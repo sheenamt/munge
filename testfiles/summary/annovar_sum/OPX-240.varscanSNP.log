@@ -1,0 +1,11 @@
+ANNOVAR Version:
+	$LastChangedDate: 2013-05-20 11:32:41 -0700 (Mon, 20 May 2013) $
+ANNOVAR Information:
+	For questions, comments, documentation, bug reports and program update, please visit http://www.openbioinformatics.org/annovar/
+ANNOVAR Command:
+	/home/genetics/bin/annotate_variation.pl -filter -dbtype generic -genericdbfile hg19_miseq_oncoplex -buildver hg19 -otherinfo --outfile /home/local/AMC/sheenams/genetics_pipeline/testfiles/summary/annovar_sum/OPX-240.varscanSNP /home/local/AMC/sheenams/genetics_pipeline/testfiles/summary/annovar_sum/OPX-240.varscanSNP.ann /home/genetics/Genomes/Annovar_files
+ANNOVAR Started:
+	Wed Oct 23 16:16:41 2013
+NOTICE: Variants matching filtering criteria are written to /home/local/AMC/sheenams/genetics_pipeline/testfiles/summary/annovar_sum/OPX-240.varscanSNP.hg19_generic_dropped, other variants are written to /home/local/AMC/sheenams/genetics_pipeline/testfiles/summary/annovar_sum/OPX-240.varscanSNP.hg19_generic_filtered
+NOTICE: Processing next batch with 822 unique variants in 822 input lines
+NOTICE: Scanning filter database /home/genetics/Genomes/Annovar_files/hg19_miseq_oncoplex...Done
