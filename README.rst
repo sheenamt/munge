@@ -19,8 +19,8 @@ installation
 Clone the project from the git repository::
 
     cd ~/src
-    git clone git@bitbucket.org:uwlabmed/genetics_pipeline.git
-    cd genetics_pipeline
+    git clone git@github.com:sheenams/munge.git
+    cd munge
 
 Now installation can be performed using the install script provided. This will default to install at /home/genetics unless an install path is provided.
 
@@ -33,7 +33,7 @@ architecture
 
 This project contains the following subdirectories::
 
-    genetics_pipeline % tree -d
+    munge % tree -d
     .
     |-- bin
     |-- doc
