@@ -14,8 +14,8 @@ subprocess.call('git shortlog --format="XXYYXX%h" | grep -c XXYYXX > munging/dat
 from munging import __version__
 from munging.scripts import script
 
-params = {'author': 'Noah Hoffman',
-          'author_email': 'ngh2@uw.edu',
+params = {'author': 'Sheena Scroggins',
+          'author_email': 'sheena.scroggins@gmail.com',
           'description': script.__doc__.strip(),
           'name': 'munging',
           'packages': ['munging','munging.scripts','munging.subcommands'],
@@ -24,6 +24,6 @@ params = {'author': 'Noah Hoffman',
           'version': __version__,
           'package_data': {'munging': [join('data',f) for f in ['sha','ver']]}
           }
-    
+
 setup(**params)
 
