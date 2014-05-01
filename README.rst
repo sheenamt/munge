@@ -28,31 +28,6 @@ Now installation can be performed using the install script provided. This will d
 
 This script does a clean install.
 
-architecture
-============
-
-This project contains the following subdirectories::
-
-    munge % tree -d
-    .
-    |-- bin
-    |-- doc
-    |-- installs
-    |--munging
-    |   |-- data
-    |   |-- scripts
-    |   |-- subcommands
-    |-- testfiles
-    |-- tests
-
-with contents as follows:
-
-* ``bin`` - scripts that call various pipeline software components
-* ``doc`` - files required for QC analysis
-* ``munging`` - the Python package implementing most of the project
-   functionality. This subdirectory is installed to the system.
-* ``testfiles`` - files and data used for testing.
-* ``tests`` - subpackage implementing unit tests.
 
 execution
 =========
@@ -78,8 +53,7 @@ script and individual actions using the ``-h`` or ``--help`` options::
 Utilities for the munge scripts
 
 positional arguments:
-  {help,xlsmaker,rename_hiseq,control_parser,variant_crawler,freq_creator,rename_miseq,db_annotation,quality_metri
-cs,getpfx,combined_cnv,combined_output,annovar_bed_parser,qc_variants,combined_pindel,summary}
+  {help,xlsmaker,rename_hiseq,control_parser,variant_crawler,freq_creator,rename_miseq,db_annotation,quality_metrics,getpfx,combined_cnv,combined_output,annovar_bed_parser,qc_variants,combined_pindel,summary}
     help                Detailed help for actions using `help <action>`
     xlsmaker            Create xls workbook from all output files
     rename_hiseq        Rename and compress HiSeq files.
