@@ -22,7 +22,8 @@ Clone the project from the git repository::
     git clone git@github.com:sheenams/munge.git
     cd munge
 
-Now installation can be performed using the install script provided. This will default to install at /home/genetics unless an install path is provided.
+Now installation can be performed using the install script provided.
+This will default to install at /home/genetics unless an install path is provided.
 
     sudo ./install_munge /install/path
 
@@ -53,7 +54,11 @@ script and individual actions using the ``-h`` or ``--help`` options::
 Utilities for the munge scripts
 
 positional arguments:
-  {help,xlsmaker,rename_hiseq,control_parser,variant_crawler,freq_creator,rename_miseq,db_annotation,quality_metrics,getpfx,combined_cnv,combined_output,annovar_bed_parser,qc_variants,combined_pindel,summary}
+  {help,xlsmaker,rename_hiseq,control_parser,variant_crawler,
+  freq_creator,rename_miseq,db_annotation,quality_metrics,
+  getpfx,combined_cnv,combined_output,annovar_bed_parser,
+  qc_variants,combined_pindel,summary}
+
     help                Detailed help for actions using `help <action>`
     xlsmaker            Create xls workbook from all output files
     rename_hiseq        Rename and compress HiSeq files.
