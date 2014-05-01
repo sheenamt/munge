@@ -11,7 +11,9 @@ import csv
 import sys
 import json
 
+
 from numpy import std, average
+from munging.scripts import filecomp
 
 from munging.subcommands import summary
 from munging.subcommands import annovar_bed_parser
@@ -19,6 +21,7 @@ from munging.subcommands import control_parser
 from munging.subcommands import qc_variants
 from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
+from munging.subcommands import msi_pipeline_samples
 from munging.subcommands import combined_cnv, combined_pindel, combined_output
 from munging.utils import munge_path
 
@@ -39,6 +42,7 @@ NM_list=['NM_001202435.1', 'NM_006772.1','NM_000038.5','NM_007300.1','NM_007297.
 data1 = {'Gene':'SCN1A', 'Transcripts':'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,', 'Variant_Type':'','Var_Reads':'-1', 'Ref_Reads':'-1'}
 data2 = {'Gene':'SYNGAP1', 'Transcripts':'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S','Variant_Type':'upstream','Var_Reads':'10', 'Ref_Reads':'90'}
 data3 = {'Gene':'BRCA1', 'Transcripts':'BRCA1:NM_007300:exon10:c.3113A>G:p.E1038G,BRCA1:NM_007297:exon9:c.2972A>G:p.E991G,BRCA1:NM_007294:exon10:c.3113A>G:p.E1038G', 'Variant_Type':''}
+
 class TestSummary(TestBase):
     """
     Test the summary script with creates the Analysis.txt file from
@@ -221,7 +225,70 @@ class TestXlsmaker(TestBase):
         self.assertEqual(p1, 'p.A1067T')
 
 
-# class TestCombinedCNV(TestBase):
+class TestMSIPipelineSamples(TestBase):
+    """
+    Test msi_pipeline_samples script that reports control
+    and sample msi counts
+    """
+    def setUp(self):
+        pass
+
+
+    def testTallyMSI(self):
+        """
+        """
+        control_file =open(path.join(config.datadir, 'testMSIcontrol'))
+        control_data = csv.DictReader(control_file, delimiter='\t')
+        sample_info  =(path.join(config.datadir, 'OPX-240.msi.txt'))
+        total, mutants, pfx = msi_pipeline_samples.tally_msi(control_data, sample_info)
+        self.assertEqual(total, 3)
+        self.assertEqual(mutants, 0)
+        self.assertEqual(pfx, 'OPX-240')
+
+    # def testWriteOutput(writer, total, mutants, pfx):
+    #     """
+    #     """
+    #     totals = ["Total microsatellite loci: %s " % total]
+    #     muts = ["Total unstable loci: %s " % mutants]
+    #     if total:
+    #         freq = (float(mutants) / total)
+    #     else:
+    #         freq=0
+    #         mut_freq = ["Fraction of unstable loci for %s: %0.4f " % (pfx, freq)]
+    #         writer.writerow(totals)
+    #         writer.writerow(muts)
+    #         writer.writerow(mut_freq)
+
+
+    def testWriteMSIOutput(self):
+        # define your test name here
+        testname = 'write_msi_output'
+        control_file =open(path.join(config.datadir, 'testMSIcontrol'))
+        control_data = csv.DictReader(control_file, delimiter='\t')
+        sample_info  =(path.join(config.datadir, 'OPX-240.msi.txt'))
+        total, mutants, pfx = msi_pipeline_samples.tally_msi(control_data, sample_info)
+
+        # put this exact code here
+        global tda, tra
+        tda = { }
+        tra = { }
+        # Define the list of output/reference files
+        output = [
+            ('OPX-240_MSI_Analysis.txt', 'fits'),
+        ]
+        # Delete all the output files before starting the test.
+        filecomp.delete_output_files( output )
+        # Run the code under test here
+        writer = csv.writer(open(path.join(config.datadir, 'OPX-240_MSI_Analysis.txt'), 'w'), delimiter='\t')
+        msi_pipeline_samples.write_output(writer, total, mutants, pfx)
+        # If the code under test isn't doing this already, write the results
+        # to one ore more output files (defined above) for comparison
+
+        # compare the output files - use this exact command
+        filecomp.compare_files( output, ( __file__, testname ), tda = tda, tra = tra )
+
+
+        # class TestCombinedCNV(TestBase):
 #     """
 #     Doesn't have separate functions currently
 #     """
