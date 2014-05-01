@@ -11,9 +11,7 @@ import csv
 import sys
 import json
 
-
 from numpy import std, average
-from munging.scripts import filecomp
 
 from munging.subcommands import summary
 from munging.subcommands import annovar_bed_parser
@@ -37,6 +35,7 @@ qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 varscan_testfiles = path.join(config.datadir, 'varscan')
 combined_testfiles = path.join(config.datadir, 'combined')
+msi_testfiles = path.join(config.datadir, 'MSI')
 
 NM_list=['NM_001202435.1', 'NM_006772.1','NM_000038.5','NM_007300.1','NM_007297.2' ]
 data1 = {'Gene':'SCN1A', 'Transcripts':'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,', 'Variant_Type':'','Var_Reads':'-1', 'Ref_Reads':'-1'}
@@ -231,125 +230,18 @@ class TestMSIPipelineSamples(TestBase):
     and sample msi counts
     """
     def setUp(self):
-        pass
-
+        self.outdir = self.mkoutdir()
 
     def testTallyMSI(self):
         """
         """
-        control_file =open(path.join(config.datadir, 'testMSIcontrol'))
+        control_file =open(path.join(msi_testfiles, 'testMSIcontrol'))
         control_data = csv.DictReader(control_file, delimiter='\t')
-        sample_info  =(path.join(config.datadir, 'OPX-240.msi.txt'))
+        sample_info  =(path.join(msi_testfiles, 'OPX-240.msi.txt'))
         total, mutants, pfx = msi_pipeline_samples.tally_msi(control_data, sample_info)
         self.assertEqual(total, 3)
         self.assertEqual(mutants, 0)
         self.assertEqual(pfx, 'OPX-240')
 
-    # def testWriteOutput(writer, total, mutants, pfx):
-    #     """
-    #     """
-    #     totals = ["Total microsatellite loci: %s " % total]
-    #     muts = ["Total unstable loci: %s " % mutants]
-    #     if total:
-    #         freq = (float(mutants) / total)
-    #     else:
-    #         freq=0
-    #         mut_freq = ["Fraction of unstable loci for %s: %0.4f " % (pfx, freq)]
-    #         writer.writerow(totals)
-    #         writer.writerow(muts)
-    #         writer.writerow(mut_freq)
 
-
-    def testWriteMSIOutput(self):
-        # define your test name here
-        testname = 'write_msi_output'
-        control_file =open(path.join(config.datadir, 'testMSIcontrol'))
-        control_data = csv.DictReader(control_file, delimiter='\t')
-        sample_info  =(path.join(config.datadir, 'OPX-240.msi.txt'))
-        total, mutants, pfx = msi_pipeline_samples.tally_msi(control_data, sample_info)
-
-        # put this exact code here
-        global tda, tra
-        tda = { }
-        tra = { }
-        # Define the list of output/reference files
-        output = [
-            ('OPX-240_MSI_Analysis.txt', 'fits'),
-        ]
-        # Delete all the output files before starting the test.
-        filecomp.delete_output_files( output )
-        # Run the code under test here
-        writer = csv.writer(open(path.join(config.datadir, 'OPX-240_MSI_Analysis.txt'), 'w'), delimiter='\t')
-        msi_pipeline_samples.write_output(writer, total, mutants, pfx)
-        # If the code under test isn't doing this already, write the results
-        # to one ore more output files (defined above) for comparison
-
-        # compare the output files - use this exact command
-        filecomp.compare_files( output, ( __file__, testname ), tda = tda, tra = tra )
-
-
-        # class TestCombinedCNV(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-# class TestCombinedPindel(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
-
-# class TestCombinedOutput(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
-
-
-
-# class TestVariantCrawler(TestBase):
-#     """
-#     HOLD OFF:
-#     May not use this script in the very near future
-#     Function to get information from csv file and create dictionary to write output file
-#     """
-#     Def testGetInfo(self):
-#         pass
-
-# class TestCreateBed(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
-
-# class TestDBAnnotation(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
-
-# class TestFreqCreator(TestBase):
-#     """
-#     May change to not create annovar file
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
-
-# class TestMSIControl(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
-
-# class TestMSISamples(TestBase):
-#     """
-#     Doesn't have separate functions currently
-#     """
-#     def setUp(self):
-#         pass
 
