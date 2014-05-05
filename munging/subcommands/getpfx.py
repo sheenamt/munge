@@ -1,5 +1,5 @@
 """
-Get prefixes files (PFX.[12].fastq.gz) for running pipeline.
+Get prefixes files (PFX.[12].fastq.gz/GATKfinal.bam/CNV_bins.txt) for running pipeline.
 
 Usage: 
     munge getpfx /path/to/data
