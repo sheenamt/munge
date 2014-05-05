@@ -18,19 +18,21 @@ from __init__ import TestBase
 import __init__ as config
 log = logging.getLogger(__name__)
 
-files1 = """LMG-240-1-10_v2_1_Analysis.txt
-LMG-240-1-10_v2_1_CNV_Gene_Analysis.txt
-LMG-240-1-10_v2_1_CNV_Exon_Analysis.txt
-LMG-240-1-10_v2_1_CNV_QC_Analysis.txt
-LMG-240-1-10_v2_1_Pindel_Analysis.txt
-LMG-240-1-10_v2_1_QC_Analysis.txt
-LMG-240-1-10_v2_1_SV_Analysis.txt
-LMG-240-1-10_v2_1_Genotype_Analysis.txt
-LMG-240-1-10_v2_1_Quality_Analysis.txt
+files1 = """LMG-240-1-10_Analysis.txt
+LMG-240-1-10_CNV_Gene_Analysis.txt
+LMG-240-1-10_CNV_Exon_Analysis.txt
+LMG-240-1-10_CNV_QC_Gene_Analysis.txt
+LMG-240-1-10_CNV_QC_Exon_Analysis.txt
+LMG-240-1-10_Pindel_Analysis.txt
+LMG-240-1-10_QC_Analysis.txt
+LMG-240-1-10_SV_Analysis.txt
+LMG-240-1-10_Genotype_Analysis.txt
+LMG-240-1-10_Quality_Analysis.txt
 OPX-0124T_Analysis.txt
 OPX-0124T_CNV_Gene_Analysis.txt
 OPX-0124T_CNV_Exon_Analysis.txt
-OPX-0124T_CNV_QC_Analysis.txt
+OPX-0124T_CNV_QC_Gene_Analysis.txt
+OPX-0124T_CNV_QC_Exon_Analysis.txt
 OPX-0124T_Pindel_Analysis.txt
 OPX-0124T_SV_Analysis.txt
 OPX-0124T_Genotype_Analysis.txt
@@ -38,7 +40,8 @@ OPX-0124T_Quality_Analysis.txt
 OPX-0129T_Analysis.txt
 OPX-0129T_CNV_Gene_Analysis.txt
 OPX-0129T_CNV_Exon_Analysis.txt
-OPX-0129T_CNV_QC_Analysis.txt
+OPX-0129T_CNV_QC_Gene_Analysis.txt
+OPX-0129T_CNV_QC_Exon_Analysis.txt
 OPX-0129T_Pindel_Analysis.txt
 OPX-0129T_SV_Analysis.txt
 OPX-0129T_Genotype_Analysis.txt
@@ -65,27 +68,27 @@ class TestFilters(TestBase):
     def testOnlyAnalysisFilter(self):
 
         keepers = {fn for fn in files1 if f.only_analysis(Path('',fn))}
-        assert keepers == set(['LMG-240-1-10_v2_1_Analysis.txt',
+        assert keepers == set(['LMG-240-1-10_Analysis.txt',
                                'OPX-0124T_Analysis.txt',
                                'OPX-0129T_Analysis.txt'])
 
 
     def testCNVGeneFileFilter(self):
         keepers = {fn for fn in files1 if f.cnv_gene_analysis(Path('',fn))}
-        assert keepers == set(['LMG-240-1-10_v2_1_CNV_Gene_Analysis.txt',
+        assert keepers == set(['LMG-240-1-10_CNV_Gene_Analysis.txt',
                                'OPX-0124T_CNV_Gene_Analysis.txt',
                                'OPX-0129T_CNV_Gene_Analysis.txt'])
 
     def testCNVExonFileFilter(self):
         keepers = {fn for fn in files1 if f.cnv_exon_analysis(Path('',fn))}
-        assert keepers == set(['LMG-240-1-10_v2_1_CNV_Exon_Analysis.txt',
+        assert keepers == set(['LMG-240-1-10_CNV_Exon_Analysis.txt',
                                'OPX-0124T_CNV_Exon_Analysis.txt',
                                'OPX-0129T_CNV_Exon_Analysis.txt'])
 
     def testPindelFileFilter(self):
 
         keepers = {fn for fn in files1 if f.pindel_analysis(Path('',fn))}
-        assert keepers == set(['LMG-240-1-10_v2_1_Pindel_Analysis.txt',
+        assert keepers == set(['LMG-240-1-10_Pindel_Analysis.txt',
                                'OPX-0124T_Pindel_Analysis.txt',
                                'OPX-0129T_Pindel_Analysis.txt'])
 
