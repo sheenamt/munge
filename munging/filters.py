@@ -17,19 +17,21 @@ def only_analysis(pth):
     True only for pfx_Analysis.{txt,csv}
     """
 
-    return pth.fname.split('_')[-2] not in set(['CNV', 'Genotype', 'Pindel', 'SV', 'QC', 'Quality', 'Breakdancer', 'quality', 'genotype','Gene', 'Exon'])
+    return pth.fname.split('_')[-2] not in set(['CNV', 'Genotype', 'Pindel', 'SV', 'QC', 'Quality', 'Breakdancer', 'quality', 'genotype','Gene', 'Exon', 'MSI', 'Ethnicity'])
 
 def cnv_gene_analysis(pth):
     """
     True only for pfx_CNV_Gene_Analysis.{txt,csv}
     """
-    return pth.fname.split('_')[-2] in set (['Gene'])
+    if len(pth.fname.split('_')) <=4:
+        return pth.fname.split('_')[-2] in set (['Gene'])
 
 def cnv_exon_analysis(pth):
     """
     True only for pfx_CNV_Exon_Analysis.{txt,csv}
     """
-    return pth.fname.split('_')[-2] in set (['Exon'])
+    if len(pth.fname.split('_')) <=4:
+        return pth.fname.split('_')[-2] in set (['Exon'])
 
 def cnv_bins_analysis(pth):
     """
@@ -42,5 +44,11 @@ def pindel_analysis(pth):
     True only for pfx_Pindel_Analysis.{txt,csv}
     """
     return pth.fname.split('_')[-2] in set (['Pindel'])
+
+def msi_analysis(pth):
+    """
+    True only for pfx_MSI_Analysis.{txt,csv}
+    """
+    return pth.fname.split('_')[-2] in set (['MSI'])
 
 
