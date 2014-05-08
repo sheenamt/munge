@@ -3,7 +3,7 @@ Parse picard and CNV output to create quality metrics file
 
 Usage:
 
-munge quality_metrics $SAVEPATH/$PFX_CNV_bins.txt $SAVEPATH/$PFX.quality_metrics $SAVEPATH/$PFX.hs_metrics -o $SAVEPATH/$PFX_quality_metrics_Analysis.txt
+munge quality_metrics $SAVEPATH/$PFX.quality_metrics $SAVEPATH/$PFX.hs_metrics -o $SAVEPATH/$PFX_quality_metrics_Analysis.txt
 """
 import argparse
 import csv
@@ -13,9 +13,6 @@ from numpy import array, average
 
 
 def build_parser(parser):
-    parser.add_argument(
-        'cnv_file', type=argparse.FileType('rU'),
-        default=sys.stdin)
     parser.add_argument(
         'metric_file', type=argparse.FileType('rU'),
         default=sys.stdin)
@@ -41,15 +38,8 @@ def get_values(info):
 
 def action(args):
 
-    cnv_info = csv.reader(args.cnv_file, delimiter="\t")
     metric_info = csv.reader(args.metric_file, delimiter="\t")
-    cnv_info.next()
     writer = csv.writer(args.outfile, quoting=csv.QUOTE_MINIMAL, delimiter='\t')
-    a = get_values(cnv_info)
-    stdev = ["Standard deviation of read depth: %0.2f " %(a).std()]
-    ave = ["Average read depth: %0.2f " %average(a)]
-    writer.writerow(stdev)
-    writer.writerow(ave)
     for line in metric_info:
         try:
             if re.search('LIBRARY', line[0]):
