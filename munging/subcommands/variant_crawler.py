@@ -8,7 +8,7 @@ munge variant_crawler /home/genetics/genetics_pipeline/doc/Clinical_variants.csv
 """
 
 import logging
-import csv 
+import csv
 import argparse
 import sys
 from itertools import count
@@ -33,7 +33,7 @@ def get_info(fname):
     """
     Function to get information from csv file and create dictionary to write output file
     """
-    reader = csv.DictReader(fname)
+    reader = csv.DictReader(fname, delimiter='\t')
     for d in reader:
          d.update()
          try:
@@ -43,7 +43,7 @@ def get_info(fname):
              continue
          yield d
 
-    
+
 
 def action(args):
     writer = csv.DictWriter(args.outfile,
