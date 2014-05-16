@@ -19,7 +19,6 @@ from munging.subcommands import control_parser
 from munging.subcommands import qc_variants
 from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
-from munging.subcommands import msi_pipeline_samples
 from munging.subcommands import combined_cnv, combined_pindel, combined_output
 from munging.utils import munge_path
 
@@ -35,12 +34,26 @@ qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 varscan_testfiles = path.join(config.datadir, 'varscan')
 combined_testfiles = path.join(config.datadir, 'combined')
-msi_testfiles = path.join(config.datadir, 'MSI')
 
-NM_list=['NM_001202435.1', 'NM_006772.1','NM_000038.5','NM_007300.1','NM_007297.2' ]
-data1 = {'Gene':'SCN1A', 'Transcripts':'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,', 'Variant_Type':'','Var_Reads':'-1', 'Ref_Reads':'-1'}
-data2 = {'Gene':'SYNGAP1', 'Transcripts':'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S','Variant_Type':'upstream','Var_Reads':'10', 'Ref_Reads':'90'}
-data3 = {'Gene':'BRCA1', 'Transcripts':'BRCA1:NM_007300:exon10:c.3113A>G:p.E1038G,BRCA1:NM_007297:exon9:c.2972A>G:p.E991G,BRCA1:NM_007294:exon10:c.3113A>G:p.E1038G', 'Variant_Type':''}
+NM_dict = {
+    'NM_001202435': 'NM_001202435.1',
+    'NM_006772': 'NM_006772.1',
+    'NM_000038': 'NM_000038.5',
+    'NM_007300': 'NM_007300.1',
+    'NM_007297': 'NM_007297.2'
+}
+data1 = {'Gene': 'SCN1A',
+         'Transcripts': 'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,',
+         'Variant_Type': '',
+         'Var_Reads': '-1', 'Ref_Reads': '-1'}
+data2 = {'Gene': 'SYNGAP1',
+         'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
+         'Variant_Type': 'upstream',
+         'Var_Reads': '10', 'Ref_Reads': '90'}
+data3 = {'Gene': 'BRCA1',
+         'Transcripts': 'BRCA1:NM_007300:exon10:c.3113A>G:p.E1038G,BRCA1:NM_007297:exon9:c.2972A>G:p.E991G,BRCA1:NM_007294:exon10:c.3113A>G:p.E1038G',
+         'Variant_Type': ''}
+
 
 class TestSummary(TestBase):
     """
@@ -55,7 +68,7 @@ class TestSummary(TestBase):
         """
         Gets header(s) and info from each file
         """
-        fname = path.join(summary_testfiles, 'OPX-240.variant_function')
+        fname = path.join(summary_testfiles, 'CON-762R.variant_function')
         header_ids = {0: 'var_type_1',
                       1: 'gene',
                       7: 'zygosity',
@@ -64,7 +77,7 @@ class TestSummary(TestBase):
         variant_idx = [2, 3, 4, 5, 6]
         out = summary.map_headers(fname, header_ids, variant_idx)
         out = list(out)
-        self.assertTrue(len(out) == 782)
+        self.assertEqual(len(out), 1373)
         header_keys = set(header_ids.values())
         # confirm that all keys in header_ids are contained in each row of the output
         for pos, data in out:
@@ -75,14 +88,28 @@ class TestSummary(TestBase):
         Return modified values of (Gene, Transcripts). Note that
         his depends on 'Variant_Type' provided by munge_variant.
         """
-        data1['Gene'], data1['Transcripts'], data1['c.'], data1['p.'] = summary.munge_gene_and_Transcripts(data1, NM_list)
-        data2['Gene'], data2['Transcripts'], data2['c.'], data2['p.'] = summary.munge_gene_and_Transcripts(data2, NM_list)
-        data3['Gene'], data3['Transcripts'], data3['c.'], data3['p.'] = summary.munge_gene_and_Transcripts(data3, NM_list)
+        data1['Gene'], data1['Transcripts'] = summary.munge_gene_and_Transcripts(data1, NM_dict)
+        data2['Gene'], data2['Transcripts'] = summary.munge_gene_and_Transcripts(data2, NM_dict)
+        data3['Gene'], data3['Transcripts'] = summary.munge_gene_and_Transcripts(data3, NM_dict)
+
         #Data 1 gene should be SCN1A
         self.assertTrue(data1['Gene'], 'SCN1A')
-        self.assertTrue(data1['p.'], 'NM_001202435.1:p.A1067T')
         #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
         self.assertEqual(data2['Gene'], '')
+
+    def testMungeTranscript(self):
+        """
+        Return HGVS correct transcript annotations
+        Filtered with a preferred transcript list
+        NM_006772.1:c.1713G>A
+        # """
+        data1['c.'], data1['p.'] = summary.munge_transcript(data1, NM_dict)
+        data2['c.'], data2['p.'] = summary.munge_transcript(data2, NM_dict)
+        data3['c.'], data3['p.'] = summary.munge_transcript(data3, NM_dict)
+
+        # #Data 1 gene should be SCN1A
+        self.assertEqual(data1['p.'], 'p.A1067T')
+        # #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
         self.assertEqual(data2['c.'], 'NM_006772.1:c.1713G>A')
         #Data 3 p. and c. should have multiple entries
         self.assertEqual(data3['p.'], 'p.E1038G p.E991G')
@@ -92,10 +119,22 @@ class TestSummary(TestBase):
         """
         Return allele frequency of var_reads/ref_reads
         """
-        freq1=summary.get_allele_freq(data1)
-        freq2=summary.get_allele_freq(data2)
+        freq1 = summary.get_allele_freq(data1)
+        freq2 = summary.get_allele_freq(data2)
         self.assertEqual(freq1, 'NA')
         self.assertEqual(freq2, '0.10')
+
+    def testGetReads(self):
+        """
+        Return Ref_Reads, Var_Reads, Variant_Phred
+        """
+        data='1/1:255:289:289:18:267:92.39%:3.3502E-142:24:30:7:11:48:219'
+        ref_reads, var_reads, variant_phred = summary.get_reads(data)
+        self.assertEqual(ref_reads, '18')
+        self.assertEqual(var_reads, '267')
+        self.assertEqual(variant_phred, '30')
+
+
 
 class TestAnnovarBedParser(TestBase):
     """
@@ -107,11 +146,12 @@ class TestAnnovarBedParser(TestBase):
         """
         Takes in row of file, return chr, start, stop
         """
-        bedfname =open(path.join(annovar_testfiles, 'test.bed'))
+        bedfname = open(path.join(annovar_testfiles, 'test.bed'))
         bedinfo = list(csv.reader(bedfname, delimiter='\t'))
         for row in bedinfo:
             bedoutput = annovar_bed_parser.coords(row)
             self.assertEqual(len(bedoutput), 3)
+
 
 class TestControlParser(TestBase):
     """
@@ -136,6 +176,7 @@ class TestControlParser(TestBase):
         #The second entry of the second line should be MTHFR:NM_005957:exon8:c.1286A>C:p.E429A,
         self.assertEqual(output[1][1], 'MTHFR:NM_005957:exon8:c.1286A>C:p.E429A,')
 
+
 class TestQCVariants(TestBase):
     """
     Test the qc_variants script which finds the intersection of
@@ -159,7 +200,8 @@ class TestQCVariants(TestBase):
         #There should be 3 lines that match
         self.assertEqual(len(output), 3)
         #The second entry on the second line should be SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S
-        self.assertEqual(str(output[1][1]), "SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S," )
+        self.assertEqual(str(output[1][1]), "SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,")
+
 
 class TestQualityMetrics(TestBase):
     """
@@ -173,14 +215,13 @@ class TestQualityMetrics(TestBase):
         """
         cnvfname = open(path.join(quality_testfiles, 'OPX-240_CNV_bins.txt'))
         cnv_info = csv.reader(cnvfname, delimiter="\t")
-        metricfname = open(path.join(quality_testfiles, 'OPX-240.quality_metrics'))
-        metric_info = csv.reader(metricfname, delimiter="\t")
         cnv_info.next()
-        a=quality_metrics.get_values(cnv_info)
-        stdev=["Standard deviation of read depth: %0.2f " %(a).std()]
-        ave=["Average read depth: %0.2f " %average(a)]
-        self.assertEqual(stdev,['Standard deviation of read depth: 120.25 '])
-        self.assertEqual(ave,['Average read depth: 312.25 '])
+        a = quality_metrics.get_values(cnv_info)
+        stdev = ["Standard deviation of read depth: %0.2f " % (a).std()]
+        ave = ["Average read depth: %0.2f " % average(a)]
+        self.assertEqual(stdev, ['Standard deviation of read depth: 120.25 '])
+        self.assertEqual(ave, ['Average read depth: 312.25 '])
+
 
 class TestXlsmaker(TestBase):
     """
@@ -192,56 +233,24 @@ class TestXlsmaker(TestBase):
         """
         Convert integers to float instead of string where applicable.
         """
-        test01='Gene'
-        test02='12'
-        self.assertTrue(xlsmaker.float_if_possible(test01),'Gene')
-        self.assertTrue(xlsmaker.float_if_possible(test02),'12.0')
+        test01 = 'Gene'
+        test02 = '12'
+        self.assertTrue(xlsmaker.float_if_possible(test01), 'Gene')
+        self.assertTrue(xlsmaker.float_if_possible(test02), '12.0')
 
     def testProcessFiles(self):
         """
         Rename the analysis files for workbook
         """
-        tab = '9_SNP_Indel'
+        tab = '10_SNP_Indel'
         filetype = 'Analysis'
-        files=[]
+        files = []
         files.append(path.join(summary_testfiles, 'LMG-098A_Analysis.txt'))
-        files.append(path.join(summary_testfiles,'LMG-098A_Quality_Analysis.txt'))
+        files.append(path.join(summary_testfiles, 'LMG-098A_Quality_Analysis.txt'))
         data, fname = xlsmaker.process_files(files, tab, filetype)
-        self.assertEqual(data, '9_SNP_Indel')
+        self.assertEqual(data, '10_SNP_Indel')
         self.assertEqual(fname, 'testfiles/summary/annovar_sum/LMG-098A_Analysis.txt')
         self.assertNotEqual(fname, 'testfiles/summary/annovar_sum/LMG-098A_Quality_Analysis.txt')
-
-
-    def testMungeTranscripts(self):
-        """
-        Return HGVS correct transcript annotations
-        NM_006772.1:c.1713G>A
-        """
-        c1,p1=summary.munge_transcript(data1['Transcripts'], NM_list)
-        c2,p2=summary.munge_transcript(data2['Transcripts'], NM_list)
-        self.assertEqual(c1, 'NM_001202435.1:c.3199G>A')
-        self.assertEqual(c2, 'NM_006772.1:c.1713G>A')
-        self.assertEqual(p1, 'p.A1067T')
-
-
-class TestMSIPipelineSamples(TestBase):
-    """
-    Test msi_pipeline_samples script that reports control
-    and sample msi counts
-    """
-    def setUp(self):
-        self.outdir = self.mkoutdir()
-
-    def testTallyMSI(self):
-        """
-        """
-        control_file =open(path.join(msi_testfiles, 'testMSIcontrol'))
-        control_data = csv.DictReader(control_file, delimiter='\t')
-        sample_info  =(path.join(msi_testfiles, 'OPX-240.msi.txt'))
-        total, mutants, pfx = msi_pipeline_samples.tally_msi(control_data, sample_info)
-        self.assertEqual(total, 3)
-        self.assertEqual(mutants, 0)
-        self.assertEqual(pfx, 'OPX-240')
 
 
 
