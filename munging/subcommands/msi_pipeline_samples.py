@@ -27,7 +27,8 @@ def build_parser(parser):
 
 
 def tally_msi(data, file_name):
-    """
+    """Count the total MSI sites found and
+    count the mutated sites
     """
     total, mutants = 0, 0
     with open(os.path.join(file_name), 'rU') as fname:
@@ -51,7 +52,7 @@ def tally_msi(data, file_name):
 
 
 def write_output(writer, total, mutants, pfx):
-    """
+    """Write formatted output to file
     """
     totals = ["Total microsatellite loci: %s " % total]
     muts = ["Total unstable loci: %s " % mutants]
@@ -60,6 +61,7 @@ def write_output(writer, total, mutants, pfx):
     else:
         freq=0
     mut_freq = ["Fraction of unstable loci for %s: %0.4f " % (pfx, freq)]
+
     writer.writerow(totals)
     writer.writerow(muts)
     writer.writerow(mut_freq)
@@ -73,7 +75,3 @@ def action(args):
     for file_name in args.sample_files:
         total, mutants, pfx = tally_msi(data, file_name)
         write_output(writer, total, mutants, pfx)
-
-
-
-
