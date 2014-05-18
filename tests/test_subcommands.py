@@ -20,6 +20,7 @@ from munging.subcommands import qc_variants
 from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
 from munging.subcommands import combined_cnv, combined_pindel, combined_output
+from munging.subcommands import msi_pipeline_samples
 from munging.utils import munge_path
 
 from __init__ import TestBase
@@ -34,6 +35,7 @@ qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 varscan_testfiles = path.join(config.datadir, 'varscan')
 combined_testfiles = path.join(config.datadir, 'combined')
+msi_testfiles = path.join(config.datadir, 'MSI')
 
 NM_dict = {
     'NM_001202435': 'NM_001202435.1',
@@ -253,4 +255,19 @@ class TestXlsmaker(TestBase):
         self.assertNotEqual(fname, 'testfiles/summary/annovar_sum/LMG-098A_Quality_Analysis.txt')
 
 
+class TestMSIPipelineSamples(TestBase):
+    """
+    Test the msi pipeline scripts
+    """
 
+    def testTallyMSI(self):
+        """Count the sites found and the mutants
+        """
+        control_info = csv.DictReader(open(path.join(msi_testfiles, 'testMSIcontrol')), delimiter='\t')
+            #Store the dictreader in a variable to loop through it twice
+        data = [row for row in control_info]
+        msi_fname = path.join(msi_testfiles, 'OPX-240.msi.txt')
+        total, mutants, pfx = msi_pipeline_samples.tally_msi(data, msi_fname)
+        self.assertEqual(total, 3)
+        self.assertEqual(mutants, 0)
+        self.assertEqual(pfx, 'OPX-240')
