@@ -11,6 +11,7 @@ import sys
 import re
 from numpy import array, average
 
+import pprint
 
 def build_parser(parser):
     parser.add_argument(
@@ -39,6 +40,7 @@ def get_values(info):
 def action(args):
 
     metric_info = csv.reader(args.metric_file, delimiter="\t")
+    hs_info = csv.reader(args.hsmetrics, delimiter='\t')
     writer = csv.writer(args.outfile, quoting=csv.QUOTE_MINIMAL, delimiter='\t')
     for line in metric_info:
         try:
@@ -48,10 +50,9 @@ def action(args):
         except IndexError:
             continue
 
-    hs_info = csv.reader(args.hsmetrics, delimiter='\t')
-    #TOTAL_READS, PF_UNIQUE_READS, PF_UQ_READS_ALIGNED, PCT_SELECTED_BASES, PCT_OFF_BAIT,
-    #MEAN_TARGET_COVERAGE, PCT_USABLE_BASES_ON_TARGET, ZERO_CVG_TARGETS_PCT, AT_DROPOUT, GC_DROPOUT, LIBRARY
-    items = [5, 7, 10, 17, 18, 21, 23, 25, 35, 36, 38]
+    #TOTAL_READS:5, PF_UNIQUE_READS:7, PF_UQ_READS_ALIGNED:10, PCT_SELECTED_BASES:17, PCT_OFF_BAIT:18,
+    #MEAN_TARGET_COVERAGE:21, PCT_USABLE_BASES_ON_TARGET:23, ZERO_CVG_TARGETS_PCT:25, AT_DROPOUT:35, GC_DROPOUT:36, LIBRARY:38
+    items = [5, 7, 10, 17, 18, 21, 23, 25, 35, 36]
     new_line = []
     for line in hs_info:
         try:
