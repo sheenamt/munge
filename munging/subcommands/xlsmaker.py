@@ -58,27 +58,34 @@ def process_files(infiles, tab, filetype):
                 sheet_name = '1_QC_Metrics'
             #OPX-240_CNV_[Exon/Gene/QC]_Analysis
             elif sheet_name[1] == 'CNV':
+#                print sheet_name
                 if sheet_name[2] == 'QC':
-                    sheet_name = '2_QC_by_Gene'
+                    if sheet_name[3] == 'Gene':
+                        sheet_name = '2_QC_by_Gene'
+                    elif sheet_name[3] == 'Exon':
+                        sheet_name = '3_QC_by_Exon'
                 elif sheet_name[2] == 'Gene':
-                    sheet_name = '6_CNV_Gene'
+                    sheet_name = '7_CNV_Gene'
                 elif sheet_name[2] == 'Exon':
-                    sheet_name = '7_CNV_Exon'
+                    sheet_name = '8_CNV_Exon'
             #OPX-240_SV_Analysis
             elif sheet_name[1] == 'SV':
-                sheet_name = '3_SV_Crest'
+                sheet_name = '4_SV_Crest'
             #OPX-240_Breakdancer_Analysis
             elif sheet_name[1] == 'Breakdancer':
-                sheet_name = '4_SV_Breakdancer'
+                sheet_name = '5_SV_Breakdancer'
             #OPX-240_Pindel_Analysis
             elif sheet_name[1] == 'Pindel':
-                sheet_name = '5_SV_Pindel'
+                sheet_name = '6_SV_Pindel'
             #OPX-240_Genotype_Analysis
             elif sheet_name[1] == 'Genotype':
-                sheet_name = '8_Clinically_Flagged'
+                sheet_name = '9_Clinically_Flagged'
+            #OPX-240_MSI_Analysis
+            elif sheet_name[1] == 'MSI':
+                sheet_name = '11_MSI'
             #OPX-240_Analysis.txt
             elif sheet_name[1] == 'Analysis':
-                sheet_name = '9_SNP_Indel'
+                sheet_name = '10_SNP_Indel'
             if sheet_name == tab:
                 return sheet_name, fname
 
@@ -103,7 +110,7 @@ def write_workbook(sheet_name, fname):
     """
     sheet = book.add_sheet(sheet_name)
     Reader = csv.reader(open(fname, 'rU'), delimiter='\t')
-    if sheet_name == '9_SNP_Indel':
+    if sheet_name == '10_SNP_Indel':
         Reader = variant_id_link(Reader, sheet)
     else:
         for rowx, row in enumerate(Reader):
@@ -117,9 +124,9 @@ def action(args):
     print filetype
     (infiles, ) = args.infiles
     if filetype == 'Analysis':
-        tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene',
-                '3_SV_Crest', '4_SV_Breakdancer', '5_SV_Pindel',
-                '6_CNV_Gene', '7_CNV_Exon', '8_Clinically_Flagged', '9_SNP_Indel']
+        tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene', '3_QC_by_Exon',
+                '4_SV_Crest', '5_SV_Breakdancer', '6_SV_Pindel',
+                '7_CNV_Gene', '8_CNV_Exon', '9_Clinically_Flagged', '10_SNP_Indel', '11_MSI']
         #    for each tab, find its file and process.
         for tab in tabs:
             try:
