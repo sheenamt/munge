@@ -73,5 +73,6 @@ def action(args):
     #Store the dictreader in a variable to loop through it twice
     data = [row for row in control_info]
     for file_name in args.sample_files:
+        print file_name
         total, mutants, pfx = tally_msi(data, file_name)
         write_output(writer, total, mutants, pfx)
