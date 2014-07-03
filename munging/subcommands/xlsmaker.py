@@ -99,7 +99,8 @@ def variant_id_link(Reader, sheet):
         row.insert(0, build_variant_id(row))
         for colx, value in enumerate(row):
             if colx == 0 and not value == 'link':
-                sheet.write(rowx, colx, Formula('HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","link")'.format(value)))
+                if len(value) < 198:
+                    sheet.write(rowx, colx, Formula('HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","link")'.format(value)))
             else:
                 sheet.write(rowx, colx, float_if_possible(value))
 
