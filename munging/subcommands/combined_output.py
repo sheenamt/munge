@@ -51,8 +51,8 @@ def action(args):
     files=sorted(files)
 
     for pth in files:
-        print pth
-        pfx = pth.split('_')[0]
+        pfx = pth.split('/')[1]
+        print pfx
         # ref_pfx=pfx+'_Ref'
         # var_pfx=pfx+'_Var'
         reads_pfx=pfx+'_Ref|Var'

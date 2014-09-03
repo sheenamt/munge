@@ -23,8 +23,9 @@ from munging.utils import walker
 log = logging.getLogger(__name__)
 
 def build_parser(parser):
-    parser.add_argument('path', 
-                        help='Path to analysis files')
+    parser.add_argument(
+        'infiles', action='append', nargs='+',
+        help='Input files')
     parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
@@ -36,11 +37,9 @@ def parse_pindel(variant_keys, files, path):
     prefixes = []
 
     for pth in files:
-        pfx = pth.fname.split('_')[0]
-        log.warning('%s %s %s' % (pfx, pth.dir, pth.fname))
+        pfx = pth.split('/')[1]
         prefixes.append(pfx)
-        with open(os.path.join(path, pth.fname)) as fname:
-            print pth.fname
+        with open(pth) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -49,14 +48,14 @@ def parse_pindel(variant_keys, files, path):
     return specimens, annotation, prefixes
 
 def action(args):
-
-    files = ifilter(filters.any_analysis, walker(args.path))
+    (infiles, ) = args.infiles
+    files = ifilter(filters.any_analysis, infiles)
     files = ifilter(filters.pindel_analysis, files)
     #sort the files so that the output in the workbook is sorted
     files=sorted(files)
 
     variant_keys = ['Position', 'Gene']
-    specimens, annotation, prefixes=parse_pindel(variant_keys, files, args.path)
+    specimens, annotation, prefixes=parse_pindel(variant_keys, files, infiles)
     annotation_headers = [
         'Gene_Region',
         'Event_Type',
