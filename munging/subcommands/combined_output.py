@@ -31,8 +31,9 @@ from munging.utils import walker
 log = logging.getLogger(__name__)
 
 def build_parser(parser):
-    parser.add_argument('path', 
-                        help='Path to analysis files')
+    parser.add_argument(
+        'infiles', action='append', nargs='+',
+        help='Input files')
     parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
@@ -43,22 +44,24 @@ def action(args):
     annotation = {}
     prefixes = []
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
-    files = ifilter(filters.any_analysis, walker(args.path))
+    (infiles, ) = args.infiles
+    print "infiles:", infiles
+    files = ifilter(filters.any_analysis, infiles)
+    print "analysis files:", files
     files = ifilter(filters.only_analysis, files)
     #sort the files so that the output in the workbook is sorted
     files=sorted(files)
 
     for pth in files:
         print pth
-        pfx = pth.fname.split('_')[0]
+        pfx = pth.split('_')[0]
         # ref_pfx=pfx+'_Ref'
         # var_pfx=pfx+'_Var'
         reads_pfx=pfx+'_Ref|Var'
         # prefixes.append(ref_pfx)
         # prefixes.append(var_pfx)
         prefixes.append(reads_pfx)
-        log.warning('%s %s %s' % (pfx, pth.dir, pth.fname))
-        with open(os.path.join(args.path, pth.fname)) as fname:
+        with open(os.path.join(pth)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
