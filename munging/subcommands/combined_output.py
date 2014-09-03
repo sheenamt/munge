@@ -45,9 +45,7 @@ def action(args):
     prefixes = []
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
     (infiles, ) = args.infiles
-    print "infiles:", infiles
     files = ifilter(filters.any_analysis, infiles)
-    print "analysis files:", files
     files = ifilter(filters.only_analysis, files)
     #sort the files so that the output in the workbook is sorted
     files=sorted(files)
