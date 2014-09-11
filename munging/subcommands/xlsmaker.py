@@ -51,40 +51,40 @@ def process_files(infiles, tab, filetype):
             (f_short_name, f_extension) = os.path.splitext(f_name)
             sheet_name = f_short_name.split('_')
             #OPX-240_QC_Analysis
-            if sheet_name[1] == 'QC':
+            if sheet_name[-2] == 'QC':
                 sheet_name = '0_QC'
             #OPX-240_Quality_Analysis
-            elif sheet_name[1] == 'Quality':
+            elif sheet_name[-2] == 'Quality':
                 sheet_name = '1_QC_Metrics'
             #OPX-240_CNV_[Exon/Gene/QC]_Analysis
-            elif sheet_name[1] == 'CNV':
+            elif sheet_name[-4] == 'CNV':
 #                print sheet_name
-                if sheet_name[2] == 'QC':
-                    if sheet_name[3] == 'Gene':
+                if sheet_name[-3] == 'QC':
+                    if sheet_name[-2] == 'Gene':
                         sheet_name = '2_QC_by_Gene'
-                    elif sheet_name[3] == 'Exon':
+                    elif sheet_name[-2] == 'Exon':
                         sheet_name = '3_QC_by_Exon'
-                elif sheet_name[2] == 'Gene':
+                elif sheet_name[-3] == 'Gene':
                     sheet_name = '7_CNV_Gene'
-                elif sheet_name[2] == 'Exon':
+                elif sheet_name[-3] == 'Exon':
                     sheet_name = '8_CNV_Exon'
             #OPX-240_SV_Analysis
-            elif sheet_name[1] == 'SV':
+            elif sheet_name[-2] == 'SV':
                 sheet_name = '4_SV_Crest'
             #OPX-240_Breakdancer_Analysis
-            elif sheet_name[1] == 'Breakdancer':
+            elif sheet_name[-2] == 'Breakdancer':
                 sheet_name = '5_SV_Breakdancer'
             #OPX-240_Pindel_Analysis
-            elif sheet_name[1] == 'Pindel':
+            elif sheet_name[-2] == 'Pindel':
                 sheet_name = '6_SV_Pindel'
             #OPX-240_Genotype_Analysis
-            elif sheet_name[1] == 'Genotype':
+            elif sheet_name[-2] == 'Genotype':
                 sheet_name = '9_Clinically_Flagged'
             #OPX-240_MSI_Analysis
-            elif sheet_name[1] == 'MSI':
+            elif sheet_name[-2] == 'MSI':
                 sheet_name = '11_MSI'
             #OPX-240_Analysis.txt
-            elif sheet_name[1] == 'Analysis':
+            elif sheet_name[-1] == 'Analysis':
                 sheet_name = '10_SNP_Indel'
             if sheet_name == tab:
                 return sheet_name, fname
@@ -133,10 +133,10 @@ def action(args):
             try:
                 #Find file in infiles
                 sheet_name, fname = process_files(infiles, tab, filetype)
-                print tab, fname
+                print sheet_name, fname
                 write_workbook(sheet_name, fname)
             except TypeError:
-                print tab
+                print "Error with:", tab
     elif filetype == 'Combined':
         for fname in infiles:
             (f_path, f_name) = os.path.split(fname)
