@@ -293,7 +293,7 @@ def action(args):
             #var_key_ids are chrm:str:stp:ref:var
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
-            log.warning('no match: %s' % fname)
+#            log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
