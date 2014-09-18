@@ -64,9 +64,11 @@ def process_files(infiles, tab, filetype):
                         sheet_name = '2_QC_by_Gene'
                     elif sheet_name[-2] == 'Exon':
                         sheet_name = '3_QC_by_Exon'
-                elif sheet_name[-3] == 'Gene':
+            #OPX-240_CNV_[Exon/Gene/QC]_Analysis
+            elif sheet_name[-3] == 'CNV':
+                if sheet_name[-2] == 'Gene':
                     sheet_name = '7_CNV_Gene'
-                elif sheet_name[-3] == 'Exon':
+                elif sheet_name[-2] == 'Exon':
                     sheet_name = '8_CNV_Exon'
             #OPX-240_SV_Analysis
             elif sheet_name[-2] == 'SV':
