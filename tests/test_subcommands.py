@@ -27,14 +27,11 @@ from __init__ import TestBase
 import __init__ as config
 log = logging.getLogger(__name__)
 
-
 summary_testfiles = path.join(config.datadir, 'annovar_summary')
 annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
 control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
-varscan_testfiles = path.join(config.datadir, 'varscan')
-combined_testfiles = path.join(config.datadir, 'combined')
 msi_testfiles = path.join(config.datadir, 'MSI')
 
 control = '49_B01_BROv7_HA0187_NA12878'
