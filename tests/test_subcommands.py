@@ -27,15 +27,14 @@ from __init__ import TestBase
 import __init__ as config
 log = logging.getLogger(__name__)
 
-
-summary_testfiles = path.join(config.datadir, 'summary/annovar_sum')
+summary_testfiles = path.join(config.datadir, 'annovar_summary')
 annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
 control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
-varscan_testfiles = path.join(config.datadir, 'varscan')
-combined_testfiles = path.join(config.datadir, 'combined')
 msi_testfiles = path.join(config.datadir, 'MSI')
+
+control = '49_B01_BROv7_HA0187_NA12878'
 
 NM_dict = {
     'NM_001202435': 'NM_001202435.1',
@@ -70,7 +69,7 @@ class TestSummary(TestBase):
         """
         Gets header(s) and info from each file
         """
-        fname = path.join(summary_testfiles, 'CON-762R.variant_function')
+        fname = path.join(summary_testfiles, '{}_gatk.variant_function').format(control)
         header_ids = {0: 'var_type_1',
                       1: 'gene',
                       7: 'zygosity',
@@ -79,7 +78,7 @@ class TestSummary(TestBase):
         variant_idx = [2, 3, 4, 5, 6]
         out = summary.map_headers(fname, header_ids, variant_idx)
         out = list(out)
-        self.assertEqual(len(out), 1373)
+        self.assertEqual(len(out), 1713)
         header_keys = set(header_ids.values())
         # confirm that all keys in header_ids are contained in each row of the output
         for pos, data in out:
@@ -168,15 +167,15 @@ class TestControlParser(TestBase):
         Matches if chr, start are the same
         control[chr] = run[chr] and control[start] = run[start]
         """
-        controlfname = open(path.join(control_testfiles, 'OncoPlex_qc_variants_v3.txt'))
+        controlfname = open(path.join(control_testfiles, 'ColoSeq_qc_variants_v7.txt'))
         controlinfo = list(csv.reader(controlfname, delimiter='\t'))
-        runfname = open(path.join(control_testfiles, 'OPX-240_Analysis.txt'))
+        runfname = open(path.join(control_testfiles, '{}_Analysis.txt').format(control))
         runinfo = list(csv.reader(runfname, delimiter='\t'))
         output, count = control_parser.match(controlinfo, runinfo)
         #Count and output length should be qual
         self.assertEqual(len(output), count)
         #The second entry of the second line should be MTHFR:NM_005957:exon8:c.1286A>C:p.E429A,
-        self.assertEqual(output[1][1], 'MTHFR:NM_005957:exon8:c.1286A>C:p.E429A,')
+        self.assertEqual(output[0][1], 'SDHB:NM_003000:exon1:c.18C>A:p.A6A,')
 
 
 class TestQCVariants(TestBase):
@@ -192,13 +191,14 @@ class TestQCVariants(TestBase):
         (1000G, Complete Genomes, LMG/OPX-240 output)
         Matches if chrm, start, stop, ref_base, and var_base are the same.
         """
-        pipefname = open(path.join(qc_testfiles, 'OPX-240.exonic_variant_function'))
+        pipefname = open(path.join(qc_testfiles, '{}_merged.exonic_variant_function').format(control))
         pipe = list(csv.reader(pipefname, delimiter="\t"))
         kgfname = open(path.join(qc_testfiles, 'NA12878.1000g.hg19.exonic_variant_function'))
         kg = list(csv.reader(kgfname, delimiter="\t"))
         cgfname = open(path.join(qc_testfiles, 'NA12878.CG.hg19.exonic_variant_function'))
         cg = list(csv.reader(cgfname, delimiter="\t"))
         output = qc_variants.match(pipe, kg, cg)
+
         #There should be 3 lines that match
         self.assertEqual(len(output), 3)
         #The second entry on the second line should be SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S
@@ -215,14 +215,14 @@ class TestQualityMetrics(TestBase):
         """
         Get the standard deviation from the tumor.rd.ori column in the CNV file
         """
-        cnvfname = open(path.join(quality_testfiles, 'OPX-240_CNV_bins.txt'))
+        cnvfname = open(path.join(quality_testfiles, '{}_CNV_bins.txt').format(control))
         cnv_info = csv.reader(cnvfname, delimiter="\t")
         cnv_info.next()
         a = quality_metrics.get_values(cnv_info)
         stdev = ["Standard deviation of read depth: %0.2f " % (a).std()]
         ave = ["Average read depth: %0.2f " % average(a)]
-        self.assertEqual(stdev, ['Standard deviation of read depth: 120.25 '])
-        self.assertEqual(ave, ['Average read depth: 312.25 '])
+        self.assertEqual(stdev, ['Standard deviation of read depth: 297.78 '])
+        self.assertEqual(ave, ['Average read depth: 781.56 '])
 
 
 class TestXlsmaker(TestBase):
@@ -247,12 +247,12 @@ class TestXlsmaker(TestBase):
         tab = '10_SNP_Indel'
         filetype = 'Analysis'
         files = []
-        files.append(path.join(summary_testfiles, 'LMG-098A_Analysis.txt'))
-        files.append(path.join(summary_testfiles, 'LMG-098A_Quality_Analysis.txt'))
+        files.append(path.join(summary_testfiles, '{}_Analysis.txt'.format(control)))
+        files.append(path.join(summary_testfiles, '{}_Quality_Analysis.txt'.format(control)))
         data, fname = xlsmaker.process_files(files, tab, filetype)
         self.assertEqual(data, '10_SNP_Indel')
-        self.assertEqual(fname, 'testfiles/summary/annovar_sum/LMG-098A_Analysis.txt')
-        self.assertNotEqual(fname, 'testfiles/summary/annovar_sum/LMG-098A_Quality_Analysis.txt')
+        self.assertEqual(fname, 'testfiles/annovar_summary/{}_Analysis.txt'.format(control))
+        self.assertNotEqual(fname, 'testfiles/annovar_summary/{}_Quality_Analysis.txt'.format(control))
 
 
 class TestMSIPipelineSamples(TestBase):
@@ -266,8 +266,8 @@ class TestMSIPipelineSamples(TestBase):
         control_info = csv.DictReader(open(path.join(msi_testfiles, 'testMSIcontrol')), delimiter='\t')
             #Store the dictreader in a variable to loop through it twice
         data = [row for row in control_info]
-        msi_fname = path.join(msi_testfiles, 'OPX-240.msi.txt')
+        msi_fname = path.join(msi_testfiles, '{}_msi.txt'.format(control))
         total, mutants, pfx = msi_pipeline_samples.tally_msi(data, msi_fname)
-        self.assertEqual(total, 3)
-        self.assertEqual(mutants, 0)
-        self.assertEqual(pfx, 'OPX-240')
+        self.assertEqual(total, 77)
+        self.assertEqual(mutants, 6)
+        self.assertEqual(pfx, '{}'.format(control))

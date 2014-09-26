@@ -17,7 +17,7 @@ from itertools import count, groupby, chain, ifilter
 
 from munging.utils import dict_factory
 from munging import filters
-from munging.utils import walker
+from munging.utils import walker, munge_pfx
 
 
 log = logging.getLogger(__name__)
@@ -25,8 +25,8 @@ log = logging.getLogger(__name__)
 def build_parser(parser):
     parser.add_argument('type', choices = ['Exon','Gene'],
                         help = 'Type of cnv file to parse')
-    parser.add_argument('infiles', action='append', nargs='+',
-                        help='Input files')
+    parser.add_argument('path',
+                        help='Path to analysis files')
     parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
@@ -37,28 +37,25 @@ def action(args):
     annotation = {}
     prefixes = []
     # apply a series of filters to files
-    (infiles, ) = args.infiles
-    files = ifilter(filters.any_analysis, infiles)
+
+    files = ifilter(filters.any_analysis, walker(args.path))
     if args.type =='Exon':
         files = ifilter(filters.cnv_exon_analysis, files)
     elif args.type=='Gene':
         files = ifilter(filters.cnv_gene_analysis, files)
     variant_keys = ['Position', 'Gene' ]
-
     #sort the files so that the output in the workbook is sorted
-    files=sorted(files)
     for pth in files:
-        print pth
-        pfx = pth.split('/')[1]
-        log_pfx=pfx+'_Log'
+        pfx = munge_pfx(pth.fname)
+        log.warning('%s %s %s' % (pfx, pth.dir, pth.fname))
+        log_pfx=pfx['mini-pfx']+'_Log'
         prefixes.append(log_pfx)
-        with open(pth) as fname:
+        with open(os.path.join(args.path, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
                 specimens[variant][log_pfx] = row['Ave_Adjusted_Log_Ratio']
                 annotation[variant] = row
-
 
     annotation_headers = [
         'Transcripts']

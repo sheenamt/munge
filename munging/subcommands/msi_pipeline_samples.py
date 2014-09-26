@@ -33,7 +33,7 @@ def tally_msi(data, file_name):
     total, mutants = 0, 0
     with open(os.path.join(file_name), 'rU') as fname:
         reader = csv.DictReader(fname, delimiter='\t')
-        pfx = file_name.split('.')[0].split('/')[-1]
+        pfx = file_name.split('.')[0].split('/')[-1].strip('_msi')
         reader = sorted(reader, key=itemgetter('Position'))
         for row in data:
             for key, group in groupby(reader, key=itemgetter('Position')):

@@ -14,57 +14,46 @@ import logging
 import shutil
 import os
 import re
-import csv 
+import csv
 import sys
-import argparse 
+import argparse
 import sqlite3
 from collections import defaultdict, namedtuple
 import collections
 from itertools import count, groupby, chain, ifilter
-import pprint
 
 from munging.utils import dict_factory
 from munging.annotation import split_chr_loc, multi_split
 from munging import filters
-from munging.utils import walker
+from munging.utils import walker, munge_pfx
 
 log = logging.getLogger(__name__)
 
 def build_parser(parser):
-    parser.add_argument(
-        'infiles', action='append', nargs='+',
-        help='Input files')
+    parser.add_argument('path',
+                        help='Path to analysis files')
     parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
-
 
 def action(args):
     specimens = collections.defaultdict(dict)
     annotation = {}
     prefixes = []
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
-    (infiles, ) = args.infiles
-    files = ifilter(filters.any_analysis, infiles)
+    files = ifilter(filters.any_analysis, walker(args.path))
     files = ifilter(filters.only_analysis, files)
+
     #sort the files so that the output in the workbook is sorted
     files=sorted(files)
-
     for pth in files:
-        pfx = pth.split('/')[1]
-        print pfx
-        # ref_pfx=pfx+'_Ref'
-        # var_pfx=pfx+'_Var'
-        reads_pfx=pfx+'_Ref|Var'
-        # prefixes.append(ref_pfx)
-        # prefixes.append(var_pfx)
+        pfx = munge_pfx(pth.fname)
+        reads_pfx=pfx['mini-pfx']+'_Ref|Var'
         prefixes.append(reads_pfx)
-        with open(os.path.join(pth)) as fname:
+        with open(os.path.join(args.path, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
-                # specimens[variant][ref_pfx] = row['Ref_Reads']
-                # specimens[variant][var_pfx] = row['Var_Reads']
                 specimens[variant][reads_pfx] = row['Ref_Reads']+'|'+row['Var_Reads']
                 annotation[variant] = row
 
@@ -93,9 +82,9 @@ def action(args):
         '1000g_ASN',
         '1000g_AFR']
 
-    writer = csv.DictWriter(args.outfile, fieldnames = variant_keys + annotation_headers + prefixes,  extrasaction = 'ignore', delimiter = '\t')    
+    writer = csv.DictWriter(args.outfile, fieldnames = variant_keys + annotation_headers + prefixes,  extrasaction = 'ignore', delimiter = '\t')
     writer.writeheader()
-    for variant in sorted(specimens.keys()):                
+    for variant in sorted(specimens.keys()):
         d = {k:v for k,v in zip(variant_keys,variant)}
         d.update({pfx:specimens[variant].get(pfx) for pfx in prefixes})
         d.update(annotation[variant])
