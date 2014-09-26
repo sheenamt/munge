@@ -98,7 +98,6 @@ def munge_pfx(pfx):
     Change the pfx output in files to a shorter version
     """
     output=multi_split(pfx, '/_.')
-    print output
     if len(output)<6:
         raise ValueError('Incorrect pfx given. Expected Run_Well_LibraryVersion_MachineRun_<CONTROL>_file-type.file-ext')
     keys=['run','well','library-version','machine-run','control']
