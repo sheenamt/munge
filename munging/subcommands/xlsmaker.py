@@ -13,7 +13,7 @@ import re
 import os
 
 from xlwt import Workbook, Formula
-from munging.annotation import build_variant_id
+from munging.annotation import build_variant_id, multi_split
 
 book = Workbook()
 
@@ -49,7 +49,7 @@ def process_files(infiles, tab, filetype):
         (f_path, f_name) = os.path.split(fname)
         if re.search(str(filetype), f_name):
             (f_short_name, f_extension) = os.path.splitext(f_name)
-            sheet_name = f_short_name.split('_')
+            sheet_name = multi_split(f_short_name, '._')
             #48_A03_BROv7_HA0186_NA12878_QC_Analysis
             if sheet_name[-2] == 'QC':
                 sheet_name = '0_QC'
