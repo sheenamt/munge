@@ -104,6 +104,7 @@ def munge_pfx(pfx):
     pfx_info=dict(zip(keys,output))
     pfx_info['control']=check_control(pfx_info['control'])
     pfx_info['mini-pfx']='{well}{control}'.format(**pfx_info)
+    pfx_info['pfx']='{well}{control}_{library-version}'.format(**pfx_info)
     return pfx_info
 
 def check_control(control):
