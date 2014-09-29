@@ -38,7 +38,7 @@ def parse_pindel(variant_keys, files, path):
     for pth in files:
         pfx = munge_pfx(pth.fname)
         prefixes.append(pfx['mini-pfx'])
-        with open(os.path.join(path, pth.fname)) as fname:
+        with open(os.path.join(pth.dir, pth.fname)) as fname:
             print pth.fname
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:

@@ -50,7 +50,8 @@ def action(args):
         pfx = munge_pfx(pth.fname)
         reads_pfx=pfx['mini-pfx']+'_Ref|Var'
         prefixes.append(reads_pfx)
-        with open(os.path.join(args.path, pth.fname)) as fname:
+        with open(os.path.join(pth.dir, pth.fname)) as fname:
+            print pth.fname
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)

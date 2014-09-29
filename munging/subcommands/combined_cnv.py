@@ -47,10 +47,10 @@ def action(args):
     #sort the files so that the output in the workbook is sorted
     for pth in files:
         pfx = munge_pfx(pth.fname)
-        log.warning('%s %s %s' % (pfx, pth.dir, pth.fname))
         log_pfx=pfx['mini-pfx']+'_Log'
         prefixes.append(log_pfx)
-        with open(os.path.join(args.path, pth.fname)) as fname:
+        with open(os.path.join(pth.dir, pth.fname)) as fname:
+            print pth.fname
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
