@@ -286,7 +286,11 @@ def action(args):
     # accumulate data from all input files for each variant
     output = defaultdict(dict)
     for fname in infiles:
-        _, file_type = path.basename(fname).split('.', 1)
+        try:
+            _, file_type = path.basename(fname).split('.', 1)
+            print file_type
+        except ValueError:
+            continue
         try:
             #if the file type matches one we want,
             #header ids are output columns
