@@ -288,7 +288,6 @@ def action(args):
     for fname in infiles:
         try:
             _, file_type = path.basename(fname).split('.', 1)
-            print file_type
         except ValueError:
             continue
         try:
