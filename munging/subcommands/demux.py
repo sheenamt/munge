@@ -9,7 +9,8 @@ Usage:
 
 # import argparse
 import os
-# import subprocess
+import sys
+import subprocess
 
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
@@ -21,10 +22,15 @@ def build_parser(parser):
                     help="Absolute path to sample sheet")
     parser.add_argument('server',choices=['narwhal','larf'],
                     help="Server name")
+    parser.add_argument('sequencer',choices=['HiSeq','MiSeq','NextSeq'],
+                    help="Sequencer name")
 
 SEQ_MACHINES={'D00180':{'machine':'HA',
                         'server':'narwhal',
-                        'drive':'/home/illumina/hiseq'}}
+                        'drive':'/home/illumina/hiseq'},
+              'NS500359':{'machine':'NA',
+                        'server':'larf',
+                        'drive':'/media/NextSeq'}}
 
 def parse_flowcell(flowcell_dir):
     """Parse the date, machine, run, side and flowcell ID
@@ -39,8 +45,9 @@ def parse_flowcell(flowcell_dir):
     run_info=zip(fc_dict, fc_values)
     return run_info
 
-def run_bcl2fastq(run_info, cores):
-    """Run bcl2fastq for de-multiplexing and fastq generation.
+def run_bcl2fastqv1(run_info, cores):
+    """Run bcl2fastq v1 for de-multiplexing and fastq 
+    generation of reads from the HiSeq or MiSeq.
     run_folder -- directory of Illumina outputs
     ss_csv -- Samplesheet CSV file describing samples.
     """
@@ -62,18 +69,40 @@ def run_bcl2fastq(run_info, cores):
 
     return run_info
 
+def run_bcl2fastqv2(run_info, cores):
+    """Run bcl2fastqv2 for de-multiplexing and fastq 
+    generation of reads from the NextSeq. 
+    run_folder -- directory of Illumina outputs
+    ss_csv -- Samplesheet CSV file describing samples.
+    """
+    runfolder_dir = os.path.join(run_info['drive'],run_info['flowcell_dir'])
+    fastq_output_dir = os.path.join(run_info['drive'],run_info['run_date']+"_"+run_info['machine']+run_info['machine_run'])
+    print fastq_output_dir
+    run_info.update({'fastq_output_dir':fastq_output_dir})
+    if not os.path.exists(fastq_output_dir):
+        subprocess.call(['bcl2fastq',
+                         '--runfolder-dir', runfolder_dir,
+                         '--output-dir', fastq_output_dir,
+                         '--demultiplexing-threads', cores,
+                         '--processing-threads', cores,
+                         '--with-failed-reads',
+                         '--use-bases-mask','Y*,I8,Y*'])
+
+    return run_info
+
 def cat_fastqs(run_info):
     """Concatenate fastqs and write to output directory"""
     # #Now we concatenate all the fastqs together. Change "Project_default" if your project is named in the sample sheet.
-    project_dirs = os.listdir(run_info['fastq_output_dir'])
-    for project in project_dirs:
-        if project.startswith("Project"):
-            output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
-            project_dir=os.path.join(run_info['fastq_output_dir'],project)
-            p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
-            p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir], stdin=p1.stdout) #send p1's output to p2
-            p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
-            p2.communicate() #run
+    for _, project in os.walk(run_info['fastq_output_dir']):
+        print project
+    sys.exit()
+        # if project.startswith("Project"):
+        #     output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
+        #     project_dir=os.path.join(run_info['fastq_output_dir'],project)
+        #     p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
+        #     p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir], stdin=p1.stdout) #send p1's output to p2
+        #     p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
+        #     p2.communicate() #run
 
 #args = parser.parse_args()
 def action(args):
@@ -85,7 +114,10 @@ def action(args):
     run_info.update({'SampleSheet': info['sample-sheet']})
     # Add server based on seq machine id
     run_info.update(SEQ_MACHINES[run_info['machine_id']])
-    run_bcl2fastq(run_info, info['cores'])
+    if info['sequencer'] == 'NextSeq':
+        run_bcl2fastqv2(run_info, info['cores'])
+    else:
+        run_bcl2fastqv1(run_info, info['cores'])
     print "run info:", run_info
     cat_fastqs(run_info)
 
