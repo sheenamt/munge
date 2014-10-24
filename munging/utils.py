@@ -5,10 +5,10 @@ import shutil
 import logging
 from collections import namedtuple
 from munging.annotation import multi_split
-import IPython
 from __init__ import __version__
 
 log = logging.getLogger(__name__)
+
 
 def dict_factory(cursor, row):
     """
@@ -22,7 +22,9 @@ def dict_factory(cursor, row):
     cur.execute("select 1 as a")
     print cur.fetchone()["a"]
     """
+
     return dict((col[0],row[idx]) for idx, col in enumerate(cursor.description))
+
 
 def flatten(seq):
     """
@@ -37,7 +39,8 @@ def flatten(seq):
         else:
             yield el
 
-def mkdir(dirpath, clobber = False):
+
+def mkdir(dirpath, clobber=False):
     """
     Create a (potentially existing) directory without errors. Raise
     OSError if directory can't be created. If clobber is True, remove
@@ -45,7 +48,7 @@ def mkdir(dirpath, clobber = False):
     """
 
     if clobber:
-        shutil.rmtree(dirpath, ignore_errors = True)
+        shutil.rmtree(dirpath, ignore_errors=True)
 
     try:
         os.mkdir(dirpath)
