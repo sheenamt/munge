@@ -93,9 +93,10 @@ def run_bcl2fastqv2(run_info, cores):
 def cat_fastqs(run_info):
     """Concatenate fastqs and write to output directory"""
     # #Now we concatenate all the fastqs together. Change "Project_default" if your project is named in the sample sheet.
-    for _, project in os.walk(run_info['fastq_output_dir']):
-        print project
-    sys.exit()
+    for root, projects, files in os.walk(run_info['fastq_output_dir']):
+        for p in projects:
+            print p
+    sys.exit() 
         # if project.startswith("Project"):
         #     output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
         #     project_dir=os.path.join(run_info['fastq_output_dir'],project)
@@ -105,6 +106,7 @@ def cat_fastqs(run_info):
         #     p2.communicate() #run
 
 #args = parser.parse_args()
+
 def action(args):
     info=vars(args)
     run_info={}
