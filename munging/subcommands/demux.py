@@ -11,7 +11,7 @@ Usage:
 import os
 import sys
 import subprocess
-
+import IPython
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
     parser.add_argument('flowcell-ID',
@@ -30,18 +30,29 @@ SEQ_MACHINES={'D00180':{'machine':'HA',
                         'drive':'/home/illumina/hiseq'},
               'NS500359':{'machine':'NA',
                         'server':'larf',
-                        'drive':'/media/NextSeq'}}
+                        'drive':'/media/NextSeq'},
+              'M00829':{'machine':'MA',
+                        'server':'narwhal',
+                        'drive':'/home/illumina/miseq'}}
 
-def parse_flowcell(flowcell_dir):
+def parse_flowcell_dir(flowcell_dir):
     """Parse the date, machine, run, side and flowcell ID
-    from the flowcell directory exp:140902_D00180_0185_AHAC3AADXX"""
+    from the flowcell directory exp:
+    HiSeq:   140902_D00180_0185_AHAC3AADXX
+    NextSeq: 140911_NS500359_0002_AH12C0BGXX
+    MiSeq:   141023_M00829_0003_000000000-AAC7L"""
     fc_dict=['flowcell_dir','run_date','machine_id', 'machine_run', 'machine_side', 'flowcell_id']
     fc_values=flowcell_dir.split('_')
     fc_values.insert(0,flowcell_dir)
     fc=fc_values.pop()
     #Parse the side [A/B] from the start of the flowcell ID [A]HAC3AADXX
-    fc_values.append(fc[0])
-    fc_values.append(fc[1:])
+    if fc[0] is 'A' or fc[0] is 'B':
+        fc_values.append(fc[0])
+        fc_values.append(fc[1:])
+    #MiSeq has a different flowcell ID format, because Illumina. 
+    else:
+        fc_values.append('NA')
+        fc_values.append(fc.split('-')[1])
     run_info=zip(fc_dict, fc_values)
     return run_info
 
@@ -87,29 +98,42 @@ def run_bcl2fastqv2(run_info, cores):
                          '--processing-threads', cores,
                          '--with-failed-reads',
                          '--use-bases-mask','Y*,I8,Y*'])
-
     return run_info
 
+def combine_fastq_files(in_files, project_dir, output_dir):
+
+    print in_files, project_dir, output_dir
+    print os.path.basename(in_files[0]).strip('Sample_')
+    for sample in in_files:
+        pfx=sample.strip('Sample_')
+        for R in (1,2):
+            to_zip="/".join([project_dir,sample])
+            zip_to="/".join([output_dir,pfx])
+            p1 = subprocess.Popen(["zcat" ,to_zip,"*$R*.fastq.gz"], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
+#            p2 = subprocess.Popen(["|","gzip", "-n>", zip_to,"*R.fastq.gz"], stdin=p1.stdout) #send p1's output to p2
 def cat_fastqs(run_info):
     """Concatenate fastqs and write to output directory"""
     # #Now we concatenate all the fastqs together. Change "Project_default" if your project is named in the sample sheet.
-    for _, project in os.walk(run_info['fastq_output_dir']):
-        print project
-    sys.exit()
-        # if project.startswith("Project"):
-        #     output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
-        #     project_dir=os.path.join(run_info['fastq_output_dir'],project)
-        #     p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
-        #     p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir], stdin=p1.stdout) #send p1's output to p2
-        #     p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
-        #     p2.communicate() #run
+    project_dirs = os.listdir(run_info['fastq_output_dir'])
+    for project in project_dirs:
+        if project.startswith("Project"):
+            output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
+            project_dir=os.path.join(run_info['fastq_output_dir'],project)
+            seq_run = ''.join([run_info['machine'],run_info['machine_run']])
+            p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
+            
+            p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
+            p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
+            p2.communicate() #run
+
+
 
 #args = parser.parse_args()
 def action(args):
     info=vars(args)
     run_info={}
     # Parse the flowcell dir to create the run_info
-    run_info.update(parse_flowcell(info['flowcell-ID']))
+    run_info.update(parse_flowcell_dir(info['flowcell-ID']))
     # Add the sample sheet to the run dict
     run_info.update({'SampleSheet': info['sample-sheet']})
     # Add server based on seq machine id
@@ -119,6 +143,7 @@ def action(args):
     else:
         run_bcl2fastqv1(run_info, info['cores'])
     print "run info:", run_info
-    cat_fastqs(run_info)
-
-
+    if not run_info['machine'] == 'NextSeq':
+        cat_fastqs(run_info)
+    else:
+        print "cat fastqs doesn't work on NextSeq data yet. Sorry"
