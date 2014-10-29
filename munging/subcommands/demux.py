@@ -121,14 +121,12 @@ def cat_fastqs(run_info):
             project_dir=os.path.join(run_info['fastq_output_dir'],project)
             seq_run = ''.join([run_info['machine'],run_info['machine_run']])
             p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
-            
             p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
             p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
             p2.communicate() #run
 
-
-
 #args = parser.parse_args()
+
 def action(args):
     info=vars(args)
     run_info={}
