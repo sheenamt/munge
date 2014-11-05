@@ -1,16 +1,9 @@
-"""Converts Illumina SampleSheet CSV files to the run_info.yaml input file.
-This allows running the analysis pipeline without Galaxy, using CSV input
-files from Illumina SampleSheet or Genesifter.
-"""
-import os
-import csv
-import itertools
 """
 Create SampleSheet for demux from LoadList provided by lab
 
 Usage:
 
- munge samplesheet /path/to/load-list.csv
+ munge loadlist2samplesheet /path/to/load-list.csv
 
 """
 
@@ -28,8 +21,6 @@ def build_parser(parser):
     parser.add_argument('loadlist',
                     help="Absolute path to load list")
 
-import difflib
-import glob
 
 # ## Create samplesheets
 
@@ -76,7 +67,7 @@ def db_project_info(info):
     pass
 
 def action(args):
-    out_dir='test_output'
+    out_dir='./'
     reader=csv.DictReader(open(args.loadlist))
     lane_details = [row for row in reader]
     #SampleSheet.csv needs to be grouped by FCID
