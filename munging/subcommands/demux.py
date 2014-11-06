@@ -11,7 +11,7 @@ Usage:
 import os
 import sys
 import subprocess
-import IPython
+
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
     parser.add_argument('flowcell-ID',

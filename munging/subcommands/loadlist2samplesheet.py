@@ -11,7 +11,6 @@ Usage:
 import os
 import sys
 import subprocess
-import IPython
 import csv
 from operator import itemgetter
 from itertools import groupby
