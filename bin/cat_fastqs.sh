@@ -10,6 +10,6 @@ echo "Zipping $fbase"
 echo "Fastqs: $project_dir"
 echo "Datapath: $output_dir"
 for R in 1 2; do
-      zcat ${project_dir}/$file/*R$R*.fastq.gz | gzip -n >${output_dir}/data/"${fbase}".$R.fastq.gz;
+      zcat ${project_dir}/$file/*R$R*.fastq.gz | gzip -n >${output_dir}/"${fbase}".$R.fastq.gz;
 done
 
