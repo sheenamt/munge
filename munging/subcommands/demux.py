@@ -3,7 +3,7 @@ Crawl analysis files to create one analysis file with all info
 
 Usage:
 
- munge demux flowcell-ID cores sample-sheet {narwhal,larf}
+ munge demux flowcell-ID-folder cores sample-sheet sequencer
 
 """
 
@@ -14,14 +14,12 @@ import subprocess
 
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
-    parser.add_argument('flowcell-ID',
+    parser.add_argument('flowcell-ID-folder',
                     help="Example: 130411_D00180_0059_AH0E3KADXX")
     parser.add_argument('cores',
                     help="Number of cores for demux")
     parser.add_argument('sample-sheet',
                     help="Absolute path to sample sheet")
-    parser.add_argument('server',choices=['narwhal','larf'],
-                    help="Server name")
     parser.add_argument('sequencer',choices=['HiSeq','MiSeq','NextSeq'],
                     help="Sequencer name")
 
@@ -42,6 +40,7 @@ def parse_flowcell_dir(flowcell_dir):
     NextSeq: 140911_NS500359_0002_AH12C0BGXX
     MiSeq:   141023_M00829_0003_000000000-AAC7L"""
     fc_dict=['flowcell_dir','run_date','machine_id', 'machine_run', 'machine_side', 'flowcell_id']
+    print flowcell_dir
     fc_values=flowcell_dir.split('_')
     fc_values.insert(0,flowcell_dir)
     fc=fc_values.pop()
@@ -111,6 +110,7 @@ def combine_fastq_files(in_files, project_dir, output_dir):
             zip_to="/".join([output_dir,pfx])
             p1 = subprocess.Popen(["zcat" ,to_zip,"*$R*.fastq.gz"], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
 #            p2 = subprocess.Popen(["|","gzip", "-n>", zip_to,"*R.fastq.gz"], stdin=p1.stdout) #send p1's output to p2
+
 def cat_fastqs(run_info):
     """Concatenate fastqs and write to output directory"""
     # #Now we concatenate all the fastqs together. Change "Project_default" if your project is named in the sample sheet.
@@ -131,7 +131,7 @@ def action(args):
     info=vars(args)
     run_info={}
     # Parse the flowcell dir to create the run_info
-    run_info.update(parse_flowcell_dir(info['flowcell-ID']))
+    run_info.update(parse_flowcell_dir(info['flowcell-ID-folder']))
     # Add the sample sheet to the run dict
     run_info.update({'SampleSheet': info['sample-sheet']})
     # Add server based on seq machine id
