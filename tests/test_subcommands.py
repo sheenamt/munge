@@ -20,7 +20,7 @@ from munging.subcommands import qc_variants
 from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
 from munging.subcommands import combined_cnv, combined_pindel, combined_output
-from munging.subcommands import msi_pipeline_samples
+from munging.subcommands import msi_sample_vs_control
 from munging.utils import munge_path
 
 from __init__ import TestBase
@@ -255,7 +255,7 @@ class TestXlsmaker(TestBase):
         self.assertNotEqual(fname, 'testfiles/annovar_summary/{}_Quality_Analysis.txt'.format(control))
 
 
-class TestMSIPipelineSamples(TestBase):
+class TestMSISamplesvsControl(TestBase):
     """
     Test the msi pipeline scripts
     """
@@ -267,7 +267,7 @@ class TestMSIPipelineSamples(TestBase):
             #Store the dictreader in a variable to loop through it twice
         data = [row for row in control_info]
         msi_fname = path.join(msi_testfiles, '{}_msi.txt'.format(control))
-        total, mutants, pfx = msi_pipeline_samples.tally_msi(data, msi_fname)
+        total, mutants, pfx = msi_sample_vs_control.tally_msi(data, msi_fname)
         self.assertEqual(total, 77)
         self.assertEqual(mutants, 6)
         self.assertEqual(pfx, '{}'.format(control))
