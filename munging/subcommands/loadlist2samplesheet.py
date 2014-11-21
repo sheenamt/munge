@@ -21,7 +21,6 @@ def build_parser(parser):
                     help="Absolute path to load list")
 
 
-# ## Create samplesheets
 
 def _lane_detail_to_ss(fcid, ldetail, r):
     """Convert information about a lane into Illumina samplesheet output.
@@ -69,6 +68,7 @@ def action(args):
     out_dir='./'
     reader=csv.DictReader(open(args.loadlist))
     lane_details = [row for row in reader]
+    
     #SampleSheet.csv needs to be grouped by FCID
     write_sample_sheets(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
     #Database needs info grouped by project
