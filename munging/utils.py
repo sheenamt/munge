@@ -1,14 +1,13 @@
 from collections import Iterable
-import re
 import os
 import shutil
 import logging
 from collections import namedtuple
 from munging.annotation import multi_split
+
 from __init__ import __version__
 
 log = logging.getLogger(__name__)
-
 
 def dict_factory(cursor, row):
     """
@@ -22,9 +21,7 @@ def dict_factory(cursor, row):
     cur.execute("select 1 as a")
     print cur.fetchone()["a"]
     """
-
     return dict((col[0],row[idx]) for idx, col in enumerate(cursor.description))
-
 
 def flatten(seq):
     """
@@ -39,8 +36,7 @@ def flatten(seq):
         else:
             yield el
 
-
-def mkdir(dirpath, clobber=False):
+def mkdir(dirpath, clobber = False):
     """
     Create a (potentially existing) directory without errors. Raise
     OSError if directory can't be created. If clobber is True, remove
@@ -48,7 +44,7 @@ def mkdir(dirpath, clobber=False):
     """
 
     if clobber:
-        shutil.rmtree(dirpath, ignore_errors=True)
+        shutil.rmtree(dirpath, ignore_errors = True)
 
     try:
         os.mkdir(dirpath)
@@ -96,23 +92,4 @@ def munge_path(pth):
 
     return pathinfo
 
-def munge_pfx(pfx):
-    """
-    Change the pfx output in files to a shorter version
-    """
-    output=multi_split(pfx, '/_.')
-    keys=['run','well','library-version','machine-run','control']
-    pfx_info=dict(zip(keys,output))
-    pfx_info['control']=check_control(pfx_info['control'])
-    pfx_info['mini-pfx']='{well}{control}'.format(**pfx_info)
-    pfx_info['pfx']='{well}{control}_{library-version}'.format(**pfx_info)
-    return pfx_info
-
-def check_control(control):
-    """Check the control is actually the control,
-    return it formatted, otherwise return empty string"""
-
-    if control in set(['NA12878']):
-        return '_'+control
-    else:
-        return ''
+    
