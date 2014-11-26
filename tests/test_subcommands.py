@@ -16,10 +16,9 @@ from numpy import std, average
 from munging.subcommands import summary
 from munging.subcommands import annovar_bed_parser
 from munging.subcommands import control_parser
-from munging.subcommands import qc_variants
 from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
-from munging.subcommands import combined_cnv, combined_pindel, combined_output
+from munging.subcommands import combined_output
 from munging.subcommands import msi_sample_vs_control
 from munging.utils import munge_path
 
@@ -30,7 +29,6 @@ log = logging.getLogger(__name__)
 summary_testfiles = path.join(config.datadir, 'annovar_summary')
 annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
 control_testfiles = path.join(config.datadir, 'control_parser')
-qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 msi_testfiles = path.join(config.datadir, 'MSI')
 
@@ -176,33 +174,6 @@ class TestControlParser(TestBase):
         self.assertEqual(len(output), count)
         #The second entry of the second line should be MTHFR:NM_005957:exon8:c.1286A>C:p.E429A,
         self.assertEqual(output[0][1], 'SDHB:NM_003000:exon1:c.18C>A:p.A6A,')
-
-
-class TestQCVariants(TestBase):
-    """
-    Test the qc_variants script which finds the intersection of
-    (1000G, Complete Genomes, LMG/OPX-240 output)
-    to create versioned assay specific qc file
-    """
-
-    def testQCVariantsMatch(self):
-        """
-        Return list of variants found in all three input files
-        (1000G, Complete Genomes, LMG/OPX-240 output)
-        Matches if chrm, start, stop, ref_base, and var_base are the same.
-        """
-        pipefname = open(path.join(qc_testfiles, '{}_merged.exonic_variant_function').format(control))
-        pipe = list(csv.reader(pipefname, delimiter="\t"))
-        kgfname = open(path.join(qc_testfiles, 'NA12878.1000g.hg19.exonic_variant_function'))
-        kg = list(csv.reader(kgfname, delimiter="\t"))
-        cgfname = open(path.join(qc_testfiles, 'NA12878.CG.hg19.exonic_variant_function'))
-        cg = list(csv.reader(cgfname, delimiter="\t"))
-        output = qc_variants.match(pipe, kg, cg)
-
-        #There should be 3 lines that match
-        self.assertEqual(len(output), 3)
-        #The second entry on the second line should be SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S
-        self.assertEqual(str(output[1][1]), "SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,")
 
 
 class TestQualityMetrics(TestBase):
