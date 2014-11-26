@@ -9,6 +9,7 @@ Usage:
 
 import logging
 import sys
+import re
 import argparse
 import csv
 from collections import defaultdict
@@ -35,7 +36,7 @@ file_types = {
     'gatk.hg19_ASN.sites.2012_04_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_EUR.sites.2012_04_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_cosmic67': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_cosmic67_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_ljb_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
@@ -47,7 +48,7 @@ file_types = {
     'gatk.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_clinvar_20131105_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_clinvar_20140303_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 
 # varscanINDELS files
@@ -75,7 +76,7 @@ file_types = {
     'varscan.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_clinvar_20131105_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_clinvar_20140303_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 
  #varscanSNP files
@@ -103,7 +104,7 @@ file_types = {
     'varscanSNP.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_clinvar_20131105_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_clinvar_20140303_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 }
 
@@ -297,6 +298,8 @@ def action(args):
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
 #            log.warning('no match: %s' % fname)
+            if re.search('dropped', fname):
+                log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
