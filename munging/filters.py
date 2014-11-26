@@ -23,15 +23,13 @@ def cnv_gene_analysis(pth):
     """
     True only for pfx_CNV_Gene_Analysis.{txt,csv}
     """
-    if len(pth.fname.split('_')) <=4:
-        return pth.fname.split('_')[-2] in set (['Gene'])
+    return pth.fname.split('_')[-2] in set (['Gene']) and pth.fname.split('_') [-3] not in set(['QC'])
 
 def cnv_exon_analysis(pth):
     """
     True only for pfx_CNV_Exon_Analysis.{txt,csv}
     """
-    if len(pth.fname.split('_')) <=4:
-        return pth.fname.split('_')[-2] in set (['Exon'])
+    return pth.fname.split('_')[-2] in set (['Exon']) and pth.fname.split('_') [-3] not in set(['QC'])
 
 def cnv_bins_analysis(pth):
     """
