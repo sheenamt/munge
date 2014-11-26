@@ -92,4 +92,23 @@ def munge_path(pth):
 
     return pathinfo
 
-    
+def munge_pfx(pfx):
+    """
+    Change the pfx output in files to a shorter version
+    """
+    output=multi_split(pfx, '/_.')
+    keys=['run','well','library-version','machine-run','control']
+    pfx_info=dict(zip(keys,output))
+    pfx_info['control']=check_control(pfx_info['control'])
+    pfx_info['mini-pfx']='{well}{control}'.format(**pfx_info)
+    pfx_info['pfx']='{well}{control}_{library-version}'.format(**pfx_info)
+    return pfx_info
+
+def check_control(control):
+    """Check the control is actually the control,
+    return it formatted, otherwise return empty string"""
+
+    if control in set(['NA12878']):
+        return '_'+control
+    else:
+        return ''
