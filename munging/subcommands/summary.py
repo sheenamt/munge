@@ -30,15 +30,16 @@ file_types = {
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
     'gatk.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'gatk.hg19_ALL.sites.2012_04_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AMR.sites.2012_04_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AFR.sites.2012_04_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ASN.sites.2012_04_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EUR.sites.2012_04_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_cosmic67_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_esp6500si_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
@@ -48,7 +49,7 @@ file_types = {
     'gatk.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_clinvar_20140303_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 
 # varscanINDELS files
@@ -57,14 +58,15 @@ file_types = {
                                   19: 'Reads'},
                                  [2, 3, 4, 5, 6]),
     'varscan.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscan.hg19_AFR.sites.2012_04_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ALL.sites.2012_04_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_AMR.sites.2012_04_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ASN.sites.2012_04_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EUR.sites.2012_04_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_cosmic67_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ljb_all_dropped': ({1: 'Poylphen'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_ljb26_all_dropped': ({1: 'Poylphen'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_snp137_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
@@ -76,7 +78,7 @@ file_types = {
     'varscan.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_clinvar_20140303_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 
  #varscanSNP files
@@ -85,14 +87,15 @@ file_types = {
                                      19: 'Reads'},
                                     [2, 3, 4, 5, 6]),
     'varscanSNP.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscanSNP.hg19_AFR.sites.2012_04_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ALL.sites.2012_04_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_AMR.sites.2012_04_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ASN.sites.2012_04_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EUR.sites.2012_04_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_cosmic67_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ljb_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_snp137_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
@@ -104,7 +107,7 @@ file_types = {
     'varscanSNP.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_clinvar_20140303_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 }
 
@@ -269,7 +272,8 @@ def action(args):
         'Gerp',
         '1000g_AMR',
         '1000g_EUR',
-        '1000g_ASN',
+        '1000g_SAS',
+        '1000g_EAS',
         '1000g_AFR',
         'EVS_esp6500_AA',
         'EVS_esp6500_EU',
@@ -324,7 +328,8 @@ def action(args):
         data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL'] = data.get('1000g_ALL') or -1
         data['1000g_AMR'] = data.get('1000g_AMR') or -1
-        data['1000g_ASN'] = data.get('1000g_ASN') or -1
+        data['1000g_SAS'] = data.get('1000g_SAS') or -1
+        data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
         data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL') or -1
