@@ -23,32 +23,28 @@ variant_headers = ['chr','start','stop','Ref_Base','Var_Base']
 
 file_types = {
 #gatk files
-
- 'variant_function': ({0: 'var_type_1',
-                            1: 'Gene',
-                       },
-                           [2, 3, 4, 5, 6]),
- 'exonic_variant_function':  ({1: 'var_type_2', 2:'Transcripts'}, [3, 4, 5, 6, 7]),
- 'hg19_ALL.sites.2012_04_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
- 'hg19_AMR.sites.2012_04_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
- 'hg19_AFR.sites.2012_04_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
- 'hg19_ASN.sites.2012_04_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
- 'hg19_EUR.sites.2012_04_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
- 'hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
- 'hg19_cosmic63': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
- 'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
- 'hg19_ljb_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
- 'hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
- 'hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
- 'hg19_esp6500si_all_dropped':({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
- 'hg19_esp6500si_ea_dropped':({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
- 'hg19_esp6500si_aa_dropped':({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
- 'hg19_variants_dropped':({1:'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
- 'hg19_nci60_dropped':({1:'NCI60'},  [2, 3, 4, 5, 6]),
- 'hg19_snp137_dropped':({1:'rsid_1'}, [2, 3, 4, 5, 6]),
+    'gatk.variant_function': ({0: 'var_type_1',1: 'Gene',}, [2, 3, 4, 5, 6]),
+    'gatk.exonic_variant_function':  ({1: 'var_type_2', 2:'Transcripts'}, [3, 4, 5, 6, 7]),
+    'gatk.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ASN.sites.2014_10_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_cosmic70': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_esp6500si_all_dropped':({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_esp6500si_ea_dropped':({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_esp6500si_aa_dropped':({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_variants_dropped':({1:'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_nci60_dropped':({1:'NCI60'},  [2, 3, 4, 5, 6]),
+    'gatk.hg19_snp137_dropped':({1:'rsid_1'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 }
-
-
 
 log = logging.getLogger(__name__)
 
@@ -88,13 +84,14 @@ def munge_gene_and_Transcripts(data):
 def action(args):
 
     (infiles, ) = args.infiles
-
     headers = ['Position'] + variant_headers[3:5] + [
         'Gene',
         'dbSNP_ID',
         'Variant_Type',
         'Transcripts',
         'Clinically_Flagged',
+        'CADD',
+        'ClinVar',
         'NCI60',
         'Cosmic',
         'Segdup',
@@ -108,7 +105,8 @@ def action(args):
         'EVS_esp6500_AA',
         '1000g_EUR',
         'EVS_esp6500_EU',
-        '1000g_ASN',
+        '1000g_SAS',
+        '1000g_EAS',
         '1000g_AFR']
 
 
@@ -126,8 +124,7 @@ def action(args):
         
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
             output[var_key].update(data)
-            
-    
+                
     writer = csv.DictWriter(args.outfile,
                             fieldnames = headers,
                             quoting = csv.QUOTE_MINIMAL,
@@ -145,7 +142,8 @@ def action(args):
         data['dbSNP_ID']=data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL']=data.get('1000g_ALL') or -1
         data['1000g_AMR']=data.get('1000g_AMR') or -1
-        data['1000g_ASN']=data.get('1000g_ASN') or -1
+        data['1000g_SAS']=data.get('1000g_SAS') or -1
+        data['1000g_EAS']=data.get('1000g_EAS') or -1
         data['1000g_AFR']=data.get('1000g_AFR') or -1
         data['1000g_EUR']=data.get('1000g_EUR') or -1
         data['EVS_esp6500_ALL']=data.get('EVS_esp6500_ALL') or -1
