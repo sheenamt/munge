@@ -6,7 +6,7 @@ Usage:
 munge db_annotation $SAVEPATH/variants.* -o $SAVEPATH/annotation_table.txt
 
 """
-
+import re
 import logging
 import sys
 import argparse
@@ -23,27 +23,27 @@ variant_headers = ['chr','start','stop','Ref_Base','Var_Base']
 
 file_types = {
 #gatk files
-    'gatk.variant_function': ({0: 'var_type_1',1: 'Gene',}, [2, 3, 4, 5, 6]),
-    'gatk.exonic_variant_function':  ({1: 'var_type_2', 2:'Transcripts'}, [3, 4, 5, 6, 7]),
-    'gatk.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ASN.sites.2014_10_dropped': ({1: '1000g_ASN'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_cosmic70': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500si_all_dropped':({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500si_ea_dropped':({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500si_aa_dropped':({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_variants_dropped':({1:'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_nci60_dropped':({1:'NCI60'},  [2, 3, 4, 5, 6]),
-    'gatk.hg19_snp137_dropped':({1:'rsid_1'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'variant_function': ({0: 'var_type_1',1: 'Gene',}, [2, 3, 4, 5, 6]),
+    'exonic_variant_function':  ({1: 'var_type_2', 2:'Transcripts'}, [3, 4, 5, 6, 7]),
+    'hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
+    'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    'hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
+    'hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
+    'hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500si_all_dropped':({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500si_ea_dropped':({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500si_aa_dropped':({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'hg19_variants_dropped':({1:'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'hg19_nci60_dropped':({1:'NCI60'},  [2, 3, 4, 5, 6]),
+    'hg19_snp137_dropped':({1:'rsid_1'}, [2, 3, 4, 5, 6]),
+    'hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
 }
 
 log = logging.getLogger(__name__)
@@ -115,13 +115,17 @@ def action(args):
     for fname in infiles:
         _, file_type = path.basename(fname).split('.', 1)
         try:
+            #if the file type matches one we want,
+            #header ids are output columns
+            #var_key_ids are chrm:str:stp:ref:var
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
-            log.warning('no match: %s' % fname)
+            if re.search('dropped', fname):
+                log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
-        
+
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
             output[var_key].update(data)
                 
