@@ -37,8 +37,9 @@ def action(args):
     con.row_factory = dict_factory
 
     cur = con.cursor()
-
-    controls = ['LMG-098', 'LMG-098A', 'LMG-098B', 'C066N', 'LMG-240', 'LMG-240A', 'LMG-240B', 'OPX-240', 'OPX-240A', 'OPX-240B','LMG-241', 'CON-0001T', 'CON-0003T', 'LMG-240-1-10', 'CON-0228T', 'CON-762R', 'CON0228T', 'CON762R']
+    
+    controls = ('LMG098','LMG098A','LMG098B','C066N','LMG240','LMG240110'
+                'LMG240A','LMG240B','OPX240','OPX240A','OPX240B','LMG241')
     controlstr = ','.join("'%s'"%c for c in controls)
 
 
@@ -48,25 +49,30 @@ def action(args):
     select run, chromosome, start, end, ref_base, var_base
     from variants
     join run_info using (run)
-    where pfx not in (%s)
+    where pfx not in {}
+    and pfx not like 'CON%'
+    and pfx not like '%NA12878%'
     and machine = ?
     and assay = ?
     group by pfx, chromosome, start, end, ref_base, var_base
     order by run)
     group by chromosome, start, end, ref_base, var_base
-    """ % controlstr
+    """.format(controls)
 
     cur.execute(cmd, (args.machine, args.assay,))
     tallies = cur.fetchall()
+
 
     cmd = """
     select pfx
     from variants
     join run_info using (run)
-    where pfx not in (%s)
+    where pfx not in {}
+    and pfx not like 'CON%'
+    and pfx not like '%NA12878%'
     and machine = ?
     and assay = ?
-    group by pfx""" % controlstr
+    group by pfx""".format(controls)
 
     cur.execute(cmd, (args.machine, args.assay,))
     sample_count = len(cur.fetchall())
