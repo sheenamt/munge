@@ -4,8 +4,6 @@ Calculate tallies of variants and write anovar output
 Usage:
 
     munge freq_creator dbname machine assay -o outfile
-
-
 """
 
 import logging
@@ -16,6 +14,7 @@ import sys
 from itertools import count, groupby
 
 from munging.utils import dict_factory
+from munging.annotation import fix_pfx
 
 log = logging.getLogger(__name__)
 
@@ -38,10 +37,12 @@ def action(args):
 
     cur = con.cursor()
     
-    controls = ('LMG098','LMG098A','LMG098B','C066N','LMG240','LMG240110'
+    controls = ('LMG-098','LMG098A','LMG098B','C066N','LMG240','LMG240110'
                 'LMG240A','LMG240B','OPX240','OPX240A','OPX240B','LMG241')
-    controlstr = ','.join("'%s'"%c for c in controls)
+    controltup= tuple(fix_pfx(c) for c in controls)
 
+    print controls
+    print controltup
 
     # retrieve the variants
     cmd = """
@@ -57,7 +58,7 @@ def action(args):
     group by pfx, chromosome, start, end, ref_base, var_base
     order by run)
     group by chromosome, start, end, ref_base, var_base
-    """.format(controls)
+    """.format(controltup)
 
     cur.execute(cmd, (args.machine, args.assay,))
     tallies = cur.fetchall()
@@ -72,7 +73,7 @@ def action(args):
     and pfx not like '%NA12878%'
     and machine = ?
     and assay = ?
-    group by pfx""".format(controls)
+    group by pfx""".format(controltup)
 
     cur.execute(cmd, (args.machine, args.assay,))
     sample_count = len(cur.fetchall())
