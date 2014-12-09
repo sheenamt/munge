@@ -15,6 +15,7 @@ from munging.annotation import multi_split
 from munging.annotation import split_string_in_two
 from munging.annotation import split_chr_loc
 from munging.annotation import build_variant_id
+from munging.annotation import fix_pfx
 
 from __init__ import TestBase
 import __init__ as config
@@ -90,4 +91,10 @@ class TestAnnotation(TestBase):
         result02=build_variant_id(data2)
         self.assertEquals(result01, 'X_12321_12321_A_T')
         self.assertEquals(result02, 'X_1234_1256_G_C')
+
+    def testFixPfx(self):
+        self.assertEqual(fix_pfx('48_A03_BROv7-HA0186-NA12878'), '48_A03_BROv7_HA0186_NA12878')
+        self.assertEqual(fix_pfx('48_A03_BROv7-HA0186-NA12878 '), '48_A03_BROv7_HA0186_NA12878')
+        self.assertEqual(fix_pfx('UNK-124-455'), 'UNK_124_455')
+        self.assertEqual(fix_pfx('LMG-240'), 'LMG240')
 
