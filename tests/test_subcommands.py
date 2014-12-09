@@ -198,7 +198,6 @@ class TestQCVariants(TestBase):
         cgfname = open(path.join(qc_testfiles, 'NA12878.CG.hg19.exonic_variant_function'))
         cg = list(csv.reader(cgfname, delimiter="\t"))
         output = qc_variants.match(pipe, kg, cg)
-
         #There should be 3 lines that match
         self.assertEqual(len(output), 3)
         #The second entry on the second line should be SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S
