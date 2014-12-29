@@ -43,6 +43,7 @@ def action(args):
         files = ifilter(filters.cnv_exon_analysis, files)
     elif args.type=='Gene':
         files = ifilter(filters.cnv_gene_analysis, files)
+    files=sorted(files)
     variant_keys = ['Position', 'Gene' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
