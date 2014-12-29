@@ -36,7 +36,7 @@ def build_parser(parser):
     # 2_QC_by_Gene
     # 3_QC_by_Exons
     
-    #No filtering:
+    #No filtering needed:
     # 1_QC_Metrics
     # 11_MSI
 
@@ -65,22 +65,22 @@ def mask_file_by_gene(fname, genes, outfile):
                 for d in out_data:
                     output.writerow(d)
 
-    def action(args):
-        (infiles, ) = args.infiles
-        ordered_genes={'BROCA':{'Genes':('BRCA1','BRCA2')}}
-        mask=ordered_genes[args.order_code]['Genes']
-        print 'Genes in output: %s ' % ([i for i in mask])
-        
-        for fname in infiles:
-            (f_path, f_name) = os.path.split(fname)
-            if re.search('Analysis', f_name):
-                print 'parsing:', f_name
-                (analysis_type,ext) = os.path.splitext(f_name)
-                #Rename Analysis file to Analysis_full
-                full_input=os.path.join(f_path, (analysis_type+'_full'+ext))
-                masked_output=os.path.join(f_path, (analysis_type+'_masked'+ext))
-                #Mask data
-                mask_file_by_gene(fname, mask, masked_output)
-                #Move the files so the masked is Analysis.txt and the full is labeled
-                copyfile(fname,full_input)
-                os.rename(masked_output, fname)
+def action(args):
+    (infiles, ) = args.infiles
+    ordered_genes={'BROCA':{'Genes':('BRCA1','BRCA2')}}
+    mask=ordered_genes[args.order_code]['Genes']
+    print 'Genes in output: %s ' % ([i for i in mask])
+    
+    for fname in infiles:
+        (f_path, f_name) = os.path.split(fname)
+        if re.search('Analysis', f_name):
+            print 'parsing:', f_name
+            (analysis_type,ext) = os.path.splitext(f_name)
+            #Rename Analysis file to Analysis_full
+            full_input=os.path.join(f_path, (analysis_type+'_full'+ext))
+            masked_output=os.path.join(f_path, (analysis_type+'_masked'+ext))
+            #Mask data
+            mask_file_by_gene(fname, mask, masked_output)
+            #Move the files so the masked is Analysis.txt and the full is labeled
+            copyfile(fname,full_input)
+            os.rename(masked_output, fname)
