@@ -11,7 +11,7 @@ import sys
 import os
 import string
 import re
-rom munging.annotation import multi_split
+from munging.annotation import multi_split
 import itertools
 import csv
 """ parse a picard HsMetrics *.metrics output to something more human readable """
