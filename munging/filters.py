@@ -49,4 +49,10 @@ def msi_analysis(pth):
     """
     return pth.fname.split('_')[-2] in set (['MSI'])
 
+def quality_analysis(pth):
+    """
+    True only for pfx_Quality_Analysis.{txt,csv}
+    """
+    return pth.fname.split('_')[-2] in set (['Quality'])
+
 
