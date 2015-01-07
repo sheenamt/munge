@@ -35,7 +35,7 @@ quality_testfiles = path.join(config.datadir, 'quality_metrics')
 msi_testfiles = path.join(config.datadir, 'MSI')
 
 control = '49_B01_BROv7_HA0187_NA12878'
-
+msi_control ='54_E05_OPXv4_NA12878_MA0013'
 NM_dict = {
     'NM_001202435': 'NM_001202435.1',
     'NM_006772': 'NM_006772.1',
@@ -265,8 +265,8 @@ class TestMSISamplesvsControl(TestBase):
         control_info = csv.DictReader(open(path.join(msi_testfiles, 'testMSIcontrol')), delimiter='\t')
             #Store the dictreader in a variable to loop through it twice
         data = [row for row in control_info]
-        msi_fname = path.join(msi_testfiles, '{}_msi.txt'.format(control))
+        msi_fname = path.join(msi_testfiles, '{}_msi.txt'.format(msi_control))
         total, mutants, pfx = msi_sample_vs_control.tally_msi(data, msi_fname)
-        self.assertEqual(total, 77)
-        self.assertEqual(mutants, 6)
-        self.assertEqual(pfx, '{}'.format(control))
+        self.assertEqual(total, 60)
+        self.assertEqual(mutants, 1)
+        self.assertEqual(pfx, '{}'.format(msi_control))
