@@ -28,6 +28,7 @@ files1 = """49_B01_BROv7_NA12878_HA0187_Analysis.txt
 49_B01_BROv7_NA12878_HA0187_SV_Analysis.txt
 49_B01_BROv7_NA12878_HA0187_Genotype_Analysis.txt
 49_B01_BROv7_NA12878_HA0187_Quality_Analysis.txt
+49_B01_BROv7_NA12878_HA0187_MSI_Analysis.txt
 49_E04_OPXv4_NA12878_HA0187_Analysis.txt
 49_E04_OPXv4_NA12878_HA0187_CNV_Gene_Analysis.txt
 49_E04_OPXv4_NA12878_HA0187_CNV_Exon_Analysis.txt
@@ -37,7 +38,9 @@ files1 = """49_B01_BROv7_NA12878_HA0187_Analysis.txt
 49_E04_OPXv4_NA12878_HA0187_SV_Analysis.txt
 49_E04_OPXv4_NA12878_HA0187_Genotype_Analysis.txt
 49_E04_OPXv4_NA12878_HA0187_Quality_Analysis.txt
+49_E04_OPXv4_NA12878_HA0187_MSI_Analysis.txt
 49_C01_OPXv4_HA0187_Analysis.txt
+49_C01_OPXv4_HA0187_MSI_Analysis.txt
 49_C01_OPXv4_HA0187_CNV_Gene_Analysis.txt
 49_C01_OPXv4_HA0187_CNV_Exon_Analysis.txt
 49_C01_OPXv4_HA0187_CNV_QC_Gene_Analysis.txt
@@ -91,4 +94,18 @@ class TestFilters(TestBase):
         assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Pindel_Analysis.txt',
                                '49_E04_OPXv4_NA12878_HA0187_Pindel_Analysis.txt',
                                '49_C01_OPXv4_HA0187_Pindel_Analysis.txt'])
+
+    def testMSIFileFilter(self):
+
+        keepers = {fn for fn in files1 if f.msi_analysis(Path('',fn))}
+        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_MSI_Analysis.txt',
+                               '49_E04_OPXv4_NA12878_HA0187_MSI_Analysis.txt',
+                               '49_C01_OPXv4_HA0187_MSI_Analysis.txt'])
+
+    def testQualityFileFilter(self):
+
+        keepers = {fn for fn in files1 if f.quality_analysis(Path('',fn))}
+        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Quality_Analysis.txt',
+                               '49_E04_OPXv4_NA12878_HA0187_Quality_Analysis.txt',
+                               '49_C01_OPXv4_HA0187_Quality_Analysis.txt'])
 
