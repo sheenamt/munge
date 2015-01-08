@@ -108,4 +108,11 @@ class TestFilters(TestBase):
         assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Quality_Analysis.txt',
                                '49_E04_OPXv4_NA12878_HA0187_Quality_Analysis.txt',
                                '49_C01_OPXv4_HA0187_Quality_Analysis.txt'])
+    
+    def testGenotypeFileFilter(self):
+
+        keepers = {fn for fn in files1 if f.genotype_analysis(Path('',fn))}
+        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Genotype_Analysis.txt',
+                               '49_E04_OPXv4_NA12878_HA0187_Genotype_Analysis.txt',
+                               '49_C01_OPXv4_HA0187_Genotype_Analysis.txt'])
 
