@@ -22,6 +22,7 @@ from munging.subcommands import xlsmaker
 from munging.subcommands import combined_cnv, combined_pindel, combined_output
 from munging.subcommands import msi_sample_vs_control
 from munging.subcommands import masker
+from munging.subcommands import loadlist2samplesheet
 from munging.utils import munge_path
 
 from __init__ import TestBase
@@ -34,7 +35,7 @@ control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 msi_testfiles = path.join(config.datadir, 'MSI')
-masker_testfiles = path.join(config.datadir, 'masker')
+masker_testfiles = path.join(config.datadir, 'analysis_files')
 
 control = '49_B01_BROv7_HA0187_NA12878'
 msi_control ='54_E05_OPXv4_NA12878_MA0013'
@@ -290,3 +291,23 @@ class TestMasker(TestBase):
         self.assertNotIn('MTHFR', out_genes)
         self.assertIn('BRCA2', out_genes)
 
+class TestLoadListtoSampleSheet(TestBase):
+    """
+    Test the script with produces the demux sample sheet
+    """
+
+    def testLaneDetailToSS(self):
+        """Test the lane details are parsed correctly"""
+        fcid='HBHW5ADXX'
+        ldetail={'FCID':'HBHW5ADXX',
+                "Index":'CCAGTTCA', 
+                'PlateNumber':'60',
+                'Operator':'SF',
+                'Well':'D05',
+                'SampleProject':'Oncoplex60',
+                'Description':'Standard',
+                'ControlWell':'E05',
+                'Recipe':'OPXv4'}
+        
+        output=loadlist2samplesheet._lane_detail_to_ss(fcid, ldetail, 1)
+        self.assertIn('6036_D05_OPXv4', output)
