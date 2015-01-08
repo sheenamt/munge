@@ -21,6 +21,7 @@ from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
 from munging.subcommands import combined_cnv, combined_pindel, combined_output
 from munging.subcommands import msi_sample_vs_control
+from munging.subcommands import masker
 from munging.utils import munge_path
 
 from __init__ import TestBase
@@ -33,6 +34,7 @@ control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 msi_testfiles = path.join(config.datadir, 'MSI')
+masker_testfiles = path.join(config.datadir, 'masker')
 
 control = '49_B01_BROv7_HA0187_NA12878'
 msi_control ='54_E05_OPXv4_NA12878_MA0013'
@@ -270,3 +272,21 @@ class TestMSISamplesvsControl(TestBase):
         self.assertEqual(total, 60)
         self.assertEqual(mutants, 1)
         self.assertEqual(pfx, '{}'.format(msi_control))
+                
+class TestMasker(TestBase):
+    """
+    Test the masker script, which masks by gene name
+    """
+    def testMaskFileByGene(self):
+        """Return only genes listed in the masking dictionary
+        """
+        data=csv.DictReader(open(path.join(masker_testfiles,'CON_0228T_OPXv4_INT_Analysis.txt')), delimiter='\t')
+        genes=('BRCA1','BRCA2')
+        out_data=[]
+        out_data=masker.mask_file_by_gene(data,genes,out_data)
+        out_genes=[d['Gene'] for d in out_data]
+        self.assertEqual(out_data[0]['Position'],'chr13:32899388')
+        self.assertEqual(len(out_data), 11)
+        self.assertNotIn('MTHFR', out_genes)
+        self.assertIn('BRCA2', out_genes)
+
