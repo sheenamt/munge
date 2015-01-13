@@ -1,8 +1,4 @@
-if [[ ! -z $1 ]]; then
 PREFIX=$1
-else
-PREFIX=/home/genetics
-fi
 
 python setup.py clean --all
 rm -r $PREFIX/lib/python2.7/site-packages/munging

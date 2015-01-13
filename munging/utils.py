@@ -97,11 +97,16 @@ def munge_pfx(pfx):
     Change the pfx output in files to a shorter version
     """
     output=multi_split(pfx, '/_.')
-    keys=['run','well','library-version','machine-run','control']
+    keys=['sample_id','well','library-version','control','machine-run']
     pfx_info=dict(zip(keys,output))
     pfx_info['control']=check_control(pfx_info['control'])
-    pfx_info['mini-pfx']='{well}{control}'.format(**pfx_info)
-    pfx_info['pfx']='{well}{control}_{library-version}'.format(**pfx_info)
+    if pfx_info['control']:
+        pfx_info['mini-pfx']=('_'.join([pfx_info['sample_id'],pfx_info['control']])).strip('_')
+        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['control'],pfx_info['library-version']])
+    else:
+        pfx_info['mini-pfx']=pfx_info['sample_id']
+        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['library-version']])
+    pfx_info['run']='{sample_id}'.format(**pfx_info)[:-2]
     return pfx_info
 
 def check_control(control):
@@ -109,6 +114,6 @@ def check_control(control):
     return it formatted, otherwise return empty string"""
 
     if control in set(['NA12878']):
-        return '_'+control
+        return control
     else:
-        return ''
+        return None

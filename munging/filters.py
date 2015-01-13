@@ -49,4 +49,22 @@ def msi_analysis(pth):
     """
     return pth.fname.split('_')[-2] in set (['MSI'])
 
+def msi_file_finder(pth):
+    """
+    Return True if pth represents an analysis file.
+    """
+    return bool(re.search(r'.msi.txt', pth.fname))
+
+def quality_analysis(pth):
+    """
+    True only for pfx_Quality_Analysis.{txt,csv}
+    """
+    return pth.fname.split('_')[-2] in set (['Quality'])
+
+def genotype_analysis(pth):
+    """
+    True only for pfx_Genotype_Analysis.{txt,csv}
+    """
+    return pth.fname.split('_')[-2] in set (['Genotype'])
+
 
