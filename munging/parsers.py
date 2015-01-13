@@ -14,8 +14,14 @@ from operator import itemgetter
 from munging import filters
 from munging.utils import walker, munge_pfx
 
+"""Each function parses a group of sample files for desired information,
+grouping based on the variant_keys list,
+some include additional annotation headers,
+sample counts, and scores calculated based on counts
+"""
 
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
+    """ Parse the sample quality analysis file, from hs_metrics"""
     files = ifilter(filters.quality_analysis, files)
     files=sorted(files)    
     variant_keys = ['MEAN_TARGET_COVERAGE',]
@@ -36,6 +42,7 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     return specimens, annotation, prefixes, fieldnames, variant_keys 
 
 def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
+    """Parse the Genotype output, which is the reads of clin_flagged found"""
     files = ifilter(filters.genotype_analysis, files)
     files=sorted(files)    
     variant_keys = ['Position','Ref_Base','Var_Base' ]
@@ -49,7 +56,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
-                specimens[variant][reads_pfx] = row['Reference_Reads']+'|'+row['Variant_Reads']
+                specimens[variant][reads_pfx]=row['Reference_Reads']+'|'+row['Variant_Reads']
                 annotation[variant] = row
 
     annotation_headers = [
@@ -58,6 +65,8 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
 def parse_msi(files, control_file, specimens, prefixes, variant_keys):
+    """Compare the sample-msi output to the baseline file, report
+    Total sites, MSI+ sites and msings score"""
     files = ifilter(filters.msi_file_finder,files) 
     files=sorted(files)    
     
@@ -108,38 +117,46 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys):
     return specimens, prefixes, fieldnames, variant_keys            
 
 
-def parse_pindel(files, specimens, annotation, prefixes, variant_keys):#SNP Specific    
-    #Pindel Specific    
+def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
+    """Parse the pindel analysis file, give total counts of samples with site"""
+    #Grab just the pindel files
     files = ifilter(filters.pindel_analysis, files)
+    #sort the files so that the output in the workbook is sorted
     files=sorted(files)    
+    #List of keys to group samples by
     variant_keys = ['Position', 'Gene']
+    #Other annotation to keep 
     annotation_headers = [
         'Gene_Region',
         'Event_Type',
         'Size',
         'Transcripts'
         ]
-    #sort the files so that the output in the workbook is sorted
-    files=sorted(files)
+
+    #Go through all the files
     for pth in files:
         pfx = munge_pfx(pth.fname)
+        #Concatenate the pfx to human readable
         prefixes.append(pfx['mini-pfx'])
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
+                #Update the specimen dict for this variant, for this pfx, report the Reads found
                 specimens[variant][pfx['mini-pfx']] = row['Reads']
                 annotation[variant] = row
-    
 
+    #Update the specimen dict for this variant, count samples present
     for key, value in specimens.iteritems():
         specimens[key]['Count']=len(value)
 
+    #Add 'Count' to prefixes for correct dict zipping/printing    
     prefixes.append('Count')
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
 def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specific   
+    """Parse the snp output file, give ref|var read counts per sample"""
     files = ifilter(filters.only_analysis, files)
     files = sorted(files)    
 
@@ -182,7 +199,7 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
     return specimens, annotation, prefixes, fieldnames, variant_keys
 
 def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
-    
+    """Parse the cnv_exon output, give ave_log_ratio"""
     files = ifilter(filters.cnv_exon_analysis, files)
     files = sorted(files)
     variant_keys = ['Position', 'Gene' ]
@@ -206,6 +223,7 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
     return specimens, annotation, prefixes, fieldnames, variant_keys
 
 def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys):
+    """Parse the cnv_genes output, give ave_log_ratio"""
     files = ifilter(filters.cnv_gene_analysis, files)
     files=sorted(files)
     variant_keys = ['Position', 'Gene' ]
