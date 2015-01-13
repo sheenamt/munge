@@ -100,8 +100,12 @@ def munge_pfx(pfx):
     keys=['sample_id','well','library-version','control','machine-run']
     pfx_info=dict(zip(keys,output))
     pfx_info['control']=check_control(pfx_info['control'])
-    pfx_info['mini-pfx']=('_'.join([pfx_info['sample_id'],pfx_info['control']])).strip('_')
-    pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['control'],pfx_info['library-version']])
+    if pfx_info['control']:
+        pfx_info['mini-pfx']=('_'.join([pfx_info['sample_id'],pfx_info['control']])).strip('_')
+        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['control'],pfx_info['library-version']])
+    else:
+        pfx_info['mini-pfx']=pfx_info['sample_id']
+        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['library-version']])
     pfx_info['run']='{sample_id}'.format(**pfx_info)[:-2]
     return pfx_info
 
@@ -112,4 +116,4 @@ def check_control(control):
     if control in set(['NA12878']):
         return control
     else:
-        return ''
+        return None
