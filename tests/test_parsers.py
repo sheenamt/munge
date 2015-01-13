@@ -106,8 +106,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_pindel'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)      
-        self.assertListEqual(sorted(prefixes),sorted(['0228T', '5437_NA12878', '6037_NA12878']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Gene_Region', 'Event_Type', 'Size', 'Transcripts', '0228T', '5437_NA12878', '6037_NA12878']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T', '5437_NA12878', '6037_NA12878','Count']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Gene_Region', 'Event_Type', 'Size', 'Transcripts', '0228T', '5437_NA12878', '6037_NA12878','Count']))
         self.assertListEqual(variant_keys, ['Position', 'Gene'])
         
     def testClinFlaggedParser(self):

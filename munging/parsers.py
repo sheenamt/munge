@@ -117,7 +117,7 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):#SNP Spec
         'Gene_Region',
         'Event_Type',
         'Size',
-        'Transcripts',
+        'Transcripts'
         ]
     #sort the files so that the output in the workbook is sorted
     files=sorted(files)
@@ -130,7 +130,12 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):#SNP Spec
                 variant = tuple(row[k] for k in variant_keys)
                 specimens[variant][pfx['mini-pfx']] = row['Reads']
                 annotation[variant] = row
-                
+    
+
+    for key, value in specimens.iteritems():
+        specimens[key]['Count']=len(value)
+
+    prefixes.append('Count')
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
