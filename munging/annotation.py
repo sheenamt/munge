@@ -1,6 +1,9 @@
 import logging
-
+import re
 from __init__ import __version__
+
+pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|UNK|TESTDATA)', re.IGNORECASE)
+pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
 
 log = logging.getLogger(__name__)
 
@@ -77,5 +80,24 @@ def build_variant_id(data):
         d['chromosome'], d['start'], d['end'] = split_chr_loc(data[0])
         d['ref_base'], d['var_base'] =  data[1], data[2]
         return '{chromosome}_{start}_{end}_{ref_base}_{var_base}'.format(**d)
+
+def pfx_ok(pfx, pattern=pfx_pattern):
+    """Return True if pfx matches compiled regular expression `pattern`
+
+    """
+    return False if pfx is None else bool(pattern.search(pfx))
+
+
+def fix_pfx(pfx):
+    """Normalize pfx (for example, to be used in a database search), but
+    only if it looks like a real prefix.
+
+    """
+    if pfx_ok(pfx):
+        return pfx.replace('-', '_').strip()
+    else:
+        if pfx_ok(pfx, pattern=pfx_pattern_old):
+            return pfx.replace('-', '').strip()
+    return pfx.strip()
 
 
