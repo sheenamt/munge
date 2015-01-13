@@ -32,20 +32,20 @@ def build_parser(parser):
                         help='Name of the output file')
 
 def action(args):
+        
     specimens = defaultdict(dict)
     prefixes = []
-    variant_keys = ['Position']
+    variant_keys =[]
     files = walker(args.path)  
     analysis_type='parse_msi'
-    print "analysis type:",analysis_type
     control_file = args.control_file
-    chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys)'.format(analysis_type)
-    print "parser:",chosen_parser
-    
+    chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys)'.format(analysis_type)    
     specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)
 
+        
     writer = csv.DictWriter(args.outfile, fieldnames = fieldnames,  extrasaction = 'ignore', delimiter = '\t')
     writer.writeheader()
+    #for position in sorted(specimens.keys(), reverse=True):
     for position in sorted(specimens.keys()):
         d = {k:v for k,v in zip(variant_keys,position)}  
         d.update({pfx:specimens[position].get(pfx) for pfx in prefixes})  
