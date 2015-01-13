@@ -15,7 +15,7 @@ from munging.annotation import multi_split
 import itertools
 import csv
 from operator import itemgetter
-from IPython.lib.pretty import pprint
+
 """ parse a picard HsMetrics *.metrics output to something more human readable """
 
 def build_parser(parser):
