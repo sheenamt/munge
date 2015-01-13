@@ -6,13 +6,14 @@ import os
 import csv
 import sys
 import IPython
+import copy
 
 from itertools import count, groupby, chain, ifilter 
 from operator import itemgetter
 
 from munging import filters
 from munging.utils import walker, munge_pfx
-from _sqlite3 import Row
+
 
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     files = ifilter(filters.quality_analysis, files)
@@ -59,8 +60,9 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
 def parse_msi(files, control_file, specimens, prefixes, variant_keys):
     files = ifilter(filters.msi_file_finder,files) 
     files=sorted(files)    
+    
     control_info=csv.DictReader(control_file, delimiter='\t')
-    control_info = sorted(control_info, key=itemgetter('Position'))
+    control_info=sorted(control_info, key=itemgetter('Position'))
     control_info=[d for d in control_info]
     
     variant_keys = ['Position',]
@@ -84,15 +86,25 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys):
                     else:           
                         new_info = None
                     specimens[variant][mini_pfx] = new_info
+    #Make copy of dictionary to iterate through
+    info=copy.copy(specimens)
 
-            for entry in specimens.items():
-                for pfx in prefixes:
-                    loci=0
-                    if entry[1][pfx] is not None:
-                       loci+=entry[1][pfx]
-            specimens['Total_Loci'][pfx]=loci
-    IPython.embed()
-    fieldnames = variant_keys + list(prefixes)
+    for pfx in prefixes:    
+        msi_loci=0
+        total_loci=0
+        loci=tuple(['passing_loci',])
+        msi=tuple(['unstable_loci'],)
+        score=tuple(['msing_score'],)
+        for entry in info.items():
+            if entry[1][pfx] is not None:
+                total_loci=total_loci + 1
+                msi_loci= msi_loci + entry[1][pfx]
+        specimens[loci][pfx]=total_loci
+        specimens[msi][pfx]=msi_loci
+        specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
+    
+    fieldnames = variant_keys + list(prefixes) 
+
     return specimens, prefixes, fieldnames, variant_keys            
 
 
@@ -125,6 +137,7 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):#SNP Spec
 def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specific   
     files = ifilter(filters.only_analysis, files)
     files = sorted(files)    
+
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
     annotation_headers = [
         'Gene',
@@ -152,7 +165,6 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
 
     for pth in files:
         pfx = munge_pfx(pth.fname)
-        print pth
         reads_pfx=pfx['mini-pfx']+'_Ref|Var'
         prefixes.append(reads_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
@@ -171,7 +183,6 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position', 'Gene' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        print pth
         pfx = munge_pfx(pth.fname)
         log_pfx=pfx['mini-pfx']+'_Log'
         prefixes.append(log_pfx)
