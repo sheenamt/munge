@@ -5,7 +5,6 @@ pindel, cnv_exon, cnv_gene, snp, msi, quality, clin_flagged
 import os
 import csv
 import sys
-import IPython
 import copy
 
 from itertools import count, groupby, chain, ifilter 
