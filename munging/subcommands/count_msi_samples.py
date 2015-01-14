@@ -42,11 +42,10 @@ def action(args):
     chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys)'.format(analysis_type)    
     specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)
 
-        
     writer = csv.DictWriter(args.outfile, fieldnames = fieldnames,  extrasaction = 'ignore', delimiter = '\t')
     writer.writeheader()
     #for position in sorted(specimens.keys(), reverse=True):
-    for position in sorted(specimens.keys()):
+    for position in sorted(specimens.keys(), reverse=True):
         d = {k:v for k,v in zip(variant_keys,position)}  
         d.update({pfx:specimens[position].get(pfx) for pfx in prefixes})  
         writer.writerow(d)
