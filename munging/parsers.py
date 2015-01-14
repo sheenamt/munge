@@ -104,6 +104,7 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys):
         loci=tuple(['passing_loci',])
         msi=tuple(['unstable_loci'],)
         score=tuple(['msing_score'],)
+        status=tuple(['msi status'],)
         for entry in info.items():
             if entry[1][pfx] is not None:
                 total_loci=total_loci + 1
@@ -111,7 +112,11 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys):
         specimens[loci][pfx]=total_loci
         specimens[msi][pfx]=msi_loci
         specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
-    
+
+        if float(specimens[score][pfx]) >= float(0.2000):
+            specimens[status][pfx]="+"
+        else:
+            specimens[status][pfx]="-"
     fieldnames = variant_keys + list(prefixes) 
 
     return specimens, prefixes, fieldnames, variant_keys            
