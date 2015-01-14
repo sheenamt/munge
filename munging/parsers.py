@@ -56,7 +56,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
-                specimens[variant][reads_pfx]=row['Reference_Reads']+'|'+row['Variant_Reads']
+                specimens[variant][reads_pfx]=row['Variant_Reads']
                 annotation[variant] = row
 
     annotation_headers = [
