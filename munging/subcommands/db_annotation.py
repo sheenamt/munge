@@ -15,7 +15,7 @@ from collections import defaultdict
 from os import path
 
 from munging.annotation import get_location
-from munging.subcommands.summary import map_headers
+from munging.subcommands.annovar_summary import map_headers
 
 variant_headers = ['chr','start','stop','Ref_Base','Var_Base']
 
