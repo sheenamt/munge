@@ -117,19 +117,39 @@ WELL_MAPPING={'A01':'01',
               'G12':'95',
               'H12':'96'}
 
-    
+ASSAYS={'OPXv4':'OncoPlex',    
+        'OPXv3':'OncoPlex',    
+        'BROv7':'ColoSeq',
+        'BROv8':'ColoSeq',
+        'BROv6':'ColoSeq',
+        'EPIv1':'EpiPlex',
+        'MRWv3':'MarrowSeq',
+        'IMMv1':'ImmunoPlex'}
+
+def create_sample_project(ldetail):
+    """Create sample project from Recipe and PlateNumber"""
+    if ldetail['Description'].lower() == 'kapa':
+        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description'].lower()+ldetail['PlateNumber']
+    else:
+        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['PlateNumber']
+    return sample_project
+
 def _lane_detail_to_ss(fcid, ldetail, r):
     """Convert information about a lane into Illumina samplesheet output.
+    FCID|PlateNumber|Well|Description|Control|Well|Recipe|Index
     """
     prefix=(ldetail['PlateNumber']+WELL_MAPPING[ldetail['Well']])
+
     if len(ldetail['ControlWell'])>3:
         ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe'],ldetail['ControlWell']])
     else:
         ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe']])
 
+    ldetail["SampleProject"]=create_sample_project(ldetail)
+
     return [ldetail['FCID'], r, ldetail["SampleID"], 'hg19',
             ldetail["Index"], ldetail["Description"], "N", 
-            ldetail["Recipe"], ldetail["Operator"],
+            ldetail["Recipe"],  ldetail["Operator"],
             ldetail["SampleProject"]]
     
 def write_sample_sheets(fcid, lane_details, out_dir=None):
