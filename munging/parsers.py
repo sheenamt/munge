@@ -200,6 +200,17 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
                 variant = tuple(row[k] for k in variant_keys)
                 specimens[variant][reads_pfx] = row['Ref_Reads']+'|'+row['Var_Reads']
                 annotation[variant] = row
+
+    #Update the specimen dict for this variant, count samples present
+    for key, value in specimens.iteritems():
+        specimens[key]['Count']=len(value)
+
+    #Add 'Count' to prefixes for correct dict zipping/printing    
+    prefixes.append('Count')
+    fieldnames = variant_keys + annotation_headers + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys
 
