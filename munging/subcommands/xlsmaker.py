@@ -134,7 +134,7 @@ def action(args):
                 print sheet_name, fname
                 write_workbook(sheet_name, fname)
             except TypeError:
-                print "Error with:", tab
+                print "Tab %s not processed" % tab
     elif filetype == 'Combined':
         for fname in infiles:
             (f_path, f_name) = os.path.split(fname)
