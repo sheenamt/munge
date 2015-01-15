@@ -21,7 +21,7 @@ from munging import parsers
 
 from __init__ import TestBase
 import __init__ as config
-from test.test_file2k import TestFileSignalEINTR
+
 log = logging.getLogger(__name__)
 
 testfiles = path.join(config.datadir, 'analysis_files')
