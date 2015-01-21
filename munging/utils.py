@@ -127,7 +127,7 @@ def munge_date(date):
 
 def munge_path(pth):
     """
-    Get date, run, project, machine, assay from path
+    Get date, run, project, machine, assay, prep-type from path
     """
     output=multi_split(pth, '/_')
     #Assuming we want YYMMDD_RUN_PROJECT
@@ -135,12 +135,26 @@ def munge_path(pth):
     keys=['date','run', 'project']
     pathinfo = dict(zip(keys,output))
     pathinfo['date']=munge_date(pathinfo['date'])
+    #Set Machine
     if re.search('HA', pathinfo['run']):
         pathinfo['machine']='hiseq'
     elif re.search('MA', pathinfo['run']):
         pathinfo['machine']='miseq'
+    #Set assay
     if re.search('colo', pathinfo['project'].lower()):
         pathinfo['assay']='coloseq'
     elif re.search('onco', pathinfo['project'].lower()):
         pathinfo['assay']='oncoplex'
+    elif re.search('epi', pathinfo['project'].lower()):
+        pathinfo['assay']='epiplex'
+    elif re.search('imm', pathinfo['project'].lower()):
+        pathinfo['assay']='immunoplex'
+    elif re.search('mrw', pathinfo['project'].lower()):
+        pathinfo['assay']='marrowseq'
+    #Set prep type
+    if re.search('kapa', pathinfo['project'].lower()):
+        pathinfo['prep_type']='kapa'
+    else:
+        pathinfo['prep_type']='sure_select'
+
     return pathinfo
