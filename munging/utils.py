@@ -93,7 +93,7 @@ def munge_pfx(pfx):
     Get the plate,well, library-version, assay, control 
     and machine-run from the pfx
     """
-    output=multi_split(pfx.strip('Analysis.txt'),'_.')
+    output=pfx.split('.')[0].split('_')
     if len(output)==5:
         keys=['sample_id','well','library-version','control','machine-run']
         pfx_info = dict(zip(keys,output))
