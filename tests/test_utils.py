@@ -10,7 +10,7 @@ import pprint
 import sys
 import json
 
-from munging.utils import munge_path, munge_pfx
+from munging.utils import munge_path, munge_pfx, munge_date
 
 from __init__ import TestBase
 import __init__ as config
@@ -19,36 +19,8 @@ log = logging.getLogger(__name__)
 class TestUtils(TestBase):
 
     def setUp(self):
-        self.run=munge_path('/home/genetics/data/2013-03-21_HiSeq_OncoPlex_Run14_v2')
+        self.run=munge_path('/home/genetics/data/130321_HA00211_OncoPlex64')
         self.outdir = self.mkoutdir()
-
-    def tearDown(self):
-        pass
-
-    def testMungePathSplitting(self):
-        """
-        Tests correct splitting of path into assay, run, machine, capture
-        """
-        self.assertEquals(self.run['assay'], 'oncoplex')
-        self.assertEquals(self.run['run'], '2013-03-21_run14')
-        self.assertEquals(self.run['machine'], 'hiseq')
-        self.assertEquals(self.run['capture'], 'v2')
-
-
-    def testMungePathLowerCase(self):
-        """
-        Tests correct lowercase of path into assay, run, machine
-        """
-        self.assertNotEqual(self.run['assay'], 'OncoPlex')
-        self.assertNotEqual(self.run['run'], '2013-03-21_Run14')
-        self.assertNotEqual(self.run['machine'], 'HiSeq')
-
-    def testMungeWrongPath(self):
-        """
-        Test that a ValueError is raised if wrong path is given
-        """
-        run=munge_path('/home/genetics/data/Broca_v6')
-        self.assertRaises(ValueError)
 
     def testMungePFX(self):
         real_info={'control': 'NA12878', 
@@ -57,10 +29,36 @@ class TestUtils(TestBase):
                    'well': 'E05', 
                    'run': '60', 
                    'sample_id': '6037', 
-                   'pfx': '6037_E05_NA12878_OPXv4', 
+                   'pfx': '6037_E05_OPXv4_NA12878_HA0201',
+                   'assay':'oncoplex',
                    'mini-pfx': '6037_NA12878'}
         
         test_info=munge_pfx('6037_E05_OPXv4_NA12878_HA0201')
         self.assertDictEqual(real_info, test_info)
+
     def testCheckControl(self):
         pass    
+
+
+    def testMungePath(self):
+        test_id1=munge_path('140915_HA000_ColoTestFiles')
+        test_id2=munge_path('testfiles/140915_MA000_OncoTestFiles')
+
+        self.assertEqual(test_id1,({'date':'2014-09-15',
+                                    'run': 'HA000', 
+                                    'machine': 'hiseq',
+                                    'assay':'coloseq',
+                                    'project': 'ColoTestFiles'}))
+
+        self.assertEqual(test_id2,({'date':'2014-09-15',
+                                    'run': 'MA000', 
+                                    'machine': 'miseq',
+                                    'assay':'oncoplex', 
+                                    'project': 'OncoTestFiles'}))
+
+    def testMungedate(self):
+        test_id1=munge_date('140915')
+        test_id2=munge_date('2014-09-09')
+
+        self.assertEqual(test_id1,'2014-09-15')
+        self.assertEqual(test_id2,'2014-09-09')
