@@ -42,19 +42,21 @@ class TestUtils(TestBase):
 
     def testMungePath(self):
         test_id1=munge_path('140915_HA000_ColoTestFiles')
-        test_id2=munge_path('testfiles/140915_MA000_OncoTestFiles')
+        test_id2=munge_path('testfiles/140915_MA0001_OncoPlexKapa')
 
         self.assertEqual(test_id1,({'date':'2014-09-15',
                                     'run': 'HA000', 
                                     'machine': 'hiseq',
                                     'assay':'coloseq',
-                                    'project': 'ColoTestFiles'}))
+                                    'project': 'ColoTestFiles',
+                                    'prep_type':'sure_select'}))
 
         self.assertEqual(test_id2,({'date':'2014-09-15',
-                                    'run': 'MA000', 
+                                    'run': 'MA0001', 
                                     'machine': 'miseq',
                                     'assay':'oncoplex', 
-                                    'project': 'OncoTestFiles'}))
+                                    'prep_type':'kapa',
+                                    'project': 'OncoPlexKapa'}))
 
     def testMungedate(self):
         test_id1=munge_date('140915')
