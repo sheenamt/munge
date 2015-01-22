@@ -1,4 +1,6 @@
 from collections import Iterable
+import datetime
+import re
 import os
 import shutil
 import logging
@@ -8,6 +10,15 @@ from munging.annotation import multi_split
 from __init__ import __version__
 
 log = logging.getLogger(__name__)
+
+ASSAYS = {'BROv7':'coloseq',
+          'BROv8':'coloseq',
+          'OPXv3':'oncoplex',
+          'OPXv4':'oncoplex',
+          'EPIv1':'epiplex',
+          'MRWv3':'marrowseq',
+          'IMMv1':'immunoplex',
+          'MSI-PLUS':'msi-plus'}
 
 def dict_factory(cursor, row):
     """
@@ -68,47 +79,6 @@ def walker(dir):
         for fname in files:
             yield Path(pth, fname)
 
-def munge_path(pth):
-    """
-    Get run, machine, assay and capture from path
-    """
-    output=multi_split(pth, '/_')
-    if len(output)<4:
-        raise ValueError('Incorrect path given. Must be in the format of YYYY-MM-DD_Machine_Assay_Run#_version')
-    pathinfo={}
-    run=""
-    for i in output:
-        i=i.lower()
-        if i.startswith('20'):
-            run=i
-        elif i.startswith('run'):
-            pathinfo['run']=run+'_'+i
-        elif i.startswith('hi') or i.startswith('mi'):
-            pathinfo['machine']=i
-        elif i.startswith('onco') or i.startswith('colo'):
-            pathinfo['assay']=i
-        elif i.startswith('v'):
-            pathinfo['capture']=i
-
-    return pathinfo
-
-def munge_pfx(pfx):
-    """
-    Change the pfx output in files to a shorter version
-    """
-    output=multi_split(pfx, '/_.')
-    keys=['sample_id','well','library-version','control','machine-run']
-    pfx_info=dict(zip(keys,output))
-    pfx_info['control']=check_control(pfx_info['control'])
-    if pfx_info['control']:
-        pfx_info['mini-pfx']=('_'.join([pfx_info['sample_id'],pfx_info['control']])).strip('_')
-        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['control'],pfx_info['library-version']])
-    else:
-        pfx_info['mini-pfx']=pfx_info['sample_id']
-        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['library-version']])
-    pfx_info['run']='{sample_id}'.format(**pfx_info)[:-2]
-    return pfx_info
-
 def check_control(control):
     """Check the control is actually the control,
     return it formatted, otherwise return empty string"""
@@ -117,3 +87,74 @@ def check_control(control):
         return control
     else:
         return None
+
+def munge_pfx(pfx):
+    """
+    Get the plate,well, library-version, assay, control 
+    and machine-run from the pfx
+    """
+    output=pfx.split('.')[0].split('_')
+    if len(output)==5:
+        keys=['sample_id','well','library-version','control','machine-run']
+        pfx_info = dict(zip(keys,output))
+        pfx_info['mini-pfx']='{sample_id}_{control}'.format(**pfx_info)
+        pfx_info['run']=pfx_info['sample_id'][:-2]
+        pfx_info['pfx']='{sample_id}_{well}_{library-version}_{control}_{machine-run}'.format(**pfx_info)
+
+    elif len(output)==4:
+        keys=['sample_id','well','library-version','machine-run']
+        pfx_info = dict(zip(keys,output))
+        pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
+        pfx_info['run']=pfx_info['sample_id'][:-2]
+        pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
+
+    else:
+        raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')
+
+    pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+    return pfx_info
+
+def munge_date(date):
+    """
+    Convert new date YYMMDD to YYYY-MM-DD
+    """
+    #only convert if new date format
+    if len(date)<7:
+        d = datetime.datetime.strptime(date, '%y%m%d')
+        return d.strftime('%Y-%m-%d')
+    else:
+        return date
+
+def munge_path(pth):
+    """
+    Get date, run, project, machine, assay, prep-type from path
+    """
+    output=multi_split(pth, '/_')
+    #Assuming we want YYMMDD_RUN_PROJECT
+    output=output[-3:]
+    keys=['date','run', 'project']
+    pathinfo = dict(zip(keys,output))
+    pathinfo['date']=munge_date(pathinfo['date'])
+    #Set Machine
+    if re.search('HA', pathinfo['run']):
+        pathinfo['machine']='hiseq'
+    elif re.search('MA', pathinfo['run']):
+        pathinfo['machine']='miseq'
+    #Set assay
+    if re.search('colo', pathinfo['project'].lower()):
+        pathinfo['assay']='coloseq'
+    elif re.search('onco', pathinfo['project'].lower()):
+        pathinfo['assay']='oncoplex'
+    elif re.search('epi', pathinfo['project'].lower()):
+        pathinfo['assay']='epiplex'
+    elif re.search('imm', pathinfo['project'].lower()):
+        pathinfo['assay']='immunoplex'
+    elif re.search('mrw', pathinfo['project'].lower()):
+        pathinfo['assay']='marrowseq'
+    #Set prep type
+    if re.search('kapa', pathinfo['project'].lower()):
+        pathinfo['prep_type']='kapa'
+    else:
+        pathinfo['prep_type']='sure_select'
+
+    return pathinfo

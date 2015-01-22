@@ -6,7 +6,7 @@ import os
 import csv
 import sys
 import copy
-
+import IPython
 from itertools import count, groupby, chain, ifilter 
 from operator import itemgetter
 
@@ -161,7 +161,7 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
 
 def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specific   
     """Parse the snp output file, give ref|var read counts per sample"""
-    files = ifilter(filters.only_analysis, files)
+    files = ifilter(filters.snp_analysis, files)
     files = sorted(files)    
 
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
@@ -209,9 +209,6 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-
-    fieldnames = variant_keys + annotation_headers + prefixes
-    return specimens, annotation, prefixes, fieldnames, variant_keys
 
 def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
     """Parse the cnv_exon output, give ave_log_ratio"""

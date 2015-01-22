@@ -125,8 +125,6 @@ def cat_fastqs(run_info):
             p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
             p2.communicate() #run
 
-#args = parser.parse_args()
-
 def action(args):
     info=vars(args)
     run_info={}

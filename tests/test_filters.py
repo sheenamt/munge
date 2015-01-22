@@ -18,37 +18,37 @@ from __init__ import TestBase
 import __init__ as config
 log = logging.getLogger(__name__)
 
-files1 = """49_B01_BROv7_NA12878_HA0187_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_CNV_Gene_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_CNV_Exon_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_CNV_QC_Gene_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_CNV_QC_Exon_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_Pindel_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_QC_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_SV_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_Genotype_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_Quality_Analysis.txt
-49_B01_BROv7_NA12878_HA0187_MSI_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_CNV_Gene_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_CNV_Exon_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_CNV_QC_Gene_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_CNV_QC_Exon_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_Pindel_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_SV_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_Genotype_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_Quality_Analysis.txt
-49_E04_OPXv4_NA12878_HA0187_MSI_Analysis.txt
-49_C01_OPXv4_HA0187_Analysis.txt
-49_C01_OPXv4_HA0187_MSI_Analysis.txt
-49_C01_OPXv4_HA0187_CNV_Gene_Analysis.txt
-49_C01_OPXv4_HA0187_CNV_Exon_Analysis.txt
-49_C01_OPXv4_HA0187_CNV_QC_Gene_Analysis.txt
-49_C01_OPXv4_HA0187_CNV_QC_Exon_Analysis.txt
-49_C01_OPXv4_HA0187_Pindel_Analysis.txt
-49_C01_OPXv4_HA0187_SV_Analysis.txt
-49_C01_OPXv4_HA0187_Genotype_Analysis.txt
-49_C01_OPXv4_HA0187_Quality_Analysis.txt""".splitlines()
+files1 = """4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.CNV_Gene_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.CNV_Exon_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.CNV_QC_Gene_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.CNV_QC_Exon_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.Pindel_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.QC_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.SV_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.Genotype_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.Quality_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.MSI_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.SNP_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.CNV_Gene_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.CNV_Exon_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.CNV_QC_Gene_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.CNV_QC_Exon_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.Pindel_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.SV_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.Genotype_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.Quality_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.MSI_Analysis.txt
+4903_C01_OPXv4_HA0187.SNP_Analysis.txt
+4903_C01_OPXv4_HA0187.MSI_Analysis.txt
+4903_C01_OPXv4_HA0187.CNV_Gene_Analysis.txt
+4903_C01_OPXv4_HA0187.CNV_Exon_Analysis.txt
+4903_C01_OPXv4_HA0187.CNV_QC_Gene_Analysis.txt
+4903_C01_OPXv4_HA0187.CNV_QC_Exon_Analysis.txt
+4903_C01_OPXv4_HA0187.Pindel_Analysis.txt
+4903_C01_OPXv4_HA0187.SV_Analysis.txt
+4903_C01_OPXv4_HA0187.Genotype_Analysis.txt
+4903_C01_OPXv4_HA0187.Quality_Analysis.txt""".splitlines()
 
 
 class TestFilters(TestBase):
@@ -68,51 +68,51 @@ class TestFilters(TestBase):
         assert f.any_analysis(Path('','Analysis.xlsx')) is False
 
 
-    def testOnlyAnalysisFilter(self):
+    def testSNPAnalysisFilter(self):
 
-        keepers = {fn for fn in files1 if f.only_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_Analysis.txt'])
+        keepers = {fn for fn in files1 if f.snp_analysis(Path('',fn))}
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.SNP_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.SNP_Analysis.txt'])
 
 
     def testCNVGeneFileFilter(self):
         keepers = {fn for fn in files1 if f.cnv_gene_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_CNV_Gene_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_CNV_Gene_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_CNV_Gene_Analysis.txt'])
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.CNV_Gene_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.CNV_Gene_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.CNV_Gene_Analysis.txt'])
 
     def testCNVExonFileFilter(self):
         keepers = {fn for fn in files1 if f.cnv_exon_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_CNV_Exon_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_CNV_Exon_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_CNV_Exon_Analysis.txt'])
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.CNV_Exon_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.CNV_Exon_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.CNV_Exon_Analysis.txt'])
 
     def testPindelFileFilter(self):
 
         keepers = {fn for fn in files1 if f.pindel_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Pindel_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_Pindel_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_Pindel_Analysis.txt'])
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Pindel_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Pindel_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Pindel_Analysis.txt'])
 
     def testMSIFileFilter(self):
 
         keepers = {fn for fn in files1 if f.msi_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_MSI_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_MSI_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_MSI_Analysis.txt'])
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.MSI_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.MSI_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.MSI_Analysis.txt'])
 
     def testQualityFileFilter(self):
 
         keepers = {fn for fn in files1 if f.quality_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Quality_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_Quality_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_Quality_Analysis.txt'])
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Quality_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Quality_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Quality_Analysis.txt'])
     
     def testGenotypeFileFilter(self):
 
         keepers = {fn for fn in files1 if f.genotype_analysis(Path('',fn))}
-        assert keepers == set(['49_B01_BROv7_NA12878_HA0187_Genotype_Analysis.txt',
-                               '49_E04_OPXv4_NA12878_HA0187_Genotype_Analysis.txt',
-                               '49_C01_OPXv4_HA0187_Genotype_Analysis.txt'])
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Genotype_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Genotype_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Genotype_Analysis.txt'])
 

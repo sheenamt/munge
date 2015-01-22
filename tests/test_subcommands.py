@@ -170,7 +170,7 @@ class TestControlParser(TestBase):
         """
         controlfname = open(path.join(control_testfiles, 'OncoPlex_qc_variants_v4.txt'))
         controlinfo = list(csv.reader(controlfname, delimiter='\t'))
-        runfname = open(path.join(analysis_testfiles, '{}_Analysis.txt').format(control))
+        runfname = open(path.join(analysis_testfiles, '{}.SNP_Analysis.txt').format(control))
         runinfo = list(csv.reader(runfname, delimiter='\t'))
         output, count = control_parser.match(controlinfo, runinfo)
         #Count and output length should be qual
@@ -247,7 +247,7 @@ class TestMSISamplesvsControl(TestBase):
         control_info = csv.DictReader(open(path.join(msi_testfiles, 'testMSIcontrol')), delimiter='\t')
             #Store the dictreader in a variable to loop through it twice
         data = [row for row in control_info]
-        msi_fname = path.join(msi_testfiles, '{}_msi.txt'.format(control))
+        msi_fname = path.join(msi_testfiles, '{}.msi.txt'.format(control))
         total, mutants, pfx = msi_sample_vs_control.tally_msi(data, msi_fname)
         self.assertEqual(total, 60)
         self.assertEqual(mutants, 1)
@@ -260,7 +260,7 @@ class TestMasker(TestBase):
     def testMaskFileByGene(self):
         """Return only genes listed in the masking dictionary
         """
-        data=csv.DictReader(open(path.join(analysis_testfiles,'0228T_CON_OPXv4_INT_Analysis.txt')), delimiter='\t')
+        data=csv.DictReader(open(path.join(analysis_testfiles,'0228T_CON_OPXv4_INT.SNP_Analysis.txt')), delimiter='\t')
         genes=('BRCA1','BRCA2')
         out_data=[]
         out_data=masker.mask_file_by_gene(data,genes,out_data)
