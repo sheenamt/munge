@@ -128,8 +128,8 @@ ASSAYS={'OPXv4':'OncoPlex',
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
-    if ldetail['Description'].lower() == 'kapa':
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description'].lower()+ldetail['PlateNumber']
+    if ldetail['Description'].upper() == 'KAPA':
+        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description'].upper()+ldetail['PlateNumber']
     else:
         sample_project=ASSAYS[ldetail['Recipe']]+ldetail['PlateNumber']
     return sample_project
