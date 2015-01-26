@@ -36,7 +36,6 @@ def cnv_bins(pth):
     """
     True only for pfx.CNV_bins.txt
     """
-    print pth.fname.split('.')
     return pth.fname.split('.')[-2] in set (['CNV_bins'])
 
 def pindel_analysis(pth):
@@ -73,7 +72,6 @@ def quality_file_finder(pth):
     """
     Return True if pth represents an hs_metrics file.
     """
-
     return bool(re.search(r'.quality_metrics', pth.fname))
 
 def genotype_analysis(pth):
