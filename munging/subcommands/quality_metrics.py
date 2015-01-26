@@ -1,5 +1,5 @@
 """
-Parse picard and CNV output to create quality metrics file
+Parse picard rmdup and hs metrics output to create quality metrics file
 
 Usage:
 
@@ -24,18 +24,6 @@ def build_parser(parser):
         '-o', '--outfile',
         help='Output file', default=sys.stdout,
         type=argparse.FileType('w'))
-
-
-def get_values(info):
-    """
-    Get the standard deviation from the tumor.rd.ori column in the CNV file
-    """
-    tumors = []
-    for i in info:
-        tumors.append(float(i[16]))  # this is the tumor.rd.ori column
-    b = array(tumors)
-    return b
-
 
 def action(args):
 
