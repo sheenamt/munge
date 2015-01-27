@@ -6,7 +6,7 @@ import os
 import csv
 import sys
 import copy
-import IPython
+
 from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
 
