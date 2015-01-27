@@ -88,6 +88,24 @@ def check_control(control):
     else:
         return None
 
+def munge_old_pfx(pfx):
+    """
+    Get the plate,well, library-version, assay, control 
+    and machine-run from the pfx
+    """
+    output=multi_split(pfx, '/_.')
+    keys=['sample_id','well','library-version','control','machine-run']
+    pfx_info=dict(zip(keys,output))
+    pfx_info['control']=check_control(pfx_info['control'])
+    if pfx_info['control']:
+        pfx_info['mini-pfx']=('_'.join([pfx_info['sample_id'],pfx_info['control']])).strip('_')
+        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['control'],pfx_info['library-version']])
+    else:
+        pfx_info['mini-pfx']=pfx_info['sample_id']
+        pfx_info['pfx']='_'.join([pfx_info['sample_id'],pfx_info['well'],pfx_info['library-version']])
+    pfx_info['run']='{sample_id}'.format(**pfx_info)[:-2]
+    return pfx_info
+
 def munge_pfx(pfx):
     """
     Get the plate,well, library-version, assay, control 
@@ -131,7 +149,11 @@ def munge_path(pth):
     """
     output=multi_split(pth, '/_')
     #Assuming we want YYMMDD_RUN_PROJECT
-    output=output[-3:]
+    if output[-1]=='output':
+        output=output[-4:-1]
+    #If old version of data that isn't in a 'output' subfolder
+    else:
+        output=output[-3:]
     keys=['date','run', 'project']
     pathinfo = dict(zip(keys,output))
     pathinfo['date']=munge_date(pathinfo['date'])
