@@ -7,7 +7,7 @@ import csv
 import sys
 import copy
 import IPython
-from itertools import count, groupby, chain, ifilter 
+from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
 
 from munging import filters
@@ -23,7 +23,7 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     """ Parse the sample quality analysis file, from hs_metrics"""
     files = ifilter(filters.quality_analysis, files)
     files=sorted(files)    
-    variant_keys = ['MEAN_TARGET_COVERAGE',]
+    variant_keys = ['MEAN_TARGET_COVERAGE']
  
     #sort the files so that the output in the workbook is sorted
     for pth in files:      
@@ -256,3 +256,68 @@ def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys
     
+
+def parse_hsmetrics(lines, variant_keys):
+    """
+    Create human readable output from picard hsmetrics file
+    """
+
+    variant_keys=['MEAN_TARGET_COVERAGE',
+                  'PF_READS',
+                  'PF_UNIQUE_READS',
+                  'PCT_PF_UQ_READS',
+                  'PF_UQ_READS_ALIGNED',
+                  'PCT_SELECTED_BASES',
+                  'PCT_OFF_BAIT',
+                  'PCT_USABLE_BASES_ON_TARGET',
+                  'ZERO_CVG_TARGETS_PCT',
+                  'AT_DROPOUT',
+                  'GC_DROPOUT']
+
+    #filter out lines that start with # or are just new lines    
+    datalines=filter(lambda x: '#' not in x, lines)
+    datalines=filter(lambda x: x!='\n' , datalines)
+
+    #then strip newlines from the lines that contain data
+    datalines=map(lambda x: x.strip() , datalines)
+
+    keys=datalines[0].split('\t')
+    values=datalines[1].split('\t')
+
+    #metrics_dict=dict(zip(keys,values))
+    metrics_dict = dict(izip_longest(keys,values, fillvalue='NA'))
+
+    #Only print the keys we care about:
+    output_dict = dict(zip(variant_keys,itemgetter(*variant_keys)(metrics_dict)))
+    return output_dict, variant_keys
+
+def parse_qualitymetrics(lines, variant_keys):
+    """
+    Create human readable output from picard hsmetrics file
+    """
+
+    variant_keys=['PERCENT_DUPLICATION',     
+                  'READ_PAIRS_EXAMINED',
+                  'READ_PAIR_DUPLICATES',
+                  'UNPAIRED_READS_EXAMINED',
+                  'UNMAPPED_READS',  
+                  'UNPAIRED_READ_DUPLICATES',
+                  'READ_PAIR_OPTICAL_DUPLICATES',    
+                  'ESTIMATED_LIBRARY_SIZE']
+
+    #filter out lines that start with # or are just new lines    
+    datalines=filter(lambda x: '#' not in x, lines)
+    datalines=filter(lambda x: x!='\n' , datalines)
+
+    #then strip newlines from the lines that contain data
+    datalines=map(lambda x: x.strip() , datalines)
+
+    keys=datalines[0].split('\t')
+    values=datalines[1].split('\t')
+
+    #metrics_dict=dict(zip(keys,values))
+    metrics_dict = dict(izip_longest(keys,values, fillvalue='NA'))
+
+    #Only print the keys we care about:
+    output_dict = dict(zip(variant_keys,itemgetter(*variant_keys)(metrics_dict)))
+    return output_dict, variant_keys

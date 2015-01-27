@@ -26,6 +26,7 @@ log = logging.getLogger(__name__)
 
 testfiles = path.join(config.datadir, 'analysis_files')
 testMSIfile = path.join(config.datadir, 'MSI')
+qualityfiles = path.join(config.datadir, 'quality_metrics')
 
 class TestParsers(TestBase):
     """Test each of the parsers are returning the correct fieldnames, 
@@ -135,5 +136,39 @@ class TestParsers(TestBase):
         self.assertListEqual(sorted(prefixes),sorted(['0228T', '5437_NA12878', '6037_NA12878']))
         self.assertListEqual(sorted(fieldnames), sorted(['0228T', '5437_NA12878', '6037_NA12878', 'Position']))
         self.assertListEqual(variant_keys, ['Position'])
-    
-      
+
+
+    def testHSParser(self):
+        variant_keys = []
+        files = ifilter(filters.hs_file_finder, walker(qualityfiles))
+        fname=open(path.join(qualityfiles, '6037_E05_OPXv4_NA12878_HA0201.hs_metrics'),'rU')
+        lines=fname.readlines()
+        output_dict, variant_keys = parsers.parse_hsmetrics(lines, variant_keys)
+        self.assertListEqual(sorted(variant_keys),sorted(['PF_READS',
+                                                          'PF_UNIQUE_READS',
+                                                          'PCT_PF_UQ_READS',
+                                                          'PF_UQ_READS_ALIGNED',
+                                                          'PCT_SELECTED_BASES',
+                                                          'PCT_OFF_BAIT',
+                                                          'MEAN_TARGET_COVERAGE',
+                                                          'PCT_USABLE_BASES_ON_TARGET',
+                                                          'ZERO_CVG_TARGETS_PCT',
+                                                          'AT_DROPOUT',
+                                                          'GC_DROPOUT']))
+        self.assertDictContainsSubset({'MEAN_TARGET_COVERAGE':'614.820203'}, output_dict)
+
+    def testQualityMetricsParser(self):
+        variant_keys = []
+        files = ifilter(filters.quality_file_finder, walker(qualityfiles))
+        fname=open(path.join(qualityfiles, '6037_E05_OPXv4_NA12878_HA0201.quality_metrics'),'rU')
+        lines=fname.readlines()
+        output_dict, variant_keys = parsers.parse_qualitymetrics(lines, variant_keys)
+        self.assertListEqual(sorted(variant_keys),sorted(['UNPAIRED_READS_EXAMINED',
+                                                          'READ_PAIRS_EXAMINED',
+                                                          'UNMAPPED_READS',  
+                                                          'UNPAIRED_READ_DUPLICATES',
+                                                          'READ_PAIR_DUPLICATES',
+                                                          'READ_PAIR_OPTICAL_DUPLICATES',    
+                                                          'PERCENT_DUPLICATION',     
+                                                          'ESTIMATED_LIBRARY_SIZE']))
+        self.assertDictContainsSubset({'PERCENT_DUPLICATION':'0.130625'}, output_dict)
