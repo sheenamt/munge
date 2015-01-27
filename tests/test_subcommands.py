@@ -228,12 +228,12 @@ class TestXlsmaker(TestBase):
         tab = '10_SNP_Indel'
         filetype = 'Analysis'
         files = []
-        files.append(path.join(summary_testfiles, '{}_Analysis.txt'.format(control)))
-        files.append(path.join(summary_testfiles, '{}_Quality_Analysis.txt'.format(control)))
+        files.append(path.join(summary_testfiles, '{}.SNP_Analysis.txt'.format(control)))
+        files.append(path.join(summary_testfiles, '{}.Quality_Analysis.txt'.format(control)))
         data, fname = xlsmaker.process_files(files, tab, filetype)
         self.assertEqual(data, '10_SNP_Indel')
-        self.assertEqual(fname, 'testfiles/annovar_summary/{}_Analysis.txt'.format(control))
-        self.assertNotEqual(fname, 'testfiles/annovar_summary/{}_Quality_Analysis.txt'.format(control))
+        self.assertEqual(fname, 'testfiles/annovar_summary/{}.SNP_Analysis.txt'.format(control))
+        self.assertNotEqual(fname, 'testfiles/annovar_summary/{}.Quality_Analysis.txt'.format(control))
 
 
 class TestMSISamplesvsControl(TestBase):
