@@ -18,6 +18,7 @@ ASSAYS = {'BROv7':'coloseq',
           'EPIv1':'epiplex',
           'MRWv3':'marrowseq',
           'IMMv1':'immunoplex',
+          'TESTDATA':'testdata',
           'MSI-PLUS':'msi-plus'}
 
 def dict_factory(cursor, row):
