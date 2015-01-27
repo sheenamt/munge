@@ -84,7 +84,7 @@ def process_files(infiles, tab, filetype):
             elif sheet_name[-2] == 'MSI':
                 sheet_name = '11_MSI'
             #48_A03_BROv7_HA0186_NA12878_Analysis
-            elif sheet_name[-1] == 'Analysis':
+            elif sheet_name[-2] == 'SNP':
                 sheet_name = '10_SNP_Indel'
             if sheet_name == tab:
                 return sheet_name, fname
