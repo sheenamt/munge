@@ -110,8 +110,10 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys):
                 msi_loci= msi_loci + entry[1][pfx]
         specimens[loci][pfx]=total_loci
         specimens[msi][pfx]=msi_loci
-        specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
-
+        if total_loci > 0:
+            specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
+        else:
+            specimens[score][pfx]=0
         if float(specimens[score][pfx]) >= float(0.2000):
             specimens[status][pfx]="+"
         else:
