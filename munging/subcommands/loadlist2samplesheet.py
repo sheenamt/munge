@@ -151,6 +151,21 @@ def _lane_detail_to_ss(fcid, ldetail, r):
             ldetail["Index"], ldetail["Description"], "N", 
             ldetail["Recipe"],  ldetail["Operator"],
             ldetail["SampleProject"]]
+
+def _lane_detail_to_signout(ldetail):
+    """Convert information about a lane into Signout sheet
+    SampleID |Accession|Patient Name| MRN
+    """
+    prefix=(ldetail['PlateNumber']+WELL_MAPPING[ldetail['Well']])
+
+    if len(ldetail['ControlWell'])>3:
+        ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe'],ldetail['ControlWell']])
+    else:
+        ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe']])
+
+    ldetail["SampleProject"]=create_sample_project(ldetail)
+
+    return ldetail["SampleID"], ldetail["Accession"],ldetail["Patient Name"],ldetail["MRN"]
     
 def write_sample_sheets(fcid, lane_details, out_dir=None):
     """Convert a flowcell into a samplesheet for demultiplexing.
@@ -158,14 +173,18 @@ def write_sample_sheets(fcid, lane_details, out_dir=None):
     fcid = fcid
     if out_dir is None:
         out_dir = run_folder
-    out_file = os.path.join(out_dir, "%s.csv" % fcid)
-    with open(out_file, "w") as out_handle:
-        writer = csv.writer(out_handle)
-        writer.writerow(["FCID", "Lane", "SampleID", "SampleRef", "Index",
-                         "Description", "Control", "Recipe", "Operator", "SampleProject"])
-        for ldetail in lane_details:
-            for r in range(1,3):
-                writer.writerow(_lane_detail_to_ss(fcid, ldetail, r))
+    out_file = open(os.path.join(out_dir, "%s.csv" % fcid), "w")
+    signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
+    writer = csv.writer(out_file)
+    writer.writerow(["FCID", "Lane", "SampleID", "SampleRef", "Index",
+                     "Description", "Control", "Recipe", "Operator", "SampleProject"])
+    so_writer = csv.writer(signout)
+    so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
+
+    for ldetail in lane_details:
+        so_writer.writerow(_lane_detail_to_signout(ldetail))
+        for r in range(1,3):
+            writer.writerow(_lane_detail_to_ss(fcid, ldetail, r))
     return out_file
 
 
