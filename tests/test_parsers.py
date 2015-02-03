@@ -171,4 +171,4 @@ class TestParsers(TestBase):
                                                           'READ_PAIR_OPTICAL_DUPLICATES',    
                                                           'PERCENT_DUPLICATION',     
                                                           'ESTIMATED_LIBRARY_SIZE']))
-        self.assertDictContainsSubset({'PERCENT_DUPLICATION':'0.288127'}, output_dict)
+        self.assertDictContainsSubset({'PERCENT_DUPLICATION':'0.130625'}, output_dict)
