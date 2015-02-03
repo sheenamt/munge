@@ -131,7 +131,7 @@ class TestParsers(TestBase):
         control_info=open(path.join(testMSIfile, 'testMSIcontrol'),'rU')
         files = walker(testMSIfile)
         analysis_type='parsers.parse_msi'
-        chosen_parser='{}(files, control_info, specimens, prefixes, variant_keys)'.format(analysis_type)
+        chosen_parser='{}(files, control_info, specimens, prefixes, variant_keys, 3)'.format(analysis_type)
         specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)  
         self.assertListEqual(sorted(prefixes),sorted(['0228T', '5437_NA12878', '6037_NA12878']))
         self.assertListEqual(sorted(fieldnames), sorted(['0228T', '5437_NA12878', '6037_NA12878', 'Position']))
@@ -171,4 +171,4 @@ class TestParsers(TestBase):
                                                           'READ_PAIR_OPTICAL_DUPLICATES',    
                                                           'PERCENT_DUPLICATION',     
                                                           'ESTIMATED_LIBRARY_SIZE']))
-        self.assertDictContainsSubset({'PERCENT_DUPLICATION':'0.130625'}, output_dict)
+        self.assertDictContainsSubset({'PERCENT_DUPLICATION':'0.288127'}, output_dict)

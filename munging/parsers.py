@@ -63,7 +63,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_msi(files, control_file, specimens, prefixes, variant_keys):
+def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier):
     """Compare the sample-msi output to the baseline file, report
     Total sites, MSI+ sites and msings score"""
     files = ifilter(filters.msi_file_finder,files) 
@@ -86,7 +86,7 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys):
                 variant = tuple(control_row[0][k] for k in variant_keys)    
                 for sample_info in group:
                     if int(sample_info['Avg_read_depth']) >= 30:
-                        value = float(control_row[0]['Ave']) + (2 * float(control_row[0]['Std']))
+                        value = float(control_row[0]['Ave']) + (multiplier * float(control_row[0]['Std']))
                         if int(sample_info['Number_Peaks']) >= value:
                             new_info = 1
                         else:
