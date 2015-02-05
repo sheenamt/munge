@@ -85,12 +85,20 @@ def maskable(pth):
     """
     True only for maskable files
     """
+    #This script filters:
+    # 4_SV_Crest
+    # 5_SV_Breakdancer
+    # 6_SV_Pindel
+    # 7_CNV_Gene
+    # 8_CNV_Exon
+    # 10_SNP_Indel
+
     if pth.fname.split('.')[-2] in set (['SNP_Analysis',
-                                         'CNV_Gene_Analysis',
                                          'CNV_Exon_Analysis',
-                                         'SV_Analysis',
+                                         'CNV_Gene_Analysis',
                                          'Pindel_Analysis',
-                                         'Breakdancer_Analysis']):
+                                         'Breakdancer_Analysis',
+                                         'SV_Analysis']):
         return pth.fname.split('.')[-2]
 
 
