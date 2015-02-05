@@ -84,7 +84,7 @@ def process_files(infiles, tab, filetype):
             elif sheet_name[-2] == 'MSI':
                 sheet_name = '11_MSI'
             #48_A03_BROv7_HA0186_NA12878_Analysis
-            elif sheet_name[-1] == 'Analysis':
+            elif sheet_name[-2] == 'SNP':
                 sheet_name = '10_SNP_Indel'
             if sheet_name == tab:
                 return sheet_name, fname
@@ -134,7 +134,7 @@ def action(args):
                 print sheet_name, fname
                 write_workbook(sheet_name, fname)
             except TypeError:
-                print "Error with:", tab
+                print "Tab %s not processed" % tab
     elif filetype == 'Combined':
         for fname in infiles:
             (f_path, f_name) = os.path.split(fname)

@@ -1,5 +1,5 @@
 """
-Parse picard and CNV output to create quality metrics file
+Parse picard rmdup and hs metrics output to create quality metrics file
 
 Usage:
 
@@ -9,13 +9,13 @@ import argparse
 import csv
 import sys
 import re
-from numpy import array, average
+from munging import parsers
 
 import pprint
 
 def build_parser(parser):
     parser.add_argument(
-        'metric_file', type=argparse.FileType('rU'),
+        'quality_metrics', type=argparse.FileType('rU'),
         default=sys.stdin)
     parser.add_argument(
         'hsmetrics', type=argparse.FileType('rU'),
@@ -25,45 +25,18 @@ def build_parser(parser):
         help='Output file', default=sys.stdout,
         type=argparse.FileType('w'))
 
-
-def get_values(info):
-    """
-    Get the standard deviation from the tumor.rd.ori column in the CNV file
-    """
-    tumors = []
-    for i in info:
-        tumors.append(float(i[16]))  # this is the tumor.rd.ori column
-    b = array(tumors)
-    return b
-
-
 def action(args):
+    variant_keys = []
+    quality_metricsfile=args.quality_metrics
+    lines=quality_metricsfile.readlines()
+    quality_dict, quality_keys = parsers.parse_qualitymetrics(lines, variant_keys)    
 
-    metric_info = csv.reader(args.metric_file, delimiter="\t")
-    hs_info = csv.reader(args.hsmetrics, delimiter='\t')
-    writer = csv.writer(args.outfile, quoting=csv.QUOTE_MINIMAL, delimiter='\t')
-    for line in metric_info:
-        try:
-            if re.search('LIBRARY', line[0]):
-                writer.writerow(line)
-                writer.writerow(next(metric_info))
-        except IndexError:
-            continue
+    metricsfile=args.hsmetrics
+    lines=metricsfile.readlines()
+    hsmetrics_dict, hsmetrics_keys = parsers.parse_hsmetrics(lines, variant_keys)
 
-    #TOTAL_READS:5, PF_UNIQUE_READS:7, PF_UQ_READS_ALIGNED:10, PCT_SELECTED_BASES:17, PCT_OFF_BAIT:18,
-    #MEAN_TARGET_COVERAGE:21, PCT_USABLE_BASES_ON_TARGET:23, ZERO_CVG_TARGETS_PCT:25, AT_DROPOUT:35, GC_DROPOUT:36, LIBRARY:38
-    items = [5, 7, 10, 17, 18, 21, 23, 25, 35, 36]
-    new_line = []
-    for line in hs_info:
-        try:
-            if not re.search('^#', line[0]):
-                for i, value in enumerate(line):
-                    if i in items:
-                        new_line.append(value)
-                writer.writerow(new_line)
-                #reset new_line so the header isn't printed twice
-                new_line = []
-
-        except IndexError:
-            continue
-
+    variant_keys = quality_keys + hsmetrics_keys
+    output_dict = dict(quality_dict,**hsmetrics_dict)
+    writer = csv.DictWriter(args.outfile, fieldnames=variant_keys, quoting=csv.QUOTE_MINIMAL,extrasaction='ignore', delimiter='\t')
+    writer.writeheader()
+    writer.writerow(output_dict)

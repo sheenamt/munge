@@ -28,7 +28,7 @@ SEQ_MACHINES={'D00180':{'machine':'HA',
                         'drive':'/home/illumina/hiseq'},
               'NS500359':{'machine':'NA',
                         'server':'larf',
-                        'drive':'/media/NextSeq'},
+                        'drive':'/media/NGS-Data/NextSeq'},
               'M00829':{'machine':'MA',
                         'server':'narwhal',
                         'drive':'/home/illumina/miseq'}}
@@ -116,6 +116,7 @@ def cat_fastqs(run_info):
     # #Now we concatenate all the fastqs together. Change "Project_default" if your project is named in the sample sheet.
     project_dirs = os.listdir(run_info['fastq_output_dir'])
     for project in project_dirs:
+        print "project:", project
         if project.startswith("Project"):
             output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
             project_dir=os.path.join(run_info['fastq_output_dir'],project)
@@ -124,8 +125,14 @@ def cat_fastqs(run_info):
             p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
             p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
             p2.communicate() #run
-
-#args = parser.parse_args()
+        else :
+            output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
+            project_dir=os.path.join(run_info['fastq_output_dir'],project)
+            seq_run = ''.join([run_info['machine'],run_info['machine_run']])
+            p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
+            p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
+            p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
+            p2.communicate() #run
 
 def action(args):
     info=vars(args)
@@ -141,7 +148,4 @@ def action(args):
     else:
         run_bcl2fastqv1(run_info, info['cores'])
     print "run info:", run_info
-    if not run_info['machine'] == 'NextSeq':
-        cat_fastqs(run_info)
-    else:
-        print "cat fastqs doesn't work on NextSeq data yet. Sorry"
+    cat_fastqs(run_info)

@@ -13,14 +13,15 @@ import json
 
 from numpy import std, average
 
-from munging.subcommands import summary
+from munging.subcommands import annovar_summary
 from munging.subcommands import annovar_bed_parser
 from munging.subcommands import control_parser
 from munging.subcommands import qc_variants
-from munging.subcommands import quality_metrics
 from munging.subcommands import xlsmaker
-from munging.subcommands import combined_cnv, combined_pindel, combined_output
 from munging.subcommands import msi_sample_vs_control
+from munging.subcommands import masker
+from munging.subcommands import loadlist2samplesheet
+
 from munging.utils import munge_path
 
 from __init__ import TestBase
@@ -33,9 +34,9 @@ control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 msi_testfiles = path.join(config.datadir, 'MSI')
+analysis_testfiles = path.join(config.datadir, 'analysis_files')
 
-control = '49_B01_BROv7_HA0187_NA12878'
-
+control ='5437_E05_OPXv4_NA12878_MA0013'
 NM_dict = {
     'NM_001202435': 'NM_001202435.1',
     'NM_006772': 'NM_006772.1',
@@ -69,16 +70,16 @@ class TestSummary(TestBase):
         """
         Gets header(s) and info from each file
         """
-        fname = path.join(summary_testfiles, '{}_gatk.variant_function').format(control)
+        fname = path.join(summary_testfiles, '{}.gatk.variant_function').format(control)
         header_ids = {0: 'var_type_1',
                       1: 'gene',
                       7: 'zygosity',
                       12: 'rsid_1',
                       8: 'GATK_Score'}
         variant_idx = [2, 3, 4, 5, 6]
-        out = summary.map_headers(fname, header_ids, variant_idx)
+        out = annovar_summary.map_headers(fname, header_ids, variant_idx)
         out = list(out)
-        self.assertEqual(len(out), 1713)
+        self.assertEqual(len(out), 1265)
         header_keys = set(header_ids.values())
         # confirm that all keys in header_ids are contained in each row of the output
         for pos, data in out:
@@ -89,9 +90,9 @@ class TestSummary(TestBase):
         Return modified values of (Gene, Transcripts). Note that
         his depends on 'Variant_Type' provided by munge_variant.
         """
-        data1['Gene'], data1['Transcripts'] = summary.munge_gene_and_Transcripts(data1, NM_dict)
-        data2['Gene'], data2['Transcripts'] = summary.munge_gene_and_Transcripts(data2, NM_dict)
-        data3['Gene'], data3['Transcripts'] = summary.munge_gene_and_Transcripts(data3, NM_dict)
+        data1['Gene'], data1['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data1, NM_dict)
+        data2['Gene'], data2['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data2, NM_dict)
+        data3['Gene'], data3['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data3, NM_dict)
 
         #Data 1 gene should be SCN1A
         self.assertTrue(data1['Gene'], 'SCN1A')
@@ -104,9 +105,9 @@ class TestSummary(TestBase):
         Filtered with a preferred transcript list
         NM_006772.1:c.1713G>A
         # """
-        data1['c.'], data1['p.'] = summary.munge_transcript(data1, NM_dict)
-        data2['c.'], data2['p.'] = summary.munge_transcript(data2, NM_dict)
-        data3['c.'], data3['p.'] = summary.munge_transcript(data3, NM_dict)
+        data1['c.'], data1['p.'] = annovar_summary.munge_transcript(data1, NM_dict)
+        data2['c.'], data2['p.'] = annovar_summary.munge_transcript(data2, NM_dict)
+        data3['c.'], data3['p.'] = annovar_summary.munge_transcript(data3, NM_dict)
 
         # #Data 1 gene should be SCN1A
         self.assertEqual(data1['p.'], 'p.A1067T')
@@ -120,8 +121,8 @@ class TestSummary(TestBase):
         """
         Return allele frequency of var_reads/ref_reads
         """
-        freq1 = summary.get_allele_freq(data1)
-        freq2 = summary.get_allele_freq(data2)
+        freq1 = annovar_summary.get_allele_freq(data1)
+        freq2 = annovar_summary.get_allele_freq(data2)
         self.assertEqual(freq1, 'NA')
         self.assertEqual(freq2, '0.10')
 
@@ -130,7 +131,7 @@ class TestSummary(TestBase):
         Return Ref_Reads, Var_Reads, Variant_Phred
         """
         data='1/1:255:289:289:18:267:92.39%:3.3502E-142:24:30:7:11:48:219'
-        ref_reads, var_reads, variant_phred = summary.get_reads(data)
+        ref_reads, var_reads, variant_phred = annovar_summary.get_reads(data)
         self.assertEqual(ref_reads, '18')
         self.assertEqual(var_reads, '267')
         self.assertEqual(variant_phred, '30')
@@ -167,15 +168,15 @@ class TestControlParser(TestBase):
         Matches if chr, start are the same
         control[chr] = run[chr] and control[start] = run[start]
         """
-        controlfname = open(path.join(control_testfiles, 'ColoSeq_qc_variants_v7.txt'))
+        controlfname = open(path.join(control_testfiles, 'OncoPlex_qc_variants_v4.txt'))
         controlinfo = list(csv.reader(controlfname, delimiter='\t'))
-        runfname = open(path.join(control_testfiles, '{}_Analysis.txt').format(control))
+        runfname = open(path.join(analysis_testfiles, '{}.SNP_Analysis.txt').format(control))
         runinfo = list(csv.reader(runfname, delimiter='\t'))
         output, count = control_parser.match(controlinfo, runinfo)
         #Count and output length should be qual
         self.assertEqual(len(output), count)
         #The second entry of the second line should be MTHFR:NM_005957:exon8:c.1286A>C:p.E429A,
-        self.assertEqual(output[0][1], 'SDHB:NM_003000:exon1:c.18C>A:p.A6A,')
+        self.assertEqual(output[0][1], 'MTHFR:NM_005957:exon8:c.1305C>T:p.F435F,')
 
 
 class TestQCVariants(TestBase):
@@ -191,7 +192,7 @@ class TestQCVariants(TestBase):
         (1000G, Complete Genomes, LMG/OPX-240 output)
         Matches if chrm, start, stop, ref_base, and var_base are the same.
         """
-        pipefname = open(path.join(qc_testfiles, '{}_merged.exonic_variant_function').format(control))
+        pipefname = open(path.join(qc_testfiles, '{}.merged.exonic_variant_function').format(control))
         pipe = list(csv.reader(pipefname, delimiter="\t"))
         kgfname = open(path.join(qc_testfiles, 'NA12878.1000g.hg19.exonic_variant_function'))
         kg = list(csv.reader(kgfname, delimiter="\t"))
@@ -200,28 +201,9 @@ class TestQCVariants(TestBase):
         output = qc_variants.match(pipe, kg, cg)
         #There should be 3 lines that match
         self.assertEqual(len(output), 3)
-        #The second entry on the second line should be SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S
-        self.assertEqual(str(output[1][1]), "SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,")
+        #The second entry on the second line should be SCN8A:NM_001177984:exon5:c.576C>T:p.D192D,SCN8A:NM_014191:exon5:c.576C>T:p.D192D
+        self.assertEqual(str(output[1][1]), "SCN8A:NM_001177984:exon5:c.576C>T:p.D192D,SCN8A:NM_014191:exon5:c.576C>T:p.D192D,")
 
-
-class TestQualityMetrics(TestBase):
-    """
-    Test the quality_metrics script with reports the average read depth,
-    standard devation given the CNV_bins file and picard metrics file
-    """
-
-    def testGetValues(self):
-        """
-        Get the standard deviation from the tumor.rd.ori column in the CNV file
-        """
-        cnvfname = open(path.join(quality_testfiles, '{}_CNV_bins.txt').format(control))
-        cnv_info = csv.reader(cnvfname, delimiter="\t")
-        cnv_info.next()
-        a = quality_metrics.get_values(cnv_info)
-        stdev = ["Standard deviation of read depth: %0.2f " % (a).std()]
-        ave = ["Average read depth: %0.2f " % average(a)]
-        self.assertEqual(stdev, ['Standard deviation of read depth: 297.78 '])
-        self.assertEqual(ave, ['Average read depth: 781.56 '])
 
 
 class TestXlsmaker(TestBase):
@@ -246,12 +228,12 @@ class TestXlsmaker(TestBase):
         tab = '10_SNP_Indel'
         filetype = 'Analysis'
         files = []
-        files.append(path.join(summary_testfiles, '{}_Analysis.txt'.format(control)))
-        files.append(path.join(summary_testfiles, '{}_Quality_Analysis.txt'.format(control)))
+        files.append(path.join(summary_testfiles, '{}.SNP_Analysis.txt'.format(control)))
+        files.append(path.join(summary_testfiles, '{}.Quality_Analysis.txt'.format(control)))
         data, fname = xlsmaker.process_files(files, tab, filetype)
         self.assertEqual(data, '10_SNP_Indel')
-        self.assertEqual(fname, 'testfiles/annovar_summary/{}_Analysis.txt'.format(control))
-        self.assertNotEqual(fname, 'testfiles/annovar_summary/{}_Quality_Analysis.txt'.format(control))
+        self.assertEqual(fname, 'testfiles/annovar_summary/{}.SNP_Analysis.txt'.format(control))
+        self.assertNotEqual(fname, 'testfiles/annovar_summary/{}.Quality_Analysis.txt'.format(control))
 
 
 class TestMSISamplesvsControl(TestBase):
@@ -265,8 +247,46 @@ class TestMSISamplesvsControl(TestBase):
         control_info = csv.DictReader(open(path.join(msi_testfiles, 'testMSIcontrol')), delimiter='\t')
             #Store the dictreader in a variable to loop through it twice
         data = [row for row in control_info]
-        msi_fname = path.join(msi_testfiles, '{}_msi.txt'.format(control))
+        msi_fname = path.join(msi_testfiles, '{}.msi.txt'.format(control))
         total, mutants, pfx = msi_sample_vs_control.tally_msi(data, msi_fname)
-        self.assertEqual(total, 77)
-        self.assertEqual(mutants, 6)
+        self.assertEqual(total, 60)
+        self.assertEqual(mutants, 1)
         self.assertEqual(pfx, '{}'.format(control))
+                
+class TestMasker(TestBase):
+    """
+    Test the masker script, which masks by gene name
+    """
+    def testMaskFileByGene(self):
+        """Return only genes listed in the masking dictionary
+        """
+        data=csv.DictReader(open(path.join(analysis_testfiles,'0228T_CON_OPXv4_INT.SNP_Analysis.txt')), delimiter='\t')
+        genes=('BRCA1','BRCA2')
+        out_data=[]
+        out_data=masker.mask_file_by_gene(data,genes,out_data)
+        out_genes=[d['Gene'] for d in out_data]
+        self.assertEqual(out_data[0]['Position'],'chr13:32899388')
+        self.assertEqual(len(out_data), 11)
+        self.assertNotIn('MTHFR', out_genes)
+        self.assertIn('BRCA2', out_genes)
+
+class TestLoadListtoSampleSheet(TestBase):
+    """
+    Test the script with produces the demux sample sheet
+    """
+
+    def testLaneDetailToSS(self):
+        """Test the lane details are parsed correctly"""
+        fcid='HBHW5ADXX'
+        ldetail={'FCID':'HBHW5ADXX',
+                "Index":'CCAGTTCA', 
+                'PlateNumber':'60',
+                'Operator':'SF',
+                'Well':'D05',
+                'SampleProject':'Oncoplex60',
+                'Description':'Standard',
+                'ControlWell':'E05',
+                'Recipe':'OPXv4'}
+        
+        output=loadlist2samplesheet._lane_detail_to_ss(fcid, ldetail, 1)
+        self.assertIn('6036_D05_OPXv4', output)
