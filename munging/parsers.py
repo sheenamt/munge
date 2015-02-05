@@ -68,7 +68,7 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier
     Total sites, MSI+ sites and msings score"""
     files = ifilter(filters.msi_file_finder,files) 
     files=sorted(files)    
-    
+
     control_info=csv.DictReader(control_file, delimiter='\t')
     control_info=sorted(control_info, key=itemgetter('Position'))
     control_info=[d for d in control_info]
@@ -114,6 +114,8 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier
             specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
             if float(specimens[score][pfx]) >= float(0.2000):
                 specimens[status][pfx]="+"
+            else:
+                specimens[status][pfx]="-"
         except ZeroDivisionError:
             specimens[status][pfx]="-"
     fieldnames = variant_keys + list(prefixes) 
