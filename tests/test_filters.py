@@ -157,3 +157,23 @@ class TestFilters(TestBase):
                                '4903_C01_OPXv4_HA0187.CNV_bins.txt'])
 
 
+    def testMaskable(self):
+
+        keepers = {fn for fn in files1 if f.maskable(Path('',fn))}
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt',
+                               '4902_B01_BROv7_NA12878_HA0187.SV_Analysis.txt',
+                               '4902_B01_BROv7_NA12878_HA0187.CNV_Gene_Analysis.txt',
+                               '4902_B01_BROv7_NA12878_HA0187.CNV_Exon_Analysis.txt',
+                               '4902_B01_BROv7_NA12878_HA0187.Pindel_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.SNP_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.SV_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.CNV_Gene_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.CNV_Exon_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Pindel_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.SNP_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.SV_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.CNV_Gene_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.CNV_Exon_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Pindel_Analysis.txt'
+                           ])
+

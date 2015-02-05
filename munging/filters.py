@@ -81,3 +81,16 @@ def genotype_analysis(pth):
     return pth.fname.split('.')[-2] in set (['Genotype_Analysis'])
 
 
+def maskable(pth):
+    """
+    True only for maskable files
+    """
+    if pth.fname.split('.')[-2] in set (['SNP_Analysis',
+                                         'CNV_Gene_Analysis',
+                                         'CNV_Exon_Analysis',
+                                         'SV_Analysis',
+                                         'Pindel_Analysis',
+                                         'Breakdancer_Analysis']):
+        return pth.fname.split('.')[-2]
+
+
