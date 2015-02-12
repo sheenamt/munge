@@ -37,12 +37,10 @@ def action(args):
 
     cur = con.cursor()
     
-    controls = ('LMG-098','LMG098A','LMG098B','C066N','LMG240','LMG240110'
+    controls = ('LMG-098','LMG098A','LMG098B','C066N','LMG240','LMG240110',
                 'LMG240A','LMG240B','OPX240','OPX240A','OPX240B','LMG241')
     controltup= tuple(fix_pfx(c) for c in controls)
 
-    print controls
-    print controltup
 
     # retrieve the variants
     cmd = """
