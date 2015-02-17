@@ -19,6 +19,10 @@ from itertools import groupby
 def build_parser(parser):
     parser.add_argument('loadlist',
                     help="Absolute path to load list")
+    parser.add_argument('--nextseq',
+                        action='store_true',
+                        default=False,
+                        help="NextSeq needs different load list. False by default")
 
 WELL_MAPPING={'A01':'01',
               'B01':'02',
@@ -140,7 +144,7 @@ def _lane_detail_to_ss(fcid, ldetail, r):
     """
     prefix=(ldetail['PlateNumber']+WELL_MAPPING[ldetail['Well']])
 
-    if len(ldetail['ControlWell'])>3:
+    if len(ldetail['ControlWell'])>4:
         ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe'],ldetail['ControlWell']])
     else:
         ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe']])
@@ -158,7 +162,7 @@ def _lane_detail_to_signout(ldetail):
     """
     prefix=(ldetail['PlateNumber']+WELL_MAPPING[ldetail['Well']])
 
-    if len(ldetail['ControlWell'])>3:
+    if len(ldetail['ControlWell'])>5:
         ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe'],ldetail['ControlWell']])
     else:
         ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe']])
@@ -187,6 +191,26 @@ def write_sample_sheets(fcid, lane_details, out_dir=None):
             writer.writerow(_lane_detail_to_ss(fcid, ldetail, r))
     return out_file
 
+def write_nextseq_sample_sheet(fcid, lane_details, out_dir=None):
+    """Convert a flowcell into a samplesheet for demultiplexing.
+    """
+    fcid = fcid
+    if out_dir is None:
+        out_dir = run_folder
+    out_file = open(os.path.join(out_dir, "%s.csv" % fcid), "w")
+    signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
+    writer = csv.writer(out_file)
+    writer.writerow(["[Data]",])
+    writer.writerow(["Sample_ID","Index", "Sample_Project"])
+    so_writer = csv.writer(signout)
+    so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
+
+    for ldetail in lane_details:
+        so_writer.writerow(_lane_detail_to_signout(ldetail))
+        info=_lane_detail_to_ss(fcid, ldetail, 1)
+        writer.writerow([info[2],info[2],info[4],info[9]])
+    return out_file
+
 
 def _get_flowcell_id(reader, require_single=True):
     """Retrieve the unique flowcell id represented in the SampleSheet.
@@ -204,8 +228,11 @@ def action(args):
     out_dir='./'
     reader=csv.DictReader(open(args.loadlist))
     lane_details = [row for row in reader]
-    
+    print args.nextseq
     #SampleSheet.csv needs to be grouped by FCID
-    write_sample_sheets(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
+    if not args.nextseq:
+        write_sample_sheets(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
+    else:
+        write_nextseq_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
     #Database needs info grouped by project
     db_project_info(lane_details)
