@@ -32,7 +32,7 @@ def build_parser(parser):
                         default=2.0,
                         type=float,
                         help='STD cutoff multiplier')
-    parser.add_argument('-t','--msi-threshold',
+    parser.add_argument('-t','--threshold',
                         default=0.2,
                         type=float,
                         help='MSI score threshold')
@@ -49,7 +49,7 @@ def action(args):
     files = walker(args.path)  
     analysis_type='parse_msi'
     multiplier=args.multiplier
-    threshold=args.msi-threshold
+    threshold=args.threshold
     control_file = args.control_file
     chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys, multiplier,threshold)'.format(analysis_type)    
     specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)
