@@ -12,8 +12,10 @@ import logging
 import os
 import csv
 import re
-
-
+from munging.utils import walker
+from itertools import ifilter
+import sys
+from munging.filters import any_analysis, maskable
 log = logging.getLogger(__name__)
 
 MASK_CODES={
@@ -54,9 +56,8 @@ MASK_CODES={
 }
 
 def build_parser(parser):
-    parser.add_argument('infiles', action='append', nargs='+',
-                        help='Input files')
-    
+    parser.add_argument('path',
+                        help='Path to analysis files')
     parser.add_argument('order_code', choices=['BROCA','IMDH01','IMDB01','IMDS01',
                                                'IMDF01','MEGV01','EPIV01'],
                         help="Order code for genes that were tested")
@@ -78,7 +79,7 @@ def build_parser(parser):
     # 1_QC_Metrics
     # 11_MSI
 
-def mask_file_by_gene(data, genes,out_data):
+def mask_file_by_gene(data, genes, output):
     """
     Create dictionary of analysis file info
     Ensure fname['Gene'] exists
@@ -90,36 +91,42 @@ def mask_file_by_gene(data, genes,out_data):
     for d in data:
         for key, value in d.iteritems():   # iter on both keys and values
             if key in gene_headers and value in genes:
-                out_data.append(d)
-    return out_data
-                
+                output.append(d)
+    
+    return output
 
 def action(args):
-    (infiles, ) = args.infiles                   
+    infiles = walker(args.path)  
+    #Get the set of genes for masking, based on cli entry
     mask=MASK_CODES[args.order_code]['Genes']
     print 'Genes in output: %s ' % ([i for i in mask])
-    out_data=[]
+    #Grab files for filtering
+    files = ifilter(any_analysis, infiles)
+    #Filter to only those that are "maskable"
+    files = ifilter(maskable, files)
 
-    for fname in infiles:
-        (f_path, f_name) = os.path.split(fname)
-        if re.search('Analysis', f_name):
-            print 'parsing:', f_name
-            (analysis_type,ext) = os.path.splitext(f_name)
-            #Rename Analysis file to Analysis_full
-            full_input=os.path.join(f_path, (analysis_type+'_full'+ext))
-            masked_output=os.path.join(f_path, (analysis_type+'_masked'+ext))
-            #Mask data
-            data=csv.DictReader(open(fname), delimiter='\t')
-            out_data=mask_file_by_gene(data, mask,out_data)
-            #Write output
-            output = csv.DictWriter(open(masked_output, 'w'),
-                            fieldnames=data.fieldnames,
-                            quoting=csv.QUOTE_MINIMAL,
-                            extrasaction='ignore',
-                            delimiter='\t')
-            output.writeheader()
-            output.writerows(out_data)
-            
-			#Move the files so the masked is Analysis.txt and the full is labeled
-            copyfile(fname,full_input)
-            os.rename(masked_output, fname)
+    for pth in files:
+        analysis_type=pth.fname.split('.')[1]
+        pfx = pth.fname.strip('.txt')
+
+        #Create file names for new output
+        full_output=os.path.join(pth.dir, (pfx+'.full.txt'))
+        masked_output=os.path.join(pth.dir, (pfx+'.masked.txt'))
+
+        #Open data for masking
+        data=csv.DictReader(open(os.path.join(pth.dir,pth.fname)),delimiter='\t')
+
+        #Open output for writing
+        writer = csv.DictWriter(open(masked_output, 'w'),
+                                fieldnames=data.fieldnames,
+                                quoting=csv.QUOTE_MINIMAL,
+                                extrasaction='ignore',
+                                delimiter='\t')
+        writer.writeheader()
+        # #Mask data
+        output = []
+        output=mask_file_by_gene(data, mask, output)
+        writer.writerows(output)
+        #Move the files so the masked is Analysis.txt and the full is labeled
+        copyfile(os.path.join(pth.dir,pth.fname),full_output)
+        os.rename(masked_output, os.path.join(pth.dir,pth.fname))
