@@ -49,7 +49,7 @@ def action(args):
     files = walker(args.path)  
     analysis_type='parse_msi'
     multiplier=args.multiplier
-    threshold=args.threshold
+    threshold=args.msi-threshold
     control_file = args.control_file
     chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys, multiplier,threshold)'.format(analysis_type)    
     specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)
