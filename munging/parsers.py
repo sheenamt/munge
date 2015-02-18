@@ -63,7 +63,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier):
+def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier, score):
     """Compare the sample-msi output to the baseline file, report
     Total sites, MSI+ sites and msings score"""
     files = ifilter(filters.msi_file_finder,files) 
@@ -112,7 +112,7 @@ def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier
         specimens[msi][pfx]=msi_loci
         try:
             specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
-            if float(specimens[score][pfx]) >= float(0.2000):
+            if float(specimens[score][pfx]) >= score:
                 specimens[status][pfx]="+"
         except ZeroDivisionError:
             specimens[status][pfx]="-"
