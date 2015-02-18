@@ -3,7 +3,7 @@ Create msi output file with MSI location counts for multiple samples
 
 Usage:
 
-munge count_msi_samples  /path/to/baseline/file /path/to/sample/files -m 2.5 -o output_file
+munge count_msi_samples  /path/to/baseline/file /path/to/sample/files -m 2.5 -t 0.4 -o output_file
 
 """
 import os
@@ -32,6 +32,10 @@ def build_parser(parser):
                         default=2.0,
                         type=float,
                         help='STD cutoff multiplier')
+    parser.add_argument('-t','--msi-threshold',
+                        default=0.2,
+                        type=float,
+                        help='MSI score threshold')
     parser.add_argument('-o', '--outfile', 
                         type=argparse.FileType('w'),
                         default=sys.stdout,
@@ -45,8 +49,9 @@ def action(args):
     files = walker(args.path)  
     analysis_type='parse_msi'
     multiplier=args.multiplier
+    threshold=args.threshold
     control_file = args.control_file
-    chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys, multiplier)'.format(analysis_type)    
+    chosen_parser='{}(files, control_file, specimens, prefixes, variant_keys, multiplier,threshold)'.format(analysis_type)    
     specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)
 
     writer = csv.DictWriter(args.outfile, fieldnames = fieldnames,  extrasaction = 'ignore', delimiter = '\t')
