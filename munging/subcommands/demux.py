@@ -27,8 +27,8 @@ SEQ_MACHINES={'D00180':{'machine':'HA',
                         'server':'narwhal',
                         'drive':'/home/illumina/hiseq'},
               'NS500359':{'machine':'NA',
-                        'server':'larf',
-                        'drive':'/media/NextSeq'},
+                        'server':'narwhal',
+                        'drive':'/home/illumina/NextSeq'},
               'M00829':{'machine':'MA',
                         'server':'narwhal',
                         'drive':'/home/illumina/miseq'}}
@@ -116,6 +116,7 @@ def cat_fastqs(run_info):
     # #Now we concatenate all the fastqs together. Change "Project_default" if your project is named in the sample sheet.
     project_dirs = os.listdir(run_info['fastq_output_dir'])
     for project in project_dirs:
+        print "project:", project
         if project.startswith("Project"):
             output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
             project_dir=os.path.join(run_info['fastq_output_dir'],project)
@@ -139,7 +140,4 @@ def action(args):
     else:
         run_bcl2fastqv1(run_info, info['cores'])
     print "run info:", run_info
-    if not run_info['machine'] == 'NextSeq':
-        cat_fastqs(run_info)
-    else:
-        print "cat fastqs doesn't work on NextSeq data yet. Sorry"
+    cat_fastqs(run_info)
