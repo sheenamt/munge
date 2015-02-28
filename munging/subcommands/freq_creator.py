@@ -21,9 +21,9 @@ log = logging.getLogger(__name__)
 def build_parser(parser):
     parser.add_argument('dbname',
                         help='Name of an sqlite database file')
-    parser.add_argument('machine', choices = ['miseq','hiseq'],
+    parser.add_argument('machine', choices = ['miseq','hiseq', 'nextseq'],
                         help = 'name of machine to represent in the output')
-    parser.add_argument('assay', choices = ['oncoplex','coloseq'],
+    parser.add_argument('assay', choices = ['oncoplex','coloseq','epiplex','marrowseq','msi-plus'],
                         help = 'name of assay to represent in the output')
     parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
