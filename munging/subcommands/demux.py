@@ -133,8 +133,8 @@ def action(args):
     # Parse the flowcell dir to create the run_info
     run_info.update(parse_flowcell_dir(info['run_folder']))
     # Add the sample sheet to the run dict
-    if '-s' in args or '--samplesheet' in args:
-        run_info.update({'SampleSheet': info['sample-sheet']})
+    if args.samplesheet:
+        run_info.update({'SampleSheet': info['samplesheet']})
     else:
         run_info.update({'SampleSheet': os.path.join(info['run_folder'],'SampleSheet.csv')})
     # Add server based on seq machine id
