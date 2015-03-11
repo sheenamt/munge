@@ -18,7 +18,6 @@ from munging.subcommands import annovar_bed_parser
 from munging.subcommands import control_parser
 from munging.subcommands import qc_variants
 from munging.subcommands import xlsmaker
-from munging.subcommands import msi_sample_vs_control
 from munging.subcommands import masker
 from munging.subcommands import loadlist2samplesheet
 from munging.subcommands import demux
@@ -34,7 +33,6 @@ annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
 control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
-msi_testfiles = path.join(config.datadir, 'MSI')
 analysis_testfiles = path.join(config.datadir, 'analysis_files')
 
 control ='5437_E05_OPXv4_NA12878_MA0013'
@@ -236,23 +234,6 @@ class TestXlsmaker(TestBase):
         self.assertEqual(fname, 'testfiles/annovar_summary/{}.SNP_Analysis.txt'.format(control))
         self.assertNotEqual(fname, 'testfiles/annovar_summary/{}.Quality_Analysis.txt'.format(control))
 
-
-class TestMSISamplesvsControl(TestBase):
-    """
-    Test the msi pipeline scripts
-    """
-
-    def testTallyMSI(self):
-        """Count the sites found and the mutants
-        """
-        control_info = csv.DictReader(open(path.join(msi_testfiles, 'testMSIcontrol')), delimiter='\t')
-            #Store the dictreader in a variable to loop through it twice
-        data = [row for row in control_info]
-        msi_fname = path.join(msi_testfiles, '{}.msi.txt'.format(control))
-        total, mutants, pfx = msi_sample_vs_control.tally_msi(data, msi_fname)
-        self.assertEqual(total, 60)
-        self.assertEqual(mutants, 1)
-        self.assertEqual(pfx, '{}'.format(control))
                 
 class TestMasker(TestBase):
     """
