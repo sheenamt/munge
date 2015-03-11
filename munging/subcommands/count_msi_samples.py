@@ -32,7 +32,7 @@ def build_parser(parser):
                         default=2.0,
                         type=float,
                         help='STD cutoff multiplier')
-    parser.add_argument('-t','--msi-threshold',
+    parser.add_argument('-t','--threshold',
                         default=0.2,
                         type=float,
                         help='MSI score threshold')

@@ -26,7 +26,7 @@ def build_parser(parser):
 SEQ_MACHINES={'D00180':{'machine':'HA',
                         'server':'narwhal'},
               'NS500359':{'machine':'NA',
-                        'server':'narwhal',
+                        'server':'narwhal'},
               'M00829':{'machine':'MA',
                         'server':'narwhal'}}
 
@@ -126,16 +126,6 @@ def cat_fastqs(run_info):
             p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
             p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
             p2.communicate() #run
-        else :
-            print "Must be nextseq"
-            output_dir=os.path.join(run_info['drive'],run_info['fastq_output_dir']+"_"+project.split('_')[-1])
-            project_dir=os.path.join(run_info['fastq_output_dir'],project)
-            print project_dir
-            seq_run = ''.join([run_info['machine'],run_info['machine_run']])
-            p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) #Set up the ls command and direct the output to a pipe
-            p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
-            p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
-            p2.communicate() #run
 
 def action(args):
     info=vars(args)
@@ -143,8 +133,8 @@ def action(args):
     # Parse the flowcell dir to create the run_info
     run_info.update(parse_flowcell_dir(info['run_folder']))
     # Add the sample sheet to the run dict
-    if '-s' in args or '--samplesheet' in args:
-        run_info.update({'SampleSheet': info['sample-sheet']})
+    if args.samplesheet:
+        run_info.update({'SampleSheet': info['samplesheet']})
     else:
         run_info.update({'SampleSheet': os.path.join(info['run_folder'],'SampleSheet.csv')})
     # Add server based on seq machine id
@@ -154,5 +144,7 @@ def action(args):
     else:
         run_bcl2fastqv1(run_info, info['cores'])
 
-   cat_fastqs(run_info)
 
+    #concatenate the fastqs across lanes
+    cat_fastqs(run_info)
+    print "run info:", run_info
