@@ -25,7 +25,6 @@ import __init__ as config
 log = logging.getLogger(__name__)
 
 testfiles = path.join(config.datadir, 'analysis_files')
-testMSIfile = path.join(config.datadir, 'MSI')
 qualityfiles = path.join(config.datadir, 'quality_metrics')
 
 class TestParsers(TestBase):
@@ -124,20 +123,6 @@ class TestParsers(TestBase):
         self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Reads', '5437_NA12878_Reads', '6037_NA12878_Reads']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
-    def testMSIParser(self):
-        specimens = defaultdict(dict)
-        prefixes = []
-        variant_keys = []
-        control_info=open(path.join(testMSIfile, 'testMSIcontrol'),'rU')
-        files = walker(testMSIfile)
-        analysis_type='parsers.parse_msi'
-        chosen_parser='{}(files, control_info, specimens, prefixes, variant_keys, 3, .2)'.format(analysis_type)
-        specimens, prefixes, fieldnames, variant_keys=eval(chosen_parser)  
-        self.assertListEqual(sorted(prefixes),sorted(['0228T', '5437_NA12878', '6037_NA12878']))
-        self.assertListEqual(sorted(fieldnames), sorted(['0228T', '5437_NA12878', '6037_NA12878', 'Position']))
-        self.assertListEqual(variant_keys, ['Position'])
-
-
     def testHSParser(self):
         variant_keys = []
         files = ifilter(filters.hs_file_finder, walker(qualityfiles))
