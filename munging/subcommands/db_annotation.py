@@ -153,6 +153,7 @@ def action(args):
         data['1000g_EAS']=data.get('1000g_EAS') or None
         data['1000g_AFR']=data.get('1000g_AFR') or None
         data['1000g_EUR']=data.get('1000g_EUR') or None
+        data['EXAC']=data.get('EXAC') or None
         data['EVS_esp6500_ALL']=data.get('EVS_esp6500_ALL') or None
         data['EVS_esp6500_AA']=data.get('EVS_esp6500_AA') or None
         data['EVS_esp6500_EU']=data.get('EVS_esp6500_EU') or None
