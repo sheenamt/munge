@@ -143,7 +143,8 @@ def action(args):
         run_bcl2fastqv2(run_info, info['cores'])
     else:
         run_bcl2fastqv1(run_info, info['cores'])
-    print "run info:", run_info
+
+
     #concatenate the fastqs across lanes
     cat_fastqs(run_info)
-
+    print "run info:", run_info

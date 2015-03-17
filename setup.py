@@ -5,7 +5,7 @@ Create unix package:    python setup.py sdist
 import os
 import subprocess
 import shutil
-from distutils.core import setup
+from setuptools import setup
 from os.path import join
 
 subprocess.call('git log --pretty=format:%h -n 1 > munging/data/sha', shell = True)
@@ -24,9 +24,8 @@ params = {'author': 'Sheena Scroggins',
           'version': __version__,
           'package_data': {'munging': [join('data',f) for f in ['sha','ver']]},
           'install_requires': [
-              'xlwt',
-              'xlrd',
-              'numpy'
+              'xlwt==0.7.5',
+              'xlrd==0.9.3',
           ]
           }
 
