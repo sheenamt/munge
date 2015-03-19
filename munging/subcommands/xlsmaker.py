@@ -46,7 +46,6 @@ def process_files(infiles, tab, filetype):
     Rename the analysis files for workbook
     """
     for fname in infiles:
-        print fname
         (f_path, f_name) = os.path.split(fname)
         if re.search(str(filetype), f_name):
             (f_short_name, f_extension) = os.path.splitext(f_name)
@@ -124,7 +123,6 @@ def write_workbook(sheet_name, fname):
 def action(args):
 
     filetype = args.type
-    print filetype
     (infiles, ) = args.infiles
     if filetype == 'Analysis':
         tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene', '3_QC_by_Exon',
