@@ -26,7 +26,7 @@ def build_parser(parser):
 SEQ_MACHINES={'D00180':{'machine':'HA',
                         'server':'narwhal'},
               'NS500359':{'machine':'NA',
-                        'server':'narwhal',
+                        'server':'narwhal'},
               'M00829':{'machine':'MA',
                         'server':'narwhal'}}
 
@@ -154,5 +154,5 @@ def action(args):
     else:
         run_bcl2fastqv1(run_info, info['cores'])
 
-   cat_fastqs(run_info)
+    cat_fastqs(run_info)
 
