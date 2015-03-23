@@ -48,7 +48,7 @@ class TestUtils(TestBase):
                                     'run': 'HA000', 
                                     'machine': 'hiseq',
                                     'assay':'coloseq',
-                                    'project': 'ColoTestFiles',
+                                    'project': 'colotestfiles',
                                     'prep_type':'sure_select'}))
 
         self.assertEqual(test_id2,({'date':'2014-09-15',
@@ -56,7 +56,7 @@ class TestUtils(TestBase):
                                     'machine': 'miseq',
                                     'assay':'oncoplex', 
                                     'prep_type':'kapa',
-                                    'project': 'OncoPlexKapa'}))
+                                    'project': 'oncoplexkapa'}))
 
     def testMungedate(self):
         test_id1=munge_date('140915')
