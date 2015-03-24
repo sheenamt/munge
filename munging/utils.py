@@ -120,18 +120,16 @@ def munge_pfx(pfx):
         pfx_info['mini-pfx']='{sample_id}_{control}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{control}_{machine-run}'.format(**pfx_info)
-
+        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     elif len(output)==4:
         keys=['sample_id','well','library-version','machine-run']
         pfx_info = dict(zip(keys,output))
         pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
-
+        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     else:
-        raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')
-
-    pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+        pfx_info=munge_old_pfx(pfx)
     return pfx_info
 
 def munge_date(date):
