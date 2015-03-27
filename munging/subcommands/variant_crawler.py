@@ -3,7 +3,7 @@ Create annovar file from Clinical variants csv
 
 Usage:
 
-munge variant_crawler /home/genetics/Genomes/Clinical_variants.csv -o hg19_clinical_variants
+munge variant_crawler /home/genetics/genetics_pipeline/doc/Clinical_variants.csv -o hg19_clinical_variants
 
 """
 

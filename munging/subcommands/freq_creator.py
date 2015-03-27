@@ -11,7 +11,7 @@ import sqlite3
 import csv
 import argparse
 import sys
-from itertools import count, groupby
+
 
 from munging.utils import dict_factory
 from munging.annotation import fix_pfx
@@ -21,62 +21,47 @@ log = logging.getLogger(__name__)
 def build_parser(parser):
     parser.add_argument('dbname',
                         help='Name of an sqlite database file')
-    parser.add_argument('machine', choices = ['miseq','hiseq'],
+    parser.add_argument('machine', choices = ['miseq','hiseq', 'nextseq'],
                         help = 'name of machine to represent in the output')
-    parser.add_argument('assay', choices = ['oncoplex','coloseq'],
+    parser.add_argument('assay', choices = ['oncoplex','coloseq','epiplex','marrowseq','msi-plus'],
                         help = 'name of assay to represent in the output')
     parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
 
 def action(args):
-
     con = sqlite3.connect(args.dbname)
     # queries return dicts
     con.row_factory = dict_factory
 
     cur = con.cursor()
-    
-    controls = ('LMG-098','LMG098A','LMG098B','C066N','LMG240','LMG240110'
-                'LMG240A','LMG240B','OPX240','OPX240A','OPX240B','LMG241')
-    controltup= tuple(fix_pfx(c) for c in controls)
-
-    print controls
-    print controltup
 
     # retrieve the variants
     cmd = """
-    select *, count(*) as tally from (
-    select run, chromosome, start, end, ref_base, var_base
+    select  chromosome, start, end, ref_base, var_base, count(distinct pfx) as tally
     from variants
-    join run_info using (run)
-    where pfx not in {}
-    and pfx not like 'CON%'
-    and pfx not like '%NA12878%'
+    join run_info using (run, project)
+    where not is_control
     and machine = ?
     and assay = ?
-    group by pfx, chromosome, start, end, ref_base, var_base
-    order by run)
     group by chromosome, start, end, ref_base, var_base
-    """.format(controltup)
+    """
 
     cur.execute(cmd, (args.machine, args.assay,))
     tallies = cur.fetchall()
 
 
     cmd = """
-    select pfx
+    select count(distinct pfx) as sample_count
     from variants
-    join run_info using (run)
-    where pfx not in {}
-    and pfx not like 'CON%'
-    and pfx not like '%NA12878%'
+    join run_info using (run, project)
+    where not is_control
     and machine = ?
     and assay = ?
-    group by pfx""".format(controltup)
+    """
 
     cur.execute(cmd, (args.machine, args.assay,))
-    sample_count = len(cur.fetchall())
+    sample_count = cur.fetchone()['sample_count']
 
     writer = csv.DictWriter(
         args.outfile,

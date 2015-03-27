@@ -17,25 +17,27 @@ def get_location(chr, start, stop, **kwargs):
         chr_loc = 'chr%s:%s-%s' % (chr, start, stop)
     return chr_loc
 
+
 def multi_split(source, splitlist):
     """
     Function to split a string given a string of multiple split points
     """
-    output=[]
-    atsplit=True
-    if source==None:
+    output = []
+    atsplit = True
+    if source is None:
         return None
     else:
         for char in source:
             if char in splitlist:
-                atsplit=True
+                atsplit = True
             else:
                 if atsplit:
                     output.append(char)
-                    atsplit=False
+                    atsplit = False
                 else:
-                    output[-1]=output[-1]+char
+                    output[-1] = output[-1] + char
     return output
+
 
 def split_chr_loc(d):
 
@@ -51,6 +53,7 @@ def split_chr_loc(d):
     chrm = output[0]
     start = output[1]
     return chrm, start, end
+
 
 def split_string_in_two(data):
     """
@@ -69,6 +72,7 @@ def split_string_in_two(data):
             count=output[1]
     return freq, count
 
+
 def build_variant_id(data):
     """
     Construct a variant_id from dict `d` containing keys ....
@@ -80,6 +84,7 @@ def build_variant_id(data):
         d['chromosome'], d['start'], d['end'] = split_chr_loc(data[0])
         d['ref_base'], d['var_base'] =  data[1], data[2]
         return '{chromosome}_{start}_{end}_{ref_base}_{var_base}'.format(**d)
+
 
 def pfx_ok(pfx, pattern=pfx_pattern):
     """Return True if pfx matches compiled regular expression `pattern`
@@ -99,5 +104,4 @@ def fix_pfx(pfx):
         if pfx_ok(pfx, pattern=pfx_pattern_old):
             return pfx.replace('-', '').strip()
     return pfx.strip()
-
 
