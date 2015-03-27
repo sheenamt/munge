@@ -1,0 +1,1 @@
+Event_1	Event_2	Type	Gene_1	Gene_2	Event1_Reads|Total_Reads	Event2_Reads|Total_Reads	Consensus
