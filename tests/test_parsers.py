@@ -119,7 +119,6 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_clin_flagged'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
-        print prefixes
         self.assertListEqual(sorted(prefixes),sorted(['0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
         self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
