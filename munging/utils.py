@@ -120,22 +120,23 @@ def munge_pfx(pfx):
         pfx_info['mini-pfx']='{sample_id}_{control}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{control}_{machine-run}'.format(**pfx_info)
-
+        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     elif len(output)==4:
         keys=['sample_id','well','library-version','machine-run']
         pfx_info = dict(zip(keys,output))
         pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
-
+        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     else:
         pfx_info={'pfx':output[0],
                   'mini-pfx':output[0],
                   'library-version':'MSI-PLUS'}
-        
-        #        raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')
+        print "PFX wasn't in expected format of: Plate_Well_Assay_<CONTROL>_MachinePlate. Running as MSI-Plus"
 
+        
     pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+
     return pfx_info
 
 def munge_date(date):
@@ -163,24 +164,26 @@ def munge_path(pth):
     keys=['date','run', 'project']
     pathinfo = dict(zip(keys,output))
     pathinfo['date']=munge_date(pathinfo['date'])
+    #Lowercase project
+    pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
     if re.search('HA', pathinfo['run']):
         pathinfo['machine']='hiseq'
     elif re.search('MA', pathinfo['run']):
         pathinfo['machine']='miseq'
     #Set assay
-    if re.search('colo', pathinfo['project'].lower()):
+    if re.search('colo', pathinfo['project']):
         pathinfo['assay']='coloseq'
-    elif re.search('onco', pathinfo['project'].lower()):
+    elif re.search('onco', pathinfo['project']):
         pathinfo['assay']='oncoplex'
-    elif re.search('epi', pathinfo['project'].lower()):
+    elif re.search('epi', pathinfo['project']):
         pathinfo['assay']='epiplex'
-    elif re.search('imm', pathinfo['project'].lower()):
+    elif re.search('imm', pathinfo['project']):
         pathinfo['assay']='immunoplex'
-    elif re.search('mrw', pathinfo['project'].lower()):
+    elif re.search('mrw', pathinfo['project']):
         pathinfo['assay']='marrowseq'
     #Set prep type
-    if re.search('kapa', pathinfo['project'].lower()):
+    if re.search('kapa', pathinfo['project']):
         pathinfo['prep_type']='kapa'
     else:
         pathinfo['prep_type']='sure_select'
