@@ -98,6 +98,7 @@ def munge_old_pfx(pfx):
     output=multi_split(pfx, '/_.')
     keys=['sample_id','well','library-version','control','machine-run']
     pfx_info=dict(zip(keys,output))
+    print "pfx_info", pfx_info
     pfx_info['control']=check_control(pfx_info['control'])
     if pfx_info['control']:
         pfx_info['mini-pfx']=('_'.join([pfx_info['sample_id'],pfx_info['control']])).strip('_')
@@ -128,8 +129,18 @@ def munge_pfx(pfx):
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
         pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+    elif len(output)==1:
+        pfx=output[0]
+        pfx_info={'mini-pfx':pfx,
+                  'pfx':pfx}
+        if re.search('LMG', pfx):
+            pfx_info['assay']='coloseq'
+        elif re.search('OPX', pfx):
+            pfx_info['assay']='oncoplex'
     else:
-        pfx_info=munge_old_pfx(pfx)
+        raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')
+
+
     return pfx_info
 
 def munge_date(date):
