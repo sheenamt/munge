@@ -129,7 +129,11 @@ def munge_pfx(pfx):
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
 
     else:
-        raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')
+        pfx_info={'pfx':output[0],
+                  'mini-pfx':output[0],
+                  'library-version':'MSI-PLUS'}
+        
+        #        raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')
 
     pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     return pfx_info
