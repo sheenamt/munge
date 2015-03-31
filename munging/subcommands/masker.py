@@ -112,8 +112,8 @@ def action(args):
 
     for pth in files:
         analysis_type=pth.fname.split('.')[1]
+        #In this case, pfx is actually PFX_analysis_type
         pfx = pth.fname.strip('.txt')
-
         #Create file names for new output
         full_output=os.path.join(pth.dir, (pfx+'.full.txt'))
         masked_output=os.path.join(pth.dir, (pfx+'.masked.txt'))
@@ -131,6 +131,6 @@ def action(args):
         # #Mask data
         print "filtering %s" % analysis_type
         writer.writerows(mask_file_by_gene(data, mask))
-        # #Move the files so the masked is Analysis.txt and the full is labeled
-        # copyfile(os.path.join(pth.dir,pth.fname),full_output)
-        # os.rename(masked_output, os.path.join(pth.dir,pth.fname))
+        #Move the files so the masked is Analysis.txt and the full is labeled
+        copyfile(os.path.join(pth.dir,pth.fname),full_output)
+        os.rename(masked_output, os.path.join(pth.dir,pth.fname))
