@@ -1,9 +1,9 @@
 """
-Crawl analysis files to create one analysis file with all info
+Run bcl2fastq to demultiplex a sequencing run
 
 Usage:
 
- munge demux run-folder cores -s sample-sheet 
+ munge demux run-folder cores sequencer
 
 """
 
