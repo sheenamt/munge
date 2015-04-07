@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 
 def build_parser(parser):
     parser.add_argument('type', 
-                        choices=['pindel','snp','cnv_exon','cnv_gene','quality','msi','clin_flagged'],
+                        choices=['pindel','snp','cnv_exon','cnv_gene','quality','msi','clin_flagged','msi_flagged'],
                         help='Type of output summary to create')
     parser.add_argument('path',
                         help='Path to analysis files')
