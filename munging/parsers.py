@@ -63,64 +63,6 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_msi(files, control_file, specimens, prefixes, variant_keys, multiplier, score):
-    """Compare the sample-msi output to the baseline file, report
-    Total sites, MSI+ sites and msings score"""
-    files = ifilter(filters.msi_file_finder,files) 
-    files=sorted(files)    
-
-    control_info=csv.DictReader(control_file, delimiter='\t')
-    control_info=sorted(control_info, key=itemgetter('Position'))
-    control_info=[d for d in control_info]
-    
-    variant_keys = ['Position',]
-    for pth in files:   
-        pfx = munge_pfx(pth.fname)
-        mini_pfx=pfx['mini-pfx']
-        prefixes.append(mini_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            sample_msi = sorted(reader, key=itemgetter('Position'))
-            for key, group in groupby(sample_msi, key=itemgetter('Position')):
-                control_row=[d for d in control_info if d['Position']==key]
-                variant = tuple(control_row[0][k] for k in variant_keys)    
-                for sample_info in group:
-                    if int(sample_info['Avg_read_depth']) >= 30:
-                        value = float(control_row[0]['Ave']) + (multiplier * float(control_row[0]['Std']))
-                        if int(sample_info['Number_Peaks']) >= value:
-                            new_info = 1
-                        else:
-                            new_info = 0
-                    else:           
-                        new_info = None
-                    specimens[variant][mini_pfx] = new_info
-    #Make copy of dictionary to iterate through
-    info=copy.copy(specimens)
-
-    for pfx in prefixes:    
-        msi_loci=0
-        total_loci=0
-        loci=tuple(['passing_loci',])
-        msi=tuple(['unstable_loci'],)
-        score=tuple(['msing_score'],)
-        status=tuple(['msi status'],)
-        for entry in info.items():
-            if entry[1][pfx] is not None:
-                total_loci=total_loci + 1
-                msi_loci= msi_loci + entry[1][pfx]
-        specimens[loci][pfx]=total_loci
-        specimens[msi][pfx]=msi_loci
-        try:
-            specimens[score][pfx]="{0:.4f}".format(float(msi_loci)/total_loci)
-            if float(specimens[score][pfx]) >= score:
-                specimens[status][pfx]="+"
-            else:
-                specimens[status][pfx]="-"
-        except ZeroDivisionError:
-            specimens[status][pfx]="-"
-    fieldnames = variant_keys + list(prefixes) 
-
-    return specimens, prefixes, fieldnames, variant_keys            
 
 
 def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
