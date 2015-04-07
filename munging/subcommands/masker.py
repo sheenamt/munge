@@ -66,20 +66,18 @@ def build_parser(parser):
     # 4_SV_Crest
     # 5_SV_Breakdancer
     # 6_SV_Pindel
-    # 7_CNV_Gene
-    # 8_CNV_Exon
     # 10_SNP_Indel
-    
-    #Not sure for filtering:
-    # 9_Clinically_Flagged
-    # 2_QC_by_Gene
-    # 3_QC_by_Exons
     
     #No filtering needed:
     # 1_QC_Metrics
+    # 2_QC_by_Gene
+    # 3_QC_by_Exons
+    # 7_CNV_Gene
+    # 8_CNV_Exon
+    # 9_Clinically_Flagged
     # 11_MSI
 
-def mask_file_by_gene(data, genes, output):
+def mask_file_by_gene(data, genes):
     """
     Create dictionary of analysis file info
     Ensure fname['Gene'] exists
@@ -87,28 +85,35 @@ def mask_file_by_gene(data, genes, output):
     return if Gene is in masking genes list
 
     """
+    output=[]
     gene_headers=('Gene','Gene_1','Gene_2', 'Clinically_Flagged')		    
     for d in data:
         for key, value in d.iteritems():   # iter on both keys and values
             if key in gene_headers and value in genes:
-                output.append(d)
+                if d not in output:
+                    output.append(d)
     
     return output
 
 def action(args):
     infiles = walker(args.path)  
+    files=[i for i in infiles]
+    if len(files)<1:
+        print "No files where found. Are there subfolders for each sample?"
+        sys.exit(1)
     #Get the set of genes for masking, based on cli entry
     mask=MASK_CODES[args.order_code]['Genes']
     print 'Genes in output: %s ' % ([i for i in mask])
     #Grab files for filtering
-    files = ifilter(any_analysis, infiles)
+    files = ifilter(any_analysis, files)
+
     #Filter to only those that are "maskable"
     files = ifilter(maskable, files)
 
     for pth in files:
         analysis_type=pth.fname.split('.')[1]
+        #In this case, pfx is actually PFX_analysis_type
         pfx = pth.fname.strip('.txt')
-
         #Create file names for new output
         full_output=os.path.join(pth.dir, (pfx+'.full.txt'))
         masked_output=os.path.join(pth.dir, (pfx+'.masked.txt'))
@@ -124,9 +129,8 @@ def action(args):
                                 delimiter='\t')
         writer.writeheader()
         # #Mask data
-        output = []
-        output=mask_file_by_gene(data, mask, output)
-        writer.writerows(output)
+        print "filtering %s" % analysis_type
+        writer.writerows(mask_file_by_gene(data, mask))
         #Move the files so the masked is Analysis.txt and the full is labeled
         copyfile(os.path.join(pth.dir,pth.fname),full_output)
         os.rename(masked_output, os.path.join(pth.dir,pth.fname))

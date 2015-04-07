@@ -31,6 +31,7 @@ file_types = {
     'hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
     'hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
+    'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
     'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
@@ -95,6 +96,7 @@ def action(args):
         'ClinVar',
         'NCI60',
         'Cosmic',
+        'EXAC',
         'Segdup',
         'Polyphen',
         'Sift',
@@ -151,6 +153,7 @@ def action(args):
         data['1000g_EAS']=data.get('1000g_EAS') or None
         data['1000g_AFR']=data.get('1000g_AFR') or None
         data['1000g_EUR']=data.get('1000g_EUR') or None
+        data['EXAC']=data.get('EXAC') or None
         data['EVS_esp6500_ALL']=data.get('EVS_esp6500_ALL') or None
         data['EVS_esp6500_AA']=data.get('EVS_esp6500_AA') or None
         data['EVS_esp6500_EU']=data.get('EVS_esp6500_EU') or None
