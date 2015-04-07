@@ -49,32 +49,51 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     for pth in files:
         pfx = munge_pfx(pth.fname)
         reads_pfx=pfx['mini-pfx']+'_Variants'
-        total_pfx=pfx['mini-pfx']+'_Total'
-        frac_pfx=pfx['mini-pfx']+'_Fraction'
         prefixes.append(reads_pfx)
-        if pfx['assay'].lower()=='msi-plus':
-            prefixes.append(total_pfx)
-            prefixes.append(frac_pfx)
+        with open(os.path.join(pth.dir, pth.fname)) as fname:
+            reader = csv.DictReader(fname, delimiter='\t')
+            for row in reader:
+                variant = tuple(row[k] for k in variant_keys)
+                specimens[variant][reads_pfx]=row['Variant_Reads']
+                annotation[variant] = row
+
+    annotation_headers = ['Clinically_Flagged']
+    fieldnames = variant_keys + annotation_headers + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys):
+    """Parse the Genotype output, which is the reads of clin_flagged found"""
+    files = ifilter(filters.genotype_analysis, files)
+    files=sorted(files)    
+    variant_keys = ['Position','Ref_Base','Var_Base' ]
+    #sort the files so that the output in the workbook is sorted
+    for pth in files:
+        pfx = munge_pfx(pth.fname)
+        reads_pfx=pfx['mini-pfx']+'_Variants|Total'
+        status_pfx=pfx['mini-pfx']+'_Status'
+        prefixes.append(reads_pfx)
+        prefixes.append(status_pfx)
 
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
-                if pfx['assay']=='msi-plus':
-                    try:
-                        frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
-                    except ZeroDivisionError:
-                        frac = '0'
-                    specimens[variant][reads_pfx]=row['Variant_Reads']
-                    specimens[variant][total_pfx]=row['Valid_Reads']
-                    specimens[variant][frac_pfx]=frac
-                    annotation[variant] = row
+                try:
+                    frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
+                except ZeroDivisionError:
+                    frac = '0'
+                specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                if int(row['Valid_Reads']) >= 100:
+                    if float(frac) >= 0.02:
+                        specimens[variant][status_pfx]='POS'
+                    elif float(frac) <= 0.01:
+                        specimens[variant][status_pfx]='NEG'
+                    elif 0.01 < float(frac) < 0.02 :
+                        specimens[variant][status_pfx]='IND'
                 else:
-                    specimens[variant][reads_pfx]=row['Variant_Reads']
-                    annotation[variant] = row
-
-    annotation_headers = [
-        'Clinically_Flagged']
+                    specimens[variant][status_pfx]='REVIEW'
+                annotation[variant] = row
+    annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
