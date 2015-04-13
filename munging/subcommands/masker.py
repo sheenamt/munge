@@ -25,7 +25,7 @@ MASK_CODES={
                        'MECP2','MEF2C','PCDH19','PNKP','PNPO',
                        'PTEN','SCN1A','SCN2A','SCN8A','SLC2A1',
                        'SLC9A6','STXBP1','SYNGAP1','TCF4','UBE3A')},
-    'MEGV01':{'Genes':('AKT1','AKT3','PTEN','PIK3CA','PIK3R2')},
+    'MEGPX':{'Genes':('AKT1','AKT3','PTEN','PIK3CA','PIK3R2')},
     'IMDF01':{'Genes':('ADA','AK2','AP3B1','ATM','BLM','BLNK',
                        'BTK','CARD11','CD3D','CD3E','CD3G',' CD8A',
                        'CD27','CD79A','CD79B','CD247','CHD7','CIITA',
