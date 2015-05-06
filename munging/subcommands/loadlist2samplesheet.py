@@ -186,7 +186,7 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
         info=_lane_detail_to_ss(fcid, ldetail, 1)
-        writer.writerow([info[2],"Project_"+info[9],info[4]])
+        writer.writerow([info[2],info[9],info[4]])
     return out_file
 
 
