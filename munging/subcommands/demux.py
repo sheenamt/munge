@@ -88,16 +88,16 @@ def rename_fastqs(run_info):
         infiles = glob.glob(os.path.join(run_info['fastq_output_dir'], project,'*fastq.gz'))
         #There are other directories in here, we only care about the ones with fastqs
         if len(infiles)>=2:
-            project_dir = '_'.join([run_info['fastq_output_dir'],project])
+            project_dir = '_'.join([run_info['fastq_output_dir'].strip("Project"),project])
             if not os.path.exists(project_dir):
                 os.makedirs(project_dir)
             for f in infiles:
                 pfx = os.path.basename(f).split('_')[0]
-                if re.search('R1', f):
+                if re.search('_R1_', f):
                     #Move newly named fastq to DATE_RUN_PROJECT directory
                     newname = os.path.join(project_dir, '%s_%s.1.fastq.gz' % (pfx.replace('-','_'), run))
                     shutil.move(f, newname)
-                elif re.search('R2', f):
+                elif re.search('_R2_', f):
                     #Move newly named fastq to DATE_RUN_PROJECT directory
                     newname = os.path.join(project_dir, '%s_%s.2.fastq.gz' % (pfx.replace('-','_'), run))
                     shutil.move(f, newname)
