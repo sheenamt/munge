@@ -122,6 +122,7 @@ WELL_MAPPING={'A01':'01',
               'H12':'96'}
 
 ASSAYS={'OPXv4':'OncoPlex',    
+        'OPXv5':'OncoPlex',    
         'OPXv3':'OncoPlex',    
         'BROv7':'ColoSeq',
         'BROv8':'ColoSeq',
