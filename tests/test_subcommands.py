@@ -169,7 +169,7 @@ class TestControlParser(TestBase):
         """
         controlfname = open(path.join(control_testfiles, 'OncoPlex_qc_variants_v4.txt'))
         controlinfo = list(csv.reader(controlfname, delimiter='\t'))
-        runfname = open(path.join(analysis_testfiles, '{}.SNP_Analysis.txt').format(control))
+        runfname = open(path.join(analysis_testfiles,'{}.SNP_Analysis.txt').format(control))
         runinfo = list(csv.reader(runfname, delimiter='\t'))
         output, count = control_parser.match(controlinfo, runinfo)
         #Count and output length should be qual
@@ -244,8 +244,7 @@ class TestMasker(TestBase):
         """
         data=csv.DictReader(open(path.join(analysis_testfiles,'0228T_CON_OPXv4_INT.SNP_Analysis.txt')), delimiter='\t')
         genes=('BRCA1','BRCA2')
-        out_data=[]
-        out_data=masker.mask_file_by_gene(data,genes,out_data)
+        out_data=masker.mask_file_by_gene(data,genes)
         out_genes=[d['Gene'] for d in out_data]
         self.assertEqual(out_data[0]['Position'],'chr13:32899388')
         self.assertEqual(len(out_data), 11)

@@ -22,7 +22,7 @@ class TestUtils(TestBase):
         self.run=munge_path('/home/genetics/data/130321_HA00211_OncoPlex64')
         self.outdir = self.mkoutdir()
 
-    def testMungePFX(self):
+    def testMungePFX1(self):
         real_info={'control': 'NA12878', 
                    'machine-run': 'HA0201', 
                    'library-version': 'OPXv4', 
@@ -35,10 +35,20 @@ class TestUtils(TestBase):
         
         test_info=munge_pfx('6037_E05_OPXv4_NA12878_HA0201')
         self.assertDictEqual(real_info, test_info)
+    def testMungePFX2(self):
+        real_info={'sample_id':'LMG-240',
+                   'pfx': 'LMG-240',
+                   'assay':'coloseq',
+                   'mini-pfx': 'LMG-240'}
+        test_info=munge_pfx('LMG-240')
+        self.assertDictEqual(real_info, test_info)
 
-    def testCheckControl(self):
-        pass    
-
+    def testMungePFX3(self):
+        real_info={'sample_id': '6037', 
+                   'pfx': '6037',
+                   'assay':'msi-plus',
+                   'mini-pfx': '6037'}
+        test_info=munge_pfx('6037_MSI-Plus')
 
     def testMungePath(self):
         test_id1=munge_path('140915_HA000_ColoTestFiles')

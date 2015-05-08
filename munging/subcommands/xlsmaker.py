@@ -142,7 +142,7 @@ def action(args):
             (f_path, f_name) = os.path.split(fname)
             if re.search(str(filetype), f_name):
                 (f_short_name, f_extension) = os.path.splitext(f_name)
-                sheet_name = f_short_name.split('_')
+                sheet_name = f_short_name.split('Combined_')
                 sheet_name = '_'.join(sheet_name[1:30])
                 print sheet_name, fname
                 write_workbook(sheet_name, fname)
