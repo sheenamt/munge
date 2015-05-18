@@ -170,7 +170,7 @@ def munge_path(pth):
         pathinfo['assay']='epiplex'
     elif re.search('imm', pathinfo['project']):
         pathinfo['assay']='immunoplex'
-    elif re.search('mrw', pathinfo['project']):
+    elif re.search('marrow', pathinfo['project']):
         pathinfo['assay']='marrowseq'
     #Set prep type
     if re.search('kapa', pathinfo['project']):
