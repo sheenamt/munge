@@ -59,7 +59,7 @@ def build_parser(parser):
     parser.add_argument('path',
                         help='Path to analysis files')
     parser.add_argument('order_code', choices=['BROCA','IMDH01','IMDB01','IMDS01',
-                                               'IMDF01','MEGV01','EPIV01'],
+                                               'IMDF01','MEGPX','EPIV01'],
                         help="Order code for genes that were tested")
 
     #This script filters:
