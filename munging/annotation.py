@@ -98,7 +98,7 @@ def fix_pfx(pfx):
     only if it looks like a real prefix.
 
     """
-    if pfx_ok(pfx):
+    if pfx_ok(pfx, pattern=pfx_pattern):
         return pfx.replace('-', '_').strip()
     else:
         if pfx_ok(pfx, pattern=pfx_pattern_old):
