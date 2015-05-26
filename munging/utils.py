@@ -161,6 +161,8 @@ def munge_path(pth):
         pathinfo['machine']='hiseq'
     elif re.search('MA', pathinfo['run']):
         pathinfo['machine']='miseq'
+    elif re.search('NA', pathinfo['run']):
+        pathinfo['machine']='nextseq'
     #Set assay
     if re.search('colo', pathinfo['project']):
         pathinfo['assay']='coloseq'
