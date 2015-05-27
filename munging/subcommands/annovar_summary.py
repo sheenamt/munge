@@ -48,6 +48,7 @@ file_types = {
     'gatk.hg19_esp6500si_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
@@ -78,6 +79,7 @@ file_types = {
     'varscan.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
@@ -108,6 +110,7 @@ file_types = {
     'varscanSNP.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
@@ -256,17 +259,18 @@ def action(args):
         'Clinically_Flagged',
         'Variant_Type',
         'HiSeq_Freq',
+        'NextSeq_Freq',
         '1000g_ALL',
         'EVS_esp6500_ALL',
+        'EXAC',
         'Gene',
         'p.',
         'c.',
         'Faves_Y/N',
         'Ref_Reads',
         'Var_Reads',
-        'Allele_Freq',
+        'Allele_Frac',
         'Variant_Phred',
-        'EXAC',
         'Cosmic',
         'CADD',
         'ClinVar',
@@ -344,5 +348,6 @@ def action(args):
         data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Reads'))
         data['MiSeq_Freq'], data['MiSeq_Count'] = split_string_in_two(data.get('Mi_Freq_list'))
         data['HiSeq_Freq'], data['HiSeq_Count'] = split_string_in_two(data.get('Hi_Freq_list'))
-        data['Allele_Freq'] = get_allele_freq(data)
+        data['NextSeq_Freq'], data['NextSeq_Count'] = split_string_in_two(data.get('NS_Freq_list'))
+        data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)
