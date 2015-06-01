@@ -246,8 +246,9 @@ class TestMasker(TestBase):
         genes=('BRCA1','BRCA2')
         out_data=masker.mask_file_by_gene(data,genes)
         out_genes=[d['Gene'] for d in out_data]
-        self.assertEqual(out_data[0]['Position'],'chr13:32899388')
-        self.assertEqual(len(out_data), 11)
+        self.assertEqual(out_data[0]['Position'],'chr2:12345')
+        #2 entries should come out
+        self.assertEqual(len(out_data), 2)
         self.assertNotIn('MTHFR', out_genes)
         self.assertIn('BRCA2', out_genes)
 

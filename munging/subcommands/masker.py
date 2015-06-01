@@ -89,9 +89,12 @@ def mask_file_by_gene(data, genes):
     gene_headers=('Gene','Gene_1','Gene_2', 'Clinically_Flagged')		    
     for d in data:
         for key, value in d.iteritems():   # iter on both keys and values
-            if key in gene_headers and value in genes:
-                if d not in output:
-                    output.append(d)
+            if key in gene_headers:
+                #some entries have multiple genes, if any are in masking list, include in output
+                sample_genes=set(value.split(',')).intersection(genes)
+                if sample_genes:
+                    if d not in output:
+                        output.append(d)
     
     return output
 
@@ -132,5 +135,5 @@ def action(args):
         print "filtering %s" % analysis_type
         writer.writerows(mask_file_by_gene(data, mask))
         #Move the files so the masked is Analysis.txt and the full is labeled
-        copyfile(os.path.join(pth.dir,pth.fname),full_output)
-        os.rename(masked_output, os.path.join(pth.dir,pth.fname))
+        # copyfile(os.path.join(pth.dir,pth.fname),full_output)
+        # os.rename(masked_output, os.path.join(pth.dir,pth.fname))
