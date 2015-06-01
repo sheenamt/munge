@@ -135,5 +135,5 @@ def action(args):
         print "filtering %s" % analysis_type
         writer.writerows(mask_file_by_gene(data, mask))
         #Move the files so the masked is Analysis.txt and the full is labeled
-        # copyfile(os.path.join(pth.dir,pth.fname),full_output)
-        # os.rename(masked_output, os.path.join(pth.dir,pth.fname))
+        copyfile(os.path.join(pth.dir,pth.fname),full_output)
+        os.rename(masked_output, os.path.join(pth.dir,pth.fname))
