@@ -1,9 +1,9 @@
 """
-Crawl analysis files to create one analysis file with all info
+Run bcl2fastq to demultiplex a sequencing run
 
 Usage:
 
- munge demux run-folder cores -s sample-sheet 
+ munge demux run-folder cores sequencer
 
 """
 
@@ -143,7 +143,6 @@ def action(args):
         run_bcl2fastqv2(run_info, info['cores'])
     else:
         run_bcl2fastqv1(run_info, info['cores'])
-
 
     #concatenate the fastqs across lanes
     cat_fastqs(run_info)

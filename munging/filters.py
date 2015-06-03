@@ -16,8 +16,14 @@ def snp_analysis(pth):
     """
     True only for pfx.Analysis.{txt,csv}
     """
-
     return pth.fname.split('.')[-2] in set(['SNP_Analysis'])
+
+def only_analysis(pth):
+    """
+    True only for pfx_Analysis.{txt,csv}
+    """
+
+    return pth.fname.split('_')[-2] not in set(['CNV', 'Genotype', 'Pindel', 'SV', 'QC', 'Quality', 'Breakdancer', 'quality', 'genotype','Gene', 'Exon', 'MSI', 'Ethnicity'])
 
 def cnv_gene_analysis(pth):
     """
@@ -89,13 +95,9 @@ def maskable(pth):
     # 4_SV_Crest
     # 5_SV_Breakdancer
     # 6_SV_Pindel
-    # 7_CNV_Gene
-    # 8_CNV_Exon
     # 10_SNP_Indel
 
     if pth.fname.split('.')[-2] in set (['SNP_Analysis',
-                                         'CNV_Exon_Analysis',
-                                         'CNV_Gene_Analysis',
                                          'Pindel_Analysis',
                                          'Breakdancer_Analysis',
                                          'SV_Analysis']):

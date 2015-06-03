@@ -121,14 +121,15 @@ WELL_MAPPING={'A01':'01',
               'G12':'95',
               'H12':'96'}
 
-ASSAYS={'OPXv4':'OncoPlex',    
-        'OPXv3':'OncoPlex',    
-        'BROv7':'ColoSeq',
-        'BROv8':'ColoSeq',
-        'BROv6':'ColoSeq',
-        'EPIv1':'EpiPlex',
-        'MRWv3':'MarrowSeq',
-        'IMMv1':'ImmunoPlex'}
+ASSAYS={'OPXv4':'OncoPlexV4',    
+        'OPXv5':'OncoPlexV5',    
+        'OPXv3':'OncoPlexV3',    
+        'BROv7':'ColoSeqV7',
+        'BROv8':'ColoSeqV8',
+        'BROv6':'ColoSeqV6',
+        'EPIv1':'EpiPlexV1',
+        'MRWv3':'MarrowSeqV3',
+        'IMMv1':'ImmunoPlexV1'}
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""

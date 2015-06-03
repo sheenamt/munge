@@ -118,9 +118,9 @@ class TestParsers(TestBase):
         files = ifilter(filters.any_analysis, walker(testfiles))  
         analysis_type='parsers.parse_clin_flagged'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
-        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)    
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_Reads', '5437_NA12878_Reads', '6037_NA12878_Reads']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Reads', '5437_NA12878_Reads', '6037_NA12878_Reads']))
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testHSParser(self):
@@ -157,3 +157,21 @@ class TestParsers(TestBase):
                                                           'PERCENT_DUPLICATION',     
                                                           'ESTIMATED_LIBRARY_SIZE']))
         self.assertDictContainsSubset({'PERCENT_DUPLICATION':'0.130625'}, output_dict)
+
+    def testMSIFlaggedParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        files = ifilter(filters.any_analysis, walker(testfiles))  
+        analysis_type='parsers.parse_msi_flagged'
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_Variants|Total', '0228T_Status','5437_NA12878_Variants|Total', '5437_NA12878_Status','6037_NA12878_Variants|Total','6037_NA12878_Status']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants|Total', '0228T_Status','5437_NA12878_Variants|Total', '5437_NA12878_Status','6037_NA12878_Variants|Total','6037_NA12878_Status']))
+        self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
+        self.assertEqual(specimens[('chr7:55259524','T','A')]['0228T_Status'], 'REVIEW')
+        self.assertEqual(specimens[('chr3:37034946', 'G', 'A')]['0228T_Status'], 'POS')
+        self.assertEqual(specimens[('chr12:25380283', 'C', 'T')]['0228T_Status'], 'NEG')
+        self.assertEqual(specimens[('chr13:32936674', 'C', 'T')]['0228T_Status'], 'IND')
+
