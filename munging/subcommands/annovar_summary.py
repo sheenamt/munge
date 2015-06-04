@@ -291,6 +291,7 @@ def action(args):
         'NCI60',
         'dbSNP_ID',
         'HiSeq_Count',
+        'NextSeq_Count',
         'MiSeq_Freq',
         'MiSeq_Count',
         'GATK_Score'
@@ -340,6 +341,7 @@ def action(args):
         data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
+        data['EXAC'] = data.get('EXAC') or -1
         data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL') or -1
         data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA') or -1
         data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU') or -1
