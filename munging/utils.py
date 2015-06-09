@@ -19,7 +19,7 @@ ASSAYS = {'BROv7':'coloseq',
           'EPIv1':'epiplex',
           'TRU':'truseq',
           'MRWv3':'marrowseq',
-          'IMMv1':'immunoplex',
+          'IMDv1':'immunoplex',
           'TESTDATA':'testdata',
           'MSI-PLUS':'msi-plus'}
 

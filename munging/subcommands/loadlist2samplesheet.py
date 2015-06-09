@@ -129,7 +129,7 @@ ASSAYS={'OPXv4':'OncoPlexV4',
         'BROv6':'ColoSeqV6',
         'EPIv1':'EpiPlexV1',
         'MRWv3':'MarrowSeqV3',
-        'IMMv1':'ImmunoPlexV1'}
+        'IMDv1':'ImmunoPlexV1'}
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
