@@ -2,7 +2,7 @@ import logging
 import re
 from __init__ import __version__
 
-pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|UNK|TESTDATA)', re.IGNORECASE)
+pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|UNK|TESTDATA)', re.IGNORECASE)
 pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
 
 log = logging.getLogger(__name__)
