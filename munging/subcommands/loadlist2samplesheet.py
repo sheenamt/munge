@@ -19,10 +19,6 @@ from itertools import groupby
 def build_parser(parser):
     parser.add_argument('loadlist',
                     help="Absolute path to load list")
-    parser.add_argument('--nextseq',
-                        action='store_true',
-                        default=False,
-                        help="NextSeq needs different load list. False by default")
 
 WELL_MAPPING={'A01':'01',
               'B01':'02',
@@ -172,27 +168,7 @@ def _lane_detail_to_signout(ldetail):
 
     return ldetail["SampleID"], ldetail["Accession"],ldetail["Patient Name"],ldetail["MRN"]
     
-def write_sample_sheets(fcid, lane_details, out_dir=None):
-    """Convert a flowcell into a samplesheet for demultiplexing.
-    """
-    fcid = fcid
-    if out_dir is None:
-        out_dir = run_folder
-    out_file = open(os.path.join(out_dir, "%s.csv" % fcid), "w")
-    signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
-    writer = csv.writer(out_file)
-    writer.writerow(["FCID", "Lane", "SampleID", "SampleRef", "Index",
-                     "Description", "Control", "Recipe", "Operator", "SampleProject"])
-    so_writer = csv.writer(signout)
-    so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
-
-    for ldetail in lane_details:
-        so_writer.writerow(_lane_detail_to_signout(ldetail))
-        for r in range(1,3):
-            writer.writerow(_lane_detail_to_ss(fcid, ldetail, r))
-    return out_file
-
-def write_nextseq_sample_sheet(fcid, lane_details, out_dir=None):
+def write_sample_sheet(fcid, lane_details, out_dir=None):
     """Convert a flowcell into a samplesheet for demultiplexing.
     """
     fcid = fcid
@@ -229,11 +205,8 @@ def action(args):
     out_dir='./'
     reader=csv.DictReader(open(args.loadlist))
     lane_details = [row for row in reader]
-    print args.nextseq
     #SampleSheet.csv needs to be grouped by FCID
-    if not args.nextseq:
-        write_sample_sheets(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
-    else:
-        write_nextseq_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
+    #else:
+    write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
     #Database needs info grouped by project
     db_project_info(lane_details)
