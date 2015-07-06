@@ -11,6 +11,7 @@ Usage:
 import os
 import sys
 import subprocess
+import glob
 
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
@@ -98,6 +99,7 @@ def run_bcl2fastqv2(run_info, cores):
                          '--processing-threads', cores,
                          '--with-failed-reads',
                          '--barcode-mismatches', '0',
+                         '--no-lane-splitting',
                          '--use-bases-mask','Y*,I8,Y*'])
 
     return run_info
@@ -134,10 +136,15 @@ def cat_fastqs(run_info):
             project_dir=os.path.join(run_info['fastq_output_dir'],project)
             print "project_dir:", project_dir
             seq_run = ''.join([run_info['machine'],run_info['machine_run']])
-            p1 = subprocess.Popen(["ls" ,project_dir], stdout=subprocess.PIPE) 
+            files =glob.glob(os.path.join(run_info['fastq_output_dir'],project, "*_R1_*"))
+            for f in files:
+                print f
+                p2 = subprocess.Popen(["cat_fastqs_v2.sh", f, project_dir, output_dir, seq_run] ) #stdin=p1.stdout) #send p1's output to p2
+#            p1 = subprocess.Popen(['ls *_R1_*', 'project_dir']) #, stdout=subprocess.PIPE) 
+#            p1.communicate()
             #Set up the ls command and direct the output to a pipe
-            p2 = subprocess.Popen(["xargs", "-P10", "-I", "file", "cat_fastqs_v2.sh", "file", project_dir, output_dir, seq_run], stdin=p1.stdout) #send p1's output to p2
-            p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
+
+#            p1.stdout.close() #make sure we close the output so p2 doesn't hang waiting for more input
             p2.communicate() #run
 
 def action(args):
@@ -155,9 +162,9 @@ def action(args):
     run_bcl2fastqv2(run_info, info['cores'])
     # if info['sequencer'] == 'NextSeq':
     #     print "running bcl2fastq on nextseq data"
-
+    #     run_bcl2fastqv1(run_info, info['cores'])
     # else:
-    #     run_bcl2fastqv2(run_info, info['cores'])
+
 
     #concatenate the fastqs across lanes
     cat_fastqs(run_info)
