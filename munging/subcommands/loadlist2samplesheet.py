@@ -117,14 +117,15 @@ WELL_MAPPING={'A01':'01',
               'G12':'95',
               'H12':'96'}
 
-ASSAYS={'OPXv4':'OncoPlex',    
+ASSAYS={'OPXv5':'OncoPlex',    
+        'OPXv4':'OncoPlex',    
         'OPXv3':'OncoPlex',    
         'BROv7':'ColoSeq',
         'BROv8':'ColoSeq',
         'BROv6':'ColoSeq',
         'EPIv1':'EpiPlex',
         'MRWv3':'MarrowSeq',
-        'IMMv1':'ImmunoPlex'}
+        'IMDv1':'ImmunoPlex'}
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
@@ -143,9 +144,9 @@ def _lane_detail_to_ss(fcid, ldetail, r):
     prefix=(ldetail['PlateNumber']+WELL_MAPPING[ldetail['Well']])
 
     if len(ldetail['ControlWell'])>4:
-        ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe'],ldetail['ControlWell']])
+        ldetail['SampleID']=('-').join([prefix,ldetail['Well'],ldetail['Recipe'],ldetail['ControlWell']])
     else:
-        ldetail['SampleID']=('_').join([prefix,ldetail['Well'],ldetail['Recipe']])
+        ldetail['SampleID']=('-').join([prefix,ldetail['Well'],ldetail['Recipe']])
 
     ldetail["SampleProject"]=create_sample_project(ldetail)
 
@@ -179,14 +180,15 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
     writer = csv.writer(out_file)
     writer.writerow(["[Data]",])
-    writer.writerow(["Sample_ID","Sample_Project","index"])
+    writer.writerow(["Sample_ID","Sample_Project","Lane","index"])
     so_writer = csv.writer(signout)
     so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
 
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
         info=_lane_detail_to_ss(fcid, ldetail, 1)
-        writer.writerow([info[2],info[9],info[4]])
+        for r in range(1,3):
+            writer.writerow([info[2],info[9],r,info[4]])
     return out_file
 
 
