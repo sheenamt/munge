@@ -22,8 +22,9 @@ def build_parser(parser):
                     help="Number of cores for demux")
     parser.add_argument('-s','--samplesheet',
                     help="Absolute path to sample sheet")
-    parser.add_argument('sequencer',choices=['HiSeq','MiSeq','NextSeq'],
-                    help="Sequencer name")
+    parser.add_argument('-f','--fileshare',
+                    default='/mnt/disk3/genetics/fastqs',
+                    help="Absolute path to fastq output on file share")
 
 SEQ_MACHINES={'D00180':{'machine':'HA',
                         'server':'narwhal'},
@@ -68,7 +69,7 @@ def run_bcl2fastqv2(run_info, cores):
     fastq_output_dir = os.path.join(run_info['drive'],run_info['run_date']+"_"+run_info['machine']+run_info['machine_run'])
     run_info.update({'fastq_output_dir':fastq_output_dir})
     if not os.path.exists(fastq_output_dir):
-        subprocess.call(['/home/genetics/working/sheenams/demux-v2/tmp/bcl2fastq2-v2.16.0.10-build/bcl2fastq2-v2.16.0.10/bin/bcl2fastq',
+        subprocess.call(['bcl2fastq-v2.17',
                          '--runfolder-dir', runfolder_dir,
                          '--output-dir', fastq_output_dir,
                          '--sample-sheet', run_info['SampleSheet'],
@@ -79,28 +80,30 @@ def run_bcl2fastqv2(run_info, cores):
                          '--use-bases-mask','Y*,I8,Y*'])
     return run_info
 
-def rename_fastqs(run_info):
+def rename_fastqs(run_info, fileshare):
     """Rename 65R21-E03-OPXv3_S8_R1_001.fastq.gz
     to 65R21_E03_OPXv3_NA0006.1.fastq.gz"""
     fastq_dirs = os.listdir(run_info['fastq_output_dir'])
     run=run_info['machine']+run_info['machine_run']
+    fileshare_output= os.path.join(fileshare,run_info['run_date']+"_"+run)
     for project in fastq_dirs:
         infiles = glob.glob(os.path.join(run_info['fastq_output_dir'], project,'*fastq.gz'))
         #There are other directories in here, we only care about the ones with fastqs
         if len(infiles)>=2:
-            project_dir = '_'.join([run_info['fastq_output_dir'].strip("Project"),project])
+            project_dir = '_'.join([fileshare_output,project])
             if not os.path.exists(project_dir):
                 os.makedirs(project_dir)
             for f in infiles:
                 pfx = os.path.basename(f).split('_')[0]
+                print pfx
                 if re.search('_R1_', f):
                     #Move newly named fastq to DATE_RUN_PROJECT directory
                     newname = os.path.join(project_dir, '%s_%s.1.fastq.gz' % (pfx.replace('-','_'), run))
-                    shutil.move(f, newname)
+                    shutil.copy2(f, newname)
                 elif re.search('_R2_', f):
                     #Move newly named fastq to DATE_RUN_PROJECT directory
                     newname = os.path.join(project_dir, '%s_%s.2.fastq.gz' % (pfx.replace('-','_'), run))
-                    shutil.move(f, newname)
+                    shutil.copy2(f, newname)
 
 
 def action(args):
@@ -116,6 +119,7 @@ def action(args):
     # Add server based on seq machine id
     run_info.update(SEQ_MACHINES[run_info['Illumina_id']])
     run_bcl2fastqv2(run_info, info['cores'])
-    rename_fastqs(run_info)
     print "run info:", run_info
-    print "ran /home/genetics/working/sheenams/demux-v2/tmp/bcl2fastq2-v2.16.0.10-build/bcl2fastq2-v2.16.0.10/bin/bcl2fastq"
+    rename_fastqs(run_info, args.fileshare)
+
+    print "ran /home/local/AMC/sheenams/bcl2fastq"
