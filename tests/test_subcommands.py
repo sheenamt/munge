@@ -271,11 +271,7 @@ class TestLoadListtoSampleSheet(TestBase):
                 'Recipe':'OPXv4'}
         
         output=loadlist2samplesheet._lane_detail_to_ss(fcid, ldetail, 1)
-        self.assertIn('6036_D05_OPXv4', output)
-        #test correct creation of Project name
-        self.assertIn('OncoPlexV460', output)
-
-
+        self.assertIn('6036-D05-OPXv4', output)
 
 class TestDemux(TestBase):
     """
