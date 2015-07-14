@@ -156,6 +156,8 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'Gerp',
         'HiSeq_Freq',
         'HiSeq_Count',
+        'NextSeq_Freq',
+        'NextSeq_Count',
         'MiSeq_Freq',
         'MiSeq_Count',
         '1000g_ALL',
