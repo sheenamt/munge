@@ -105,6 +105,14 @@ def munge_pfx(pfx):
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
         pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+    elif len(output)==3:
+        #Research non-control samples often hit this
+        keys=['sample_id','well','library-version']
+        pfx_info = dict(zip(keys,output))
+        pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
+        pfx_info['run']=pfx_info['sample_id'][:-2]
+        pfx_info['pfx']='{sample_id}_{well}_{library-version}'.format(**pfx_info)
+        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     elif len(output)==2:
         #MSI-Plus will hit this
         keys=['sample_id', 'library-version']

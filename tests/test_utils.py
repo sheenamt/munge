@@ -46,6 +46,14 @@ class TestUtils(TestBase):
     def testMungePFX3(self):
         real_info={'sample_id': '6037', 
                    'pfx': '6037',
+                   'assay':'coloseq',
+                   'well':'01',
+                   'mini-pfx': '6037'}
+        test_info=munge_pfx('6037_01_BROv8')
+
+    def testMungePFX4(self):
+        real_info={'sample_id': '6037', 
+                   'pfx': '6037',
                    'assay':'msi-plus',
                    'mini-pfx': '6037'}
         test_info=munge_pfx('6037_MSI-Plus')
