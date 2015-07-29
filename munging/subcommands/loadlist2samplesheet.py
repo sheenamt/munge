@@ -207,6 +207,8 @@ def db_project_info(info):
 def action(args):
     out_dir='./'
     reader=csv.DictReader(open(args.loadlist))
+    #strip whitespace from header names in case tech used wrong template
+    reader.fieldnames=[i.strip() for i in reader.fieldnames]
     lane_details = [row for row in reader]
     #SampleSheet.csv needs to be grouped by FCID
     write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
