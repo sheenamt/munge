@@ -58,10 +58,13 @@ MASK_CODES={
 def build_parser(parser):
     parser.add_argument('path',
                         help='Path to analysis files')
-    parser.add_argument('order_code', choices=['BROCA','IMDH01','IMDB01','IMDS01',
-                                               'IMDF01','MEGPX','EPIV01'],
-                        help="Order code for genes that were tested")
-
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-o','--order_code', 
+                       choices=['BROCA','IMDH01','IMDB01','IMDS01',
+                                'IMDF01','MEGPX','EPIV01'],
+                       help="Order code for genes that were tested")
+    group.add_argument('-g','--gene_list', nargs='+',
+                       help="List of genes that were tested, must have spece between names")
     #This script filters:
     # 4_SV_Crest
     # 5_SV_Breakdancer
@@ -105,7 +108,10 @@ def action(args):
         print "No files where found. Are there subfolders for each sample?"
         sys.exit(1)
     #Get the set of genes for masking, based on cli entry
-    mask=MASK_CODES[args.order_code]['Genes']
+    if args.order_code:
+        mask=MASK_CODES[args.order_code]['Genes'] 
+    elif args.gene_list:
+        mask=args.gene_list 
     print 'Genes in output: %s ' % ([i for i in mask])
     #Grab files for filtering
     files = ifilter(any_analysis, files)
