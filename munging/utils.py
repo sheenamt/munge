@@ -119,7 +119,10 @@ def munge_pfx(pfx):
         pfx_info = dict(zip(keys,output))
         pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
         pfx_info['pfx']='{sample_id}'.format(**pfx_info)
-        pfx_info['assay']=ASSAYS[pfx_info['library-version'].upper()]
+        if re.search('msi',pfx_info['library-version'], re.IGNORECASE):
+            pfx_info['assay']=ASSAYS[pfx_info['library-version'].upper()]
+        else:
+            pfx_info['assay']=ASSAYS[pfx_info['library-version']]
     elif len(output)==1:
         #Only the old LMG/OPX should hit this. 
         pfx=output[0]
