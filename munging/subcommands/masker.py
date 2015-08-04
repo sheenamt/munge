@@ -103,10 +103,11 @@ def action(args):
         print "No files where found. Are there subfolders for each sample?"
         sys.exit(1)
     #Get the set of genes for masking, based on cli entry
+    
     try:
-        mask=MASK_CODES[args.mask_list]['Genes'] 
+        mask=MASK_CODES[args.mask_list[0]]['Genes'] 
     except KeyError:
-        mask=args.gene_list 
+        mask=args.mask_list 
     print 'Genes in output: %s ' % ([i for i in mask])
     #Grab files for filtering
     files = ifilter(any_analysis, files)
