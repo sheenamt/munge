@@ -11,8 +11,6 @@ import csv
 import sys
 import json
 
-from numpy import std, average
-
 from munging.subcommands import annovar_summary
 from munging.subcommands import annovar_bed_parser
 from munging.subcommands import control_parser
