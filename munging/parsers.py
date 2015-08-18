@@ -6,18 +6,32 @@ import os
 import csv
 import sys
 import copy
+import re
 
 from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
 
 from munging import filters
-from munging.utils import walker, munge_pfx
+from munging.utils import munge_pfx
 
 """Each function parses a group of sample files for desired information,
 grouping based on the variant_keys list,
 some include additional annotation headers,
 sample counts, and scores calculated based on counts
 """
+
+def shorten_name(pfx):
+    """ Shorten file name if needed """
+    pfx=re.split('_|-', pfx.split('.')[0])
+    if 'NA12878' in pfx:
+        pfx = '_'.join([pfx[0],pfx[3]])
+        return pfx
+    elif len(pfx) >2:
+        pfx = '_'.join(pfx[:2])
+        return pfx
+    else:
+        return pfx
+    
 
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     """ Parse the sample quality analysis file, from hs_metrics"""
@@ -27,14 +41,13 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
  
     #sort the files so that the output in the workbook is sorted
     for pth in files:      
-        pfx = munge_pfx(pth.fname)
-        log_pfx=pfx['mini-pfx']
-        prefixes.append(log_pfx)
+        pfx = shorten_name(pth.fname)
+        prefixes.append(pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(k for k in variant_keys)
-                specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
+                specimens[variant][pfx] = row['MEAN_TARGET_COVERAGE']
                 annotation[variant] = specimens[variant]
 
     fieldnames = variant_keys + prefixes
@@ -47,8 +60,8 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = munge_pfx(pth.fname)
-        reads_pfx=pfx['mini-pfx']+'_Variants'
+        pfx = shorten_name(pth.fname)
+        reads_pfx=pfx+'_Variants'
         prefixes.append(reads_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
@@ -68,9 +81,9 @@ def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = munge_pfx(pth.fname)
-        reads_pfx=pfx['mini-pfx']+'_Variants|Total'
-        status_pfx=pfx['mini-pfx']+'_Status'
+        pfx = shorten_name(pth.fname)
+        reads_pfx=pfx+'_Variants|Total'
+        status_pfx=pfx+'_Status'
         prefixes.append(reads_pfx)
         prefixes.append(status_pfx)
 
@@ -117,15 +130,15 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
 
     #Go through all the files
     for pth in files:
-        pfx = munge_pfx(pth.fname)
+        pfx = shorten_name(pth.fname)
         #Concatenate the pfx to human readable
-        prefixes.append(pfx['mini-pfx'])
+        prefixes.append(pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
                 #Update the specimen dict for this variant, for this pfx, report the Reads found
-                specimens[variant][pfx['mini-pfx']] = row['Reads']
+                specimens[variant][pfx] = row['Reads']
                 annotation[variant] = row
 
     #Update the specimen dict for this variant, count samples present
@@ -170,8 +183,8 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         '1000g_AFR']
 
     for pth in files:
-        pfx = munge_pfx(pth.fname)
-        reads_pfx=pfx['mini-pfx']+'_Ref|Var'
+        pfx = shorten_name(pth.fname)
+        reads_pfx=pfx+'_Ref|Var'
         prefixes.append(reads_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
@@ -301,3 +314,4 @@ def parse_qualitymetrics(lines, variant_keys):
     #Only print the keys we care about:
     output_dict = dict(zip(variant_keys,itemgetter(*variant_keys)(metrics_dict)))
     return output_dict, variant_keys
+
