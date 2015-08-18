@@ -35,6 +35,7 @@ def float_if_possible(strg):
     """
     Convert integers to float instead of string where applicable.
     """
+    strg=strg.decode('utf-8')
     try:
         return float(strg)
     except ValueError:
