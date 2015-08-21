@@ -20,9 +20,9 @@ some include additional annotation headers,
 sample counts, and scores calculated based on counts
 """
 
-def shorten_name(pfx):
+def shorten_name(fname):
     """ Shorten file name if needed """
-    pfx=re.split('_|-', pfx.split('.')[0])
+    pfx=re.split('_|-', fname.split('.')[0])
     if 'NA12878' in pfx:
         pfx = '_'.join([pfx[0],pfx[3]])
         return pfx
@@ -30,8 +30,7 @@ def shorten_name(pfx):
         pfx = '_'.join(pfx[:2])
         return pfx
     else:
-        return pfx
-    
+        return fname.split('.')[0]
 
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     """ Parse the sample quality analysis file, from hs_metrics"""
