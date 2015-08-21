@@ -11,7 +11,6 @@ import glob
 import re
 import shutil
 import os
-import sys
 import subprocess
 
 # parser = argparse.ArgumentParser()

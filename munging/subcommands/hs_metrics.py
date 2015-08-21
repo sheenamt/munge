@@ -7,14 +7,8 @@ munge hs_metrics $SAVEPATH/$PFX.hs_metrics -o $SAVEPATH/$PFX_quality_metrics_Ana
 """
 import argparse
 import sys
-import os
-import string
-import re
-import itertools
 import csv
 
-from operator import itemgetter
-from munging.annotation import multi_split
 from munging import parsers
 
 def build_parser(parser):
@@ -28,7 +22,6 @@ def build_parser(parser):
 
 def action(args):
     metricsfile=args.hsmetrics
-    samplename=multi_split(metricsfile.name,'/.')[-2]
     lines=metricsfile.readlines()
     #filter out lines that start with # or are just new lines
     #then a simplelines of code to make a dictionary and then print

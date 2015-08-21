@@ -9,7 +9,7 @@ munge bed_parser bedfile input_file -o output_file
 
 """
 from collections import defaultdict
-from operator import itemgetter
+
 import csv
 import sys
 

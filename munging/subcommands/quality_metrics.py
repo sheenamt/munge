@@ -8,10 +8,7 @@ munge quality_metrics $SAVEPATH/$PFX.quality_metrics $SAVEPATH/$PFX.hs_metrics -
 import argparse
 import csv
 import sys
-import re
 from munging import parsers
-
-import pprint
 
 def build_parser(parser):
     parser.add_argument(

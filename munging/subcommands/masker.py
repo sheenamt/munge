@@ -6,16 +6,16 @@ Usage:
  munge mask_masker $SAVEPATH/$PFX order-code/gene list
 
 """
-from shutil import copyfile
-import pprint
+import sys
 import logging
 import os
 import csv
-import re
+
 from munging.utils import walker
 from itertools import ifilter
-import sys
+from shutil import copyfile
 from munging.filters import any_analysis, maskable
+
 log = logging.getLogger(__name__)
 
 MASK_CODES={

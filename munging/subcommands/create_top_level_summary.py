@@ -6,25 +6,15 @@ Usage:
 munge create_summary <Type> $SAVEPATH -o $OUTFILE
 
 """
-import subprocess
-import tempfile
 import logging
-import shutil
-import os
-import re
 import csv
 import sys
 import argparse
-import sqlite3
-from collections import defaultdict, namedtuple
 import collections
-from itertools import count, groupby, chain, ifilter
+from itertools import ifilter
 
-from munging.utils import dict_factory
-from munging.annotation import split_chr_loc, multi_split
 from munging import filters
-from munging import parsers 
-from munging.utils import walker, munge_pfx
+from munging.utils import walker
 
 log = logging.getLogger(__name__)
 

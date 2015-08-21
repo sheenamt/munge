@@ -11,10 +11,7 @@ import logging
 import csv
 import argparse
 import sys
-from itertools import count
-from collections import defaultdict
 
-from munging.utils import dict_factory
 from munging.annotation import split_chr_loc
 
 log = logging.getLogger(__name__)

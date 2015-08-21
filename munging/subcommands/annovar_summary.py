@@ -143,7 +143,6 @@ def munge_gene_and_Transcripts(data, RefSeqs):
     Return modified values of (Gene, Transcripts). Note that
     this depends on 'Variant_Type' provided by munge_variant.
     """
-    c, p = "",""
     Transcripts = data.get('Transcripts')
     Gene = data.get('Gene', '')
     if not Gene or data['Variant_Type'] in ('upstream','downstream','intergenic','ncRNA_exonic'):

@@ -9,11 +9,7 @@ Usage:
 
 # import argparse
 import os
-import sys
-import subprocess
 import csv
-from operator import itemgetter
-from itertools import groupby
 
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
@@ -174,8 +170,6 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     """Convert a flowcell into a samplesheet for demultiplexing.
     """
     fcid = fcid
-    if out_dir is None:
-        out_dir = run_folder
     out_file = open(os.path.join(out_dir, "%s.csv" % fcid), "w")
     signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
     writer = csv.writer(out_file)
@@ -197,7 +191,7 @@ def _get_flowcell_id(reader, require_single=True):
     """
     fc_ids = set([x['FCID'] for x in reader])
     if require_single and len(fc_ids) > 1:
-        raise ValueError("There are several FCIDs in the same samplesheet file: %s" % in_file)
+        raise ValueError("There are several FCIDs in the same samplesheet file: %s" % reader)
     else:
         return fc_ids
 

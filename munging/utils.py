@@ -5,6 +5,7 @@ import os
 import shutil
 import logging
 from collections import namedtuple
+import csv
 from munging.annotation import multi_split
 
 from __init__ import __version__
@@ -192,3 +193,80 @@ def munge_path(pth):
         pathinfo['prep_type']='sure_select'
 
     return pathinfo
+
+    #def get_info(fname, pfx=None, run=None, project=None):
+def munge_samples(pth):
+    """
+    Get pfx, run, and project from either the manifest or the sample name
+    """
+    #Strip trailing slash if present
+    pth = os.path.normpath(pth)
+    manifest=os.path.join(pth,'configs/manifest.csv')
+    project=os.path.basename(pth)
+    #os.path.isfile returns True if file exists
+    info={}
+    if os.path.isfile(manifest):        
+        reader=csv.DictReader(open(manifest))
+        for row in reader:
+            pfx="-".join([row['run_number'], row['barcode_id']])
+            is_control = True if row['sample_type'].lower()=='c' else False
+            info=dict(pfx=pfx,run=row['run_number'],project=project,is_control=is_control)
+            yield info
+    else:
+        try:
+            pfx_info = munge_pfx(pth.fname)
+            with open(os.path.join(pth.dir, pth.fname)) as fname:
+                log.debug('loading variants from file %s' % fname)
+                db._add_variants(get_info(fname, pfx=pfx_info['pfx'], run=pfx_info['machine-run'], project=run_info['project']), allow_missing=True)
+        except ValueError:
+            pfx = fix_pfx(pth.fname.split('_')[0])
+            run = munge_path(args.path)['run']
+            project = munge_path(args.path)['project'].lower()
+            with open(os.path.join(args.path, pth.fname)) as fname:
+                # Insert a row of data, use get_info to get the data. Repeat for all
+                db._add_variants(get_info(fname, pfx=pfx, run=run, project=project), allow_missing=True)
+
+        print "no manifest munging for you"
+
+
+
+def get_info(fname, pfx=None, run=None, project=None):
+    """
+    Function to get information from analysis files to populate database
+
+    new versions of the pipeline use 'position' to identify chromosome
+    location in the form 'chr:start-end'; old versions use 'chr_loc'
+    """
+    reader = csv.DictReader(fname, delimiter='\t')
+    reader.fieldnames = [f.lower() for f in reader.fieldnames]
+    position_key = 'position' if 'position' in reader.fieldnames else 'chr_loc'
+    for d in reader:
+        data = dict(pfx=pfx, run=run, project=project,**d)
+        data['is_control'] = data.get('is_control') or _is_control(data.get('pfx', ''))
+
+        if not 'ref_reads' in reader.fieldnames:
+            data['ref_reads'], data['var_reads'], data['allele_ratio'] = get_reads(data)
+        else:
+            try:
+                data['allele_ratio'] = float(data['var_reads'])/(float(data['ref_reads'])+float(data['var_reads']))
+            except ZeroDivisionError:
+                data['allele_ratio']=None
+
+        data['chromosome'], data['start'], data['end'] = split_chr_loc(d[position_key])
+        data['variant'] = build_variant_id(data)
+
+        # Set -1 values to None
+        for k, v in data.items():
+            if v == '-1' or v == '' or v == '.':
+                data[k] = None
+        yield data
+
+def get_run_info(path, git_version):
+    """
+    Function to get run, assay, machine, git version, date from path
+    """
+    run_info = munge_path(path)
+    run_info['git_version'] = git_version
+
+    return run_info
+

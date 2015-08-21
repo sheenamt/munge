@@ -7,17 +7,9 @@ munge create_bed /path/to/bed/file -o new_bed_file
 
 """
 
-import os
 import csv 
 import sys
 import argparse 
-from collections import defaultdict
-from itertools import groupby, ifilter
-from operator import itemgetter
-
-from munging import filters
-from munging.utils import walker
-
 
 
 def build_parser(parser):

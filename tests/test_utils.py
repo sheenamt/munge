@@ -10,7 +10,7 @@ import pprint
 import sys
 import json
 
-from munging.utils import munge_path, munge_pfx, munge_date
+from munging.utils import munge_path, munge_pfx, munge_date, munge_samples
 
 from __init__ import TestBase
 import __init__ as config
@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 class TestUtils(TestBase):
 
     def setUp(self):
-        self.run=munge_path('/home/genetics/data/130321_HA00211_OncoPlex64')
+        self.run='/home/genetics/data/130321_HA00211_OncoPlex64'
         self.outdir = self.mkoutdir()
 
     def testMungePFX1(self):
@@ -82,3 +82,19 @@ class TestUtils(TestBase):
 
         self.assertEqual(test_id1,'2014-09-15')
         self.assertEqual(test_id2,'2014-09-09')
+
+
+class TestManifest(TestBase):
+    def testMungeSamples(self):
+        pth1='/mnt/disk3/genetics/TruSeq/analysis/07_HTSPT/'
+        for sample in munge_samples(pth1):
+            if sample['pfx']=='7-LMG240':
+                self.assertTrue(sample['is_control'])
+                self.assertEqual(sample['run'], '7')
+                self.assertEqual(sample['project'], '07_HTSPT')
+            if sample['pfx']=='7-B1':
+                self.assertFalse(sample['is_control'])
+                self.assertEqual(sample['run'], '7')
+                self.assertEqual(sample['project'], '07_HTSPT')
+                
+                

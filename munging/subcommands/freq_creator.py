@@ -12,9 +12,7 @@ import csv
 import argparse
 import sys
 
-
 from munging.utils import dict_factory
-from munging.annotation import fix_pfx
 
 log = logging.getLogger(__name__)
 

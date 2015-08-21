@@ -8,9 +8,7 @@ munge quality_metrics_only $SAVEPATH/$PFX.quality_metrics -o $SAVEPATH/$PFX_qual
 import argparse
 import csv
 import sys
-import re
-from itertools import izip_longest
-from operator import itemgetter
+
 from munging import parsers
 
 def build_parser(parser):

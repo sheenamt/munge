@@ -30,7 +30,6 @@ def match(control, run_info):
     Matches if chr, start are the same. 
     """
     matchedlist = []
-    nonmatch= []
     concount=0
     for conline in control:
         concount=concount+1
