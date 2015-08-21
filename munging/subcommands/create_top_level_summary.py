@@ -13,7 +13,7 @@ import argparse
 import collections
 from itertools import ifilter
 
-from munging import filters
+from munging import filters, parsers
 from munging.utils import walker
 
 log = logging.getLogger(__name__)
