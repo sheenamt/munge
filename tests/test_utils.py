@@ -76,6 +76,10 @@ class TestUtils(TestBase):
                                     'prep_type':'kapa',
                                     'project': 'oncoplexkapa'}))
 
+        self.assertRaises(ValueError,munge_path,'testfiles/140915_MA0001_MSIPlus')
+        self.assertRaises(ValueError,munge_path,'testfiles/140915_NPM1_0123')
+        self.assertRaises(ValueError,munge_path,'testfiles/140915_NP')
+
     def testMungedate(self):
         test_id1=munge_date('140915')
         test_id2=munge_date('2014-09-09')

@@ -24,6 +24,10 @@ ASSAYS = {'BROv7':'coloseq',
           'TESTDATA':'testdata',
           'MSI-PLUS':'msi-plus'}
 
+MACHINES = {'H':'hiseq',
+            'M':'miseq',
+            'N':'nextseq'}
+
 def dict_factory(cursor, row):
     """
     Factory to return dicts from sqlite3 queries
@@ -156,25 +160,29 @@ def munge_path(pth):
     """
     Get date, run, project, machine, assay, prep-type from path
     """
+    #First, make sure this isn't NPM1 or MSIPlus
+    if re.search('npm1', pth.lower()):
+        raise ValueError('This is a NPM1 run')
+    elif re.search('msiplus', pth.lower()):
+        raise ValueError('This is a MSIPlus run')
+        
     output=multi_split(pth, '/_')
+    print output
     #Assuming we want YYMMDD_RUN_PROJECT
     if output[-1]=='output':
         output=output[-4:-1]
     #If old version of data that isn't in a 'output' subfolder
     else:
         output=output[-3:]
+    #If this is a incorrectly formatted run, don't process
+
     keys=['date','run', 'project']
     pathinfo = dict(zip(keys,output))
     pathinfo['date']=munge_date(pathinfo['date'])
     #Lowercase project
     pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
-    if re.search('HA', pathinfo['run']):
-        pathinfo['machine']='hiseq'
-    elif re.search('MA', pathinfo['run']):
-        pathinfo['machine']='miseq'
-    elif re.search('NA', pathinfo['run']):
-        pathinfo['machine']='nextseq'
+    pathinfo['machine']=MACHINES[pathinfo['run'][0]]
     #Set assay
     if re.search('colo', pathinfo['project']):
         pathinfo['assay']='coloseq'
