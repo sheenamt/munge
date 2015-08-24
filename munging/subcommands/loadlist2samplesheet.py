@@ -195,9 +195,6 @@ def _get_flowcell_id(reader, require_single=True):
     else:
         return fc_ids
 
-def db_project_info(info):
-    pass
-
 def action(args):
     out_dir='./'
     reader=csv.DictReader(open(args.loadlist))
@@ -206,5 +203,3 @@ def action(args):
     lane_details = [row for row in reader]
     #SampleSheet.csv needs to be grouped by FCID
     write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
-    #Database needs info grouped by project
-    db_project_info(lane_details)
