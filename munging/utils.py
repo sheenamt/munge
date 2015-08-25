@@ -160,47 +160,48 @@ def munge_path(pth):
     """
     Get date, run, project, machine, assay, prep-type from path
     """
-    #First, make sure this isn't NPM1 or MSIPlus
     if re.search('npm1', pth.lower()):
-        raise ValueError('This is a NPM1 run')
+        raise ValueError('npm1 assay not included in munge utils')
     elif re.search('msiplus', pth.lower()):
-        raise ValueError('This is a MSIPlus run')
-        
+        raise ValueError('msiplus assay not included in munge utils')
+
     output=multi_split(pth, '/_')
-    print output
+
     #Assuming we want YYMMDD_RUN_PROJECT
     if output[-1]=='output':
         output=output[-4:-1]
     #If old version of data that isn't in a 'output' subfolder
     else:
         output=output[-3:]
-    #If this is a incorrectly formatted run, don't process
-
-    keys=['date','run', 'project']
-    pathinfo = dict(zip(keys,output))
-    pathinfo['date']=munge_date(pathinfo['date'])
-    #Lowercase project
-    pathinfo['project']=pathinfo['project'].lower()
-    #Set Machine
-    pathinfo['machine']=MACHINES[pathinfo['run'][0]]
-    #Set assay
-    if re.search('colo', pathinfo['project']):
-        pathinfo['assay']='coloseq'
-    elif re.search('onco', pathinfo['project']):
-        pathinfo['assay']='oncoplex'
-    elif re.search('epi', pathinfo['project']):
-        pathinfo['assay']='epiplex'
-    elif re.search('imm', pathinfo['project']):
-        pathinfo['assay']='immunoplex'
-    elif re.search('marrow', pathinfo['project']):
-        pathinfo['assay']='marrowseq'
-    #Set prep type
-    if re.search('kapa', pathinfo['project']):
-        pathinfo['prep_type']='kapa'
+    run_pattern = re.compile('^[HMN].*_')
+    #If this is correctly formatted run, process
+    if output[0].isdigit() and re.match('^[HNM]',output[1]):
+        keys=['date','run', 'project']
+        pathinfo = dict(zip(keys,output))
+        pathinfo['date']=munge_date(pathinfo['date'])
+        #Lowercase project
+        pathinfo['project']=pathinfo['project'].lower()
+        #Set Machine
+        pathinfo['machine']=MACHINES[pathinfo['run'][0]]
+        #Set assay
+        if re.search('colo', pathinfo['project']):
+            pathinfo['assay']='coloseq'
+        elif re.search('onco', pathinfo['project']):
+            pathinfo['assay']='oncoplex'
+        elif re.search('epi', pathinfo['project']):
+            pathinfo['assay']='epiplex'
+        elif re.search('imm', pathinfo['project']):
+            pathinfo['assay']='immunoplex'
+        elif re.search('marrow', pathinfo['project']):
+            pathinfo['assay']='marrowseq'
+        #Set prep type
+        if re.search('kapa', pathinfo['project']):
+            pathinfo['prep_type']='kapa'
+        else:
+            pathinfo['prep_type']='sure_select'
+        return pathinfo
     else:
-        pathinfo['prep_type']='sure_select'
-
-    return pathinfo
+        raise ValueError('Run folder name not properly formatted')
 
     #def get_info(fname, pfx=None, run=None, project=None):
 def munge_samples(pth):
