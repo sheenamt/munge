@@ -67,8 +67,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_cnv_gene'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)   
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
         self.assertListEqual(variant_keys, ['Position', 'Gene'])
 
     def testCNVExonParser(self):
@@ -80,8 +80,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_cnv_exon'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)   
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
         self.assertListEqual(variant_keys, ['Position', 'Gene'])
     
     def testQualityParser(self):

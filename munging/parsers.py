@@ -12,7 +12,6 @@ from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
 
 from munging import filters
-from munging.utils import munge_pfx
 
 """Each function parses a group of sample files for desired information,
 grouping based on the variant_keys list,
@@ -209,8 +208,8 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position', 'Gene' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = munge_pfx(pth.fname)
-        log_pfx=pfx['mini-pfx']+'_Log'
+        pfx = shorten_name(pth.fname)
+        log_pfx=pfx+'_Log'
         prefixes.append(log_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
@@ -233,8 +232,8 @@ def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position', 'Gene' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = munge_pfx(pth.fname)
-        log_pfx=pfx['mini-pfx']+'_Log'
+        pfx = shorten_name(pth.fname)
+        log_pfx=pfx+'_Log'
         prefixes.append(log_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
