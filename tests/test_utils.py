@@ -10,7 +10,7 @@ import pprint
 import sys
 import json
 
-from munging.utils import munge_path, munge_pfx, munge_date, munge_samples
+from munging.utils import munge_path_for_database, munge_pfx, munge_date, munge_samples
 
 from __init__ import TestBase
 import __init__ as config
@@ -59,9 +59,9 @@ class TestUtils(TestBase):
         test_info=munge_pfx('6037_MSI-Plus')
 
     def testMungePath(self):
-        test_id1=munge_path('140915_HA000_ColoTestFiles')
-        test_id2=munge_path('testfiles/140915_MA0001_OncoPlexKapa')
-        test_id3=munge_path('testfiles/140915_MA0001_OncoPlexKapa/output')
+        test_id1=munge_path_for_database('140915_HA000_ColoTestFiles')
+        test_id2=munge_path_for_database('testfiles/140915_MA0001_OncoPlexKapa')
+        test_id3=munge_path_for_database('testfiles/140915_MA0001_OncoPlexKapa/output')
 
         self.assertEqual(test_id1,({'date':'2014-09-15',
                                     'run': 'HA000', 
@@ -84,14 +84,14 @@ class TestUtils(TestBase):
                                     'prep_type':'kapa',
                                     'project': 'oncoplexkapa'}))
 
-        self.assertRaises(ValueError,munge_path,'testfiles/140915_MA0001_MSIPlus')
-        self.assertRaises(ValueError,munge_path,'testfiles/140915_NPM1_0123')
-        self.assertRaises(ValueError,munge_path,'testfiles/1405_07')
-        self.assertRaises(ValueError,munge_path,'150813_MA0089_MSIplus_150811')
-        self.assertRaises(ValueError,munge_path,'08-19-15_NPM1NG2')
-        self.assertRaises(ValueError,munge_path,'150728_NPM1_PP7')
-        self.assertRaises(ValueError,munge_path,'TruSeq06')
-        self.assertRaises(ValueError,munge_path,'2015_MSI-PLUS_Validation')
+        self.assertRaises(ValueError,munge_path_for_database,'testfiles/140915_MA0001_MSIPlus')
+        self.assertRaises(ValueError,munge_path_for_database,'testfiles/140915_NPM1_0123')
+        self.assertRaises(ValueError,munge_path_for_database,'testfiles/1405_07')
+        self.assertRaises(ValueError,munge_path_for_database,'150813_MA0089_MSIplus_150811')
+        self.assertRaises(ValueError,munge_path_for_database,'08-19-15_NPM1NG2')
+        self.assertRaises(ValueError,munge_path_for_database,'150728_NPM1_PP7')
+        self.assertRaises(ValueError,munge_path_for_database,'TruSeq06')
+        self.assertRaises(ValueError,munge_path_for_database,'2015_MSI-PLUS_Validation')
 
     def testMungedate(self):
         test_id1=munge_date('140915')
