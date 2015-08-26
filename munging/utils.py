@@ -162,7 +162,7 @@ def munge_path(pth):
         output=output[-3:]
     run_pattern = re.compile('^[HMN].*_')
     #If this is correctly formatted run, process
-    if output[0].isdigit() and re.match('^[HNM]',output[1]):
+    if re.match('\d{6}', output[0]) and re.match('^[HNM]',output[1]):
         keys=['date','run', 'project']
         pathinfo = dict(zip(keys,output))
         pathinfo['date']=munge_date(pathinfo['date'])

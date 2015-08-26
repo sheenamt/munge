@@ -90,6 +90,7 @@ class TestUtils(TestBase):
         self.assertRaises(ValueError,munge_path,'150813_MA0089_MSIplus_150811')
         self.assertRaises(ValueError,munge_path,'08-19-15_NPM1NG2')
         self.assertRaises(ValueError,munge_path,'150728_NPM1_PP7')
+        self.assertRaises(ValueError,munge_path,'2015_MSI-PLUS_Validation')
         
     def testMungedate(self):
         test_id1=munge_date('140915')
