@@ -149,7 +149,7 @@ def munge_path(pth):
     """
     if re.search('npm1', pth.lower()):
         raise ValueError('npm1 assay not included in munge utils')
-    elif re.search('msiplus', pth.lower()):
+    elif re.search('msi', pth.lower()):
         raise ValueError('msiplus assay not included in munge utils')
 
     output=multi_split(pth, '/_')
@@ -162,7 +162,7 @@ def munge_path(pth):
         output=output[-3:]
     run_pattern = re.compile('^[HMN].*_')
     #If this is correctly formatted run, process
-    if re.match('\d{6}', output[0]) and re.match('^[HNM]',output[1]):
+    if output[0].isdigit() and re.match('^[HNM]',output[1]):
         keys=['date','run', 'project']
         pathinfo = dict(zip(keys,output))
         pathinfo['date']=munge_date(pathinfo['date'])
