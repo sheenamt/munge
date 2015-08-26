@@ -10,7 +10,7 @@ import re
 
 from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
-
+from munging.utils import shorten_sample_id
 from munging import filters
 
 """Each function parses a group of sample files for desired information,
@@ -18,18 +18,6 @@ grouping based on the variant_keys list,
 some include additional annotation headers,
 sample counts, and scores calculated based on counts
 """
-
-def shorten_name(fname):
-    """ Shorten file name if needed """
-    pfx=re.split('_|-', fname.split('.')[0])
-    if 'NA12878' in pfx:
-        pfx = '_'.join([pfx[0],pfx[3]])
-        return pfx
-    elif len(pfx) >2:
-        pfx = '_'.join(pfx[:2])
-        return pfx
-    else:
-        return fname.split('.')[0]
 
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     """ Parse the sample quality analysis file, from hs_metrics"""
@@ -39,7 +27,7 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
  
     #sort the files so that the output in the workbook is sorted
     for pth in files:      
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         prefixes.append(pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
@@ -58,7 +46,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         reads_pfx=pfx+'_Variants'
         prefixes.append(reads_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
@@ -79,7 +67,7 @@ def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         reads_pfx=pfx+'_Variants|Total'
         status_pfx=pfx+'_Status'
         prefixes.append(reads_pfx)
@@ -128,7 +116,7 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
 
     #Go through all the files
     for pth in files:
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         #Concatenate the pfx to human readable
         prefixes.append(pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
@@ -181,7 +169,7 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         '1000g_AFR']
 
     for pth in files:
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         reads_pfx=pfx+'_Ref|Var'
         prefixes.append(reads_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
@@ -208,7 +196,7 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position', 'Gene' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         log_pfx=pfx+'_Log'
         prefixes.append(log_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:
@@ -232,7 +220,7 @@ def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys):
     variant_keys = ['Position', 'Gene' ]
     #sort the files so that the output in the workbook is sorted
     for pth in files:
-        pfx = shorten_name(pth.fname)
+        pfx = shorten_sample_id(pth.fname)
         log_pfx=pfx+'_Log'
         prefixes.append(log_pfx)
         with open(os.path.join(pth.dir, pth.fname)) as fname:

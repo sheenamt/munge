@@ -192,11 +192,25 @@ def munge_path_for_database(pth):
 
     #def get_info(fname, pfx=None, run=None, project=None):
 
+def shorten_sample_id(fname):
+    """ Shorten file name if needed """
+    pfx=re.split('_|-', fname.split('.')[0])
+    if 'NA12878' in pfx:
+        pfx = '_'.join([pfx[0],pfx[3]])
+        return pfx
+    elif len(pfx) >2:
+        pfx = '_'.join(pfx[:2])
+        return pfx
+    else:
+        return fname.split('.')[0]
+
+
 def munge_samples(pth):
     """
     Get pfx, run, and project from either the manifest or the sample name
     """
     #Strip trailing slash if present
+    print pth
     pth = os.path.normpath(pth)
     manifest=os.path.join(pth,'configs/manifest.csv')
     project=os.path.basename(pth)
@@ -208,20 +222,9 @@ def munge_samples(pth):
             pfx="-".join([row['run_number'], row['barcode_id']])
             is_control = True if row['sample_type'].lower()=='c' else False
             info=dict(pfx=pfx,run=row['run_number'],project=project,is_control=is_control)
-            yield info
     else:
-        try:
-            pfx_info = munge_pfx(pth.fname)
-            with open(os.path.join(pth.dir, pth.fname)) as fname:
-                log.debug('loading variants from file %s' % fname)
-                db._add_variants(get_info(fname, pfx=pfx_info['pfx'], run=pfx_info['machine-run'], project=run_info['project']), allow_missing=True)
-        except ValueError:
-            pfx = fix_pfx(pth.fname.split('_')[0])
-            run = munge_path_for_database(args.path)['run']
-            project = munge_path_for_database(args.path)['project'].lower()
-            with open(os.path.join(args.path, pth.fname)) as fname:
-                # Insert a row of data, use get_info to get the data. Repeat for all
-                db._add_variants(get_info(fname, pfx=pfx, run=run, project=project), allow_missing=True)
-
-        print "no manifest munging for you"
-
+        pfx = shorten_sample_id(pth.fname)
+        run = munge_path_for_database(args.path)['run']
+        project = munge_path_for_database(args.path)['project'].lower()
+        info=dict(pfx=pfx,run=row['run_number'],project=project,is_control=is_control)
+    return info
