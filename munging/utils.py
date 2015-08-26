@@ -143,7 +143,7 @@ def munge_date(date):
     else:
         return date
 
-def munge_path(pth):
+def munge_path_for_database(pth):
     """
     Get date, run, project, machine, assay, prep-type from path
     """
@@ -217,8 +217,8 @@ def munge_samples(pth):
                 db._add_variants(get_info(fname, pfx=pfx_info['pfx'], run=pfx_info['machine-run'], project=run_info['project']), allow_missing=True)
         except ValueError:
             pfx = fix_pfx(pth.fname.split('_')[0])
-            run = munge_path(args.path)['run']
-            project = munge_path(args.path)['project'].lower()
+            run = munge_path_for_database(args.path)['run']
+            project = munge_path_for_database(args.path)['project'].lower()
             with open(os.path.join(args.path, pth.fname)) as fname:
                 # Insert a row of data, use get_info to get the data. Repeat for all
                 db._add_variants(get_info(fname, pfx=pfx, run=run, project=project), allow_missing=True)
