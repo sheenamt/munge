@@ -20,8 +20,6 @@ from munging.subcommands import masker
 from munging.subcommands import loadlist2samplesheet
 from munging.subcommands import demux
 
-from munging.utils import munge_path
-
 from __init__ import TestBase
 import __init__ as config
 log = logging.getLogger(__name__)
