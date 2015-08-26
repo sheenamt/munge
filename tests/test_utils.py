@@ -101,15 +101,15 @@ class TestUtils(TestBase):
 
 class TestManifest(TestBase):
     def testMungeSamples(self):
-        pth1='/mnt/disk3/genetics/TruSeq/analysis/07_HTSPT/'
+        pth1='testfiles/'
         for sample in munge_samples(pth1):
             if sample['pfx']=='7-LMG240':
                 self.assertTrue(sample['is_control'])
                 self.assertEqual(sample['run'], '7')
-                self.assertEqual(sample['project'], '07_HTSPT')
+                self.assertEqual(sample['project'], 'testfiles')
             if sample['pfx']=='7-B1':
                 self.assertFalse(sample['is_control'])
                 self.assertEqual(sample['run'], '7')
-                self.assertEqual(sample['project'], '07_HTSPT')
+                self.assertEqual(sample['project'], 'testfiles')
                 
                 
