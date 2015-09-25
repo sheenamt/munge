@@ -197,7 +197,7 @@ def _get_flowcell_id(reader, require_single=True):
     """
     fc_ids = set([x['FCID'] for x in reader])
     if require_single and len(fc_ids) > 1:
-        raise ValueError("There are several FCIDs in the same samplesheet file: %s" % reader)
+        raise ValueError("There are several FCIDs in the same samplesheet file: %s" % fc_ids)
     else:
         return fc_ids
 
