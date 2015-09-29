@@ -11,17 +11,13 @@ from __init__ import __version__
 
 log = logging.getLogger(__name__)
 
-ASSAYS = {'BROv7':'coloseq',
-          'BROv8':'coloseq',
-          'OPXv3':'oncoplex',
-          'OPXv4':'oncoplex',
-          'OPXv5':'oncoplex',
-          'EPIv1':'epiplex',
-          'TRU':'truseq',
-          'MRWv3':'marrowseq',
-          'IMDv1':'immunoplex',
-          'TESTDATA':'testdata',
-          'MSI-PLUS':'msi-plus'}
+ASSAYS={'OPX':'OncoPlex',    
+        'BRO':'ColoSeq',
+        'EPI':'EpiPlex',
+        'MRW':'MarrowSeq',
+        'IMD':'ImmunoPlex',
+        'TESTDATA':'testdata',
+        'MSI-PLUS':'msi-plus'}
 
 def dict_factory(cursor, row):
     """
@@ -96,7 +92,7 @@ def munge_pfx(pfx):
         pfx_info['mini-pfx']='{sample_id}_{control}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{control}_{machine-run}'.format(**pfx_info)
-        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+        pfx_info['assay']=[value for key,value in ASSAYS.items() if re.search(key, pfx_info['library-version'])][0]
     elif len(output)==4:
         #New non-control samples hit this
         keys=['sample_id','well','library-version','machine-run']
@@ -104,7 +100,7 @@ def munge_pfx(pfx):
         pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}_{machine-run}'.format(**pfx_info)
-        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+        pfx_info['assay']=[value for key,value in ASSAYS.items() if re.search(key, pfx_info['library-version'])][0]
     elif len(output)==3:
         #Research non-control samples often hit this
         keys=['sample_id','well','library-version']
@@ -112,7 +108,7 @@ def munge_pfx(pfx):
         pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
         pfx_info['run']=pfx_info['sample_id'][:-2]
         pfx_info['pfx']='{sample_id}_{well}_{library-version}'.format(**pfx_info)
-        pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+        pfx_info['assay']=[value for key,value in ASSAYS.items() if re.search(key, pfx_info['library-version'])][0]
     elif len(output)==2:
         #MSI-Plus will hit this
         keys=['sample_id', 'library-version']
@@ -120,9 +116,7 @@ def munge_pfx(pfx):
         pfx_info['mini-pfx']='{sample_id}'.format(**pfx_info)
         pfx_info['pfx']='{sample_id}'.format(**pfx_info)
         if re.search('msi',pfx_info['library-version'], re.IGNORECASE):
-            pfx_info['assay']=ASSAYS[pfx_info['library-version'].upper()]
-        else:
-            pfx_info['assay']=ASSAYS[pfx_info['library-version']]
+            pfx_info['assay']=[value for key,value in ASSAYS.items() if re.search(key, pfx_info['library-version'])]
     elif len(output)==1:
         #Only the old LMG/OPX should hit this. 
         pfx=output[0]
@@ -130,9 +124,9 @@ def munge_pfx(pfx):
                   'pfx':pfx,
                   'sample_id':pfx}
         if re.search('LMG', pfx):
-            pfx_info['assay']='coloseq'
+            pfx_info['assay']='Coloseq'
         elif re.search('OPX', pfx):
-            pfx_info['assay']='oncoplex'
+            pfx_info['assay']='OncoPlex'
     else:
         print "pfx:", pfx
         raise ValueError('Incorrect pfx given. Expected Plate_Well_Assay_<CONTROL>_MachinePlate.file-type.file-ext')

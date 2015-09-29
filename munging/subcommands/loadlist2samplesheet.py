@@ -12,6 +12,7 @@ import os
 import sys
 import subprocess
 import csv
+import re
 from operator import itemgetter
 from itertools import groupby
 
@@ -117,24 +118,22 @@ WELL_MAPPING={'A01':'01',
               'G12':'95',
               'H12':'96'}
 
-ASSAYS={'OPXv4':'OncoPlex',    
-        'OPXv5':'OncoPlex',    
-        'OPXv3':'OncoPlex',    
-        'BROv7':'ColoSeq',
-        'BROv8':'ColoSeq',
-        'BROv6':'ColoSeq',
-        'EPIv1':'EpiPlex',
-        'MRWv3':'MarrowSeq',
-        'IMDv1':'ImmunoPlex'}
+ASSAYS={'OPX':'OncoPlex',    
+        'BRO':'ColoSeq',
+        'EPI':'EpiPlex',
+        'MRW':'MarrowSeq',
+        'IMD':'ImmunoPlex'}
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
+    #Grab the assay based on the recipe, don't care about verion of assay
+    assay = [value for key,value in ASSAYS.items() if re.search(key, ldetail['Recipe'])][0]
     if ldetail['Description'].upper()=='KAPA':
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description'].upper()+ldetail['PlateNumber']
+        sample_project=+ldetail['Description'].upper()+ldetail['PlateNumber']
     elif ldetail['Description'].upper()=='STANDARD' or ldetail['Description'].upper()=='SURE SELECT':
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['PlateNumber']
+        sample_project=assay+ldetail['PlateNumber']
     else:
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description']+ldetail['PlateNumber']
+        sample_project=assay+ldetail['Description']+ldetail['PlateNumber']
     return sample_project
 
 def _lane_detail_to_ss(fcid, ldetail, r):

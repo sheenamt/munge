@@ -30,7 +30,7 @@ class TestUtils(TestBase):
                    'run': '60', 
                    'sample_id': '6037', 
                    'pfx': '6037_E05_OPXv4_NA12878_HA0201',
-                   'assay':'oncoplex',
+                   'assay':'OncoPlex',
                    'mini-pfx': '6037_NA12878'}
         
         test_info=munge_pfx('6037_E05_OPXv4_NA12878_HA0201')
@@ -38,7 +38,7 @@ class TestUtils(TestBase):
     def testMungePFX2(self):
         real_info={'sample_id':'LMG-240',
                    'pfx': 'LMG-240',
-                   'assay':'coloseq',
+                   'assay':'Coloseq',
                    'mini-pfx': 'LMG-240'}
         test_info=munge_pfx('LMG-240')
         self.assertDictEqual(real_info, test_info)
@@ -46,7 +46,7 @@ class TestUtils(TestBase):
     def testMungePFX3(self):
         real_info={'sample_id': '6037', 
                    'pfx': '6037',
-                   'assay':'coloseq',
+                   'assay':'Coloseq',
                    'well':'01',
                    'mini-pfx': '6037'}
         test_info=munge_pfx('6037_01_BROv8')
@@ -54,7 +54,7 @@ class TestUtils(TestBase):
     def testMungePFX4(self):
         real_info={'sample_id': '6037', 
                    'pfx': '6037',
-                   'assay':'msi-plus',
+                   'assay':'MSI-PLUS',
                    'mini-pfx': '6037'}
         test_info=munge_pfx('6037_MSI-Plus')
 
