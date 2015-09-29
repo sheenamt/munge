@@ -129,7 +129,7 @@ def create_sample_project(ldetail):
     #Grab the assay based on the recipe, don't care about verion of assay
     assay = [value for key,value in ASSAYS.items() if re.search(key, ldetail['Recipe'])][0]
     if ldetail['Description'].upper()=='KAPA':
-        sample_project=+ldetail['Description'].upper()+ldetail['PlateNumber']
+        sample_project=assay+ldetail['Description'].upper()+ldetail['PlateNumber']
     elif ldetail['Description'].upper()=='STANDARD' or ldetail['Description'].upper()=='SURE SELECT':
         sample_project=assay+ldetail['PlateNumber']
     else:
