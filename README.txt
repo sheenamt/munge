@@ -19,7 +19,7 @@ installation
 Clone the project from the git repository::
 
     cd ~/src
-    git clone git@github.com:sheenams/munge.git
+    git clone git@bitbucket.org:uwlabmed/munge.git
     cd munge
 
 Now installation can be performed using the install script provided.
