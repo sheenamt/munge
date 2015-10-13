@@ -126,7 +126,7 @@ ASSAYS={'OPX':'OncoPlex',
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
-    #Grab the assay based on the recipe, don't care about verion of assay
+    #Grab the assay based on the recipe, don't care about verion of assay for this part
     assay = [value for key,value in ASSAYS.items() if re.search(key, ldetail['Recipe'])][0]
     if ldetail['Description'].upper()=='KAPA':
         sample_project=assay+ldetail['Description'].upper()+ldetail['PlateNumber']
@@ -134,6 +134,8 @@ def create_sample_project(ldetail):
         sample_project=assay+ldetail['PlateNumber']
     else:
         sample_project=assay+ldetail['Description']+ldetail['PlateNumber']
+    # append assay version to the end - used in case of multiple assay versions
+    sample_project +='-'+ldetail['Recipe']
     return sample_project
 
 def _lane_detail_to_ss(fcid, ldetail, r):
