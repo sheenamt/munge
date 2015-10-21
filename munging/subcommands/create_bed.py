@@ -1,5 +1,5 @@
 """
-Crawl control files to find std and ave of each position across control run
+Parse bed file from agilent into 120bp probes or CONTRA dies
 
 Usage:
 
@@ -44,7 +44,7 @@ def action(args):
         start=int(row[1])
         stop=int(row[2])
         while start<stop:
-            new_row=(row[0],start,int(start)+120,row[3])
+            new_row=(row[0],start,int(start)+120,row[3],'+','+')
             new_probes.append(new_row)
             start=int(start)+40
     writer=csv.writer(args.outfile, delimiter='\t')
