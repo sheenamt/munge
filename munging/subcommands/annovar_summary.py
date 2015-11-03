@@ -30,28 +30,25 @@ file_types = {
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
     'gatk.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'gatk.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),    
     'gatk.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500si_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500si_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500si_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 
 # varscanINDELS files
@@ -60,29 +57,26 @@ file_types = {
                                   19: 'Reads'},
                                  [2, 3, 4, 5, 6]),
     'varscan.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscan.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ljb26_all_dropped': ({1: 'Poylphen'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500si_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500si_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500si_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 
  #varscanSNP files
@@ -91,29 +85,26 @@ file_types = {
                                      19: 'Reads'},
                                     [2, 3, 4, 5, 6]),
     'varscanSNP.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscanSNP.hg19_AFR.sites.2014_10_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ALL.sites.2014_10_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_AMR.sites.2014_10_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_SAS.sites.2014_10_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EAS.sites.2014_10_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EUR.sites.2014_10_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_avsift_dropped': ({1: 'Sift'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ljb26_all_dropped': ({1: 'Polyphen'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ljb_gerp++_dropped': ({1: 'Gerp'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ljb_mt_dropped': ({1: 'Mutation_Taster'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500si_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500si_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500si_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_clinvar_20140929_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 }
 
@@ -227,6 +218,21 @@ def get_allele_freq(data):
         freq = "{0:.2f}".format(freq)
     return freq
 
+def munge_ljb_scores(data):
+    """
+    Parse sift, polyphen and gerp from ljb_all file
+    """
+ #  polyphen, sift, gerp, mutation_taster = -1, -1, -1, -1 
+    try:
+        info = data.get('ljb_Scores').split(',')
+        sift = info[0]
+        polyphen = info[2]
+        gerp = info[21]
+        mutation_taster = info[8]
+    except AttributeError:
+        return -1, -1, -1, -1 
+    return polyphen, sift, gerp, mutation_taster 
+    
 
 def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
@@ -334,6 +340,7 @@ def action(args):
         data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2', '').strip() else data.get('var_type_1')
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
+        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)        
         data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL'] = data.get('1000g_ALL') or -1
         data['1000g_AMR'] = data.get('1000g_AMR') or -1
