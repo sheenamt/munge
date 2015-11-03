@@ -3,7 +3,7 @@ Summarize output from Annovar and EVS
 
 Usage:
 
-   munge summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
+ munge summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
 
 """
 
@@ -222,7 +222,6 @@ def munge_ljb_scores(data):
     """
     Parse sift, polyphen and gerp from ljb_all file
     """
- #  polyphen, sift, gerp, mutation_taster = -1, -1, -1, -1 
     try:
         info = data.get('ljb_Scores').split(',')
         sift = info[0]
