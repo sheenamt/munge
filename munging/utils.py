@@ -16,6 +16,7 @@ ASSAYS={'OPX':'OncoPlex',
         'EPI':'EpiPlex',
         'MRW':'MarrowSeq',
         'IMD':'ImmunoPlex',
+        'HH':'HotSpot-Heme',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus'}
 
