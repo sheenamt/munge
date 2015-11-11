@@ -20,6 +20,18 @@ ASSAYS={'OPX':'OncoPlex',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus'}
 
+MACHINE_CODES={'H':'hiseq',
+               'M':'miseq',
+               'N':'nextseq'}
+
+ASSAY_CODES={'colo':'coloseq',
+             'onco':'oncoplex',
+             'epi':'epiplex',
+             'imm':'immunoplex',
+             'marrow':'marrowseq',
+             'hh':'hotspot-heme'}
+
+
 def dict_factory(cursor, row):
     """
     Factory to return dicts from sqlite3 queries
@@ -146,6 +158,7 @@ def munge_date(date):
     else:
         return date
 
+
 def munge_path(pth):
     """
     Get date, run, project, machine, assay, prep-type from path
@@ -163,25 +176,12 @@ def munge_path(pth):
     #Lowercase project
     pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
-    if re.search('HA', pathinfo['run']):
-        pathinfo['machine']='hiseq'
-    elif re.search('MA', pathinfo['run']):
-        pathinfo['machine']='miseq'
-    elif re.search('NA', pathinfo['run']):
-        pathinfo['machine']='nextseq'
+    if re.search(''.join(MACHINE_CODES.keys())+'[A-Z]\d+', pathinfo['run']):
+        pathinfo['machine']= MACHINE_CODES[pathinfo['run'][0]]
     #Set assay
-    if re.search('colo', pathinfo['project']):
-        pathinfo['assay']='coloseq'
-    elif re.search('onco', pathinfo['project']):
-        pathinfo['assay']='oncoplex'
-    elif re.search('epi', pathinfo['project']):
-        pathinfo['assay']='epiplex'
-    elif re.search('imm', pathinfo['project']):
-        pathinfo['assay']='immunoplex'
-    elif re.search('marrow', pathinfo['project']):
-        pathinfo['assay']='marrowseq'
-    elif re.search('hh', pathinfo['project']):
-        pathinfo['assay']='hotspot-heme'
+    for a in ASSAY_CODES.keys():
+        if re.search(a, pathinfo['project']):
+            pathinfo['assay'] = ASSAY_CODES[a]
     #Set prep type
     if re.search('kapa', pathinfo['project']):
         pathinfo['prep_type']='kapa'
