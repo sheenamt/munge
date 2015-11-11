@@ -176,7 +176,7 @@ def munge_path(pth):
     #Lowercase project
     pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
-    if re.search(''.join(MACHINE_CODES.keys())+'[A-Z]\d+', pathinfo['run']):
+    if re.search('[%s][A-Z]\d+' % ''.join(MACHINE_CODES.keys()), pathinfo['run']):
         pathinfo['machine']= MACHINE_CODES[pathinfo['run'][0]]
     #Set assay
     for a in ASSAY_CODES.keys():
