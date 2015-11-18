@@ -169,6 +169,7 @@ def munge_path(pth):
     Get date, run, project, machine, assay, prep-type from path
     """
     output=multi_split(pth, '/_')
+    print "output to parse:", output
     #Assuming we want YYMMDD_RUN_PROJECT
     if output[-1]=='output':
         output=output[-4:-1]
