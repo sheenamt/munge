@@ -198,7 +198,7 @@ def munge_path(pth):
         pathinfo['machine']= MACHINE_CODES[pathinfo['run'][0]]
     #Set assay
     for a in ASSAY_CODES.keys():
-        if re.search(a, pathinfo['project']):
+        if re.search(a, pathinfo['project'], re.IGNORECASE):
             pathinfo['assay'] = ASSAY_CODES[a]
     #Set prep type
     if re.search('kapa', pathinfo['project']):
