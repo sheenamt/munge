@@ -169,7 +169,6 @@ def munge_path(pth):
     Get date, run, project, machine, assay, prep-type from path
     """
     output=multi_split(pth, '/_')
-    output=[i.lower() for i in output]
     #Assuming we want YYMMDD_RUN_PROJECT
     if output[-1]=='output':
         output=output[-4:-1]
@@ -178,16 +177,15 @@ def munge_path(pth):
     elif len(output)==5:
         keys=['date','machine','assay','run','version','project']
         #check that the third item is the assay
-        if not output[2] in ASSAY_CODES.values():
+        if not output[2].lower() in ASSAY_CODES.values():
             #is the second item is the assay?
-            if not output[2] in ASSAY_CODES.values():
+            if not output[1].lower() in ASSAY_CODES.values():
                 print "not a good path", output
             project=output[1]+output[3].strip('run')
             output=[output[0],output[2],output[1],output[3], output[4],project] 
         else:
             project=output[2]+output[3].strip('run')
             output=[output[0],output[1],output[2],output[3], output[4],project] 
-#        path_info=munge_old_path(pth)
     else:
         output=output[-3:]
         keys=['date','run', 'project']
