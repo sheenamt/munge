@@ -16,8 +16,21 @@ ASSAYS={'OPX':'OncoPlex',
         'EPI':'EpiPlex',
         'MRW':'MarrowSeq',
         'IMD':'ImmunoPlex',
+        'HH':'HotSpot-Heme',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus'}
+
+MACHINE_CODES={'H':'hiseq',
+               'M':'miseq',
+               'N':'nextseq'}
+
+ASSAY_CODES={'colo':'coloseq',
+             'onco':'oncoplex',
+             'epi':'epiplex',
+             'imm':'immunoplex',
+             'marrow':'marrowseq',
+             'hh':'hotspot-heme'}
+
 
 def dict_factory(cursor, row):
     """
@@ -145,42 +158,49 @@ def munge_date(date):
     else:
         return date
 
+
+def munge_old_path(pth):
+    """
+    Get date, run, project, machine, assay, from old-path
+    """
+    
 def munge_path(pth):
     """
     Get date, run, project, machine, assay, prep-type from path
     """
     output=multi_split(pth, '/_')
+    output=[i.lower() for i in output]
     #Assuming we want YYMMDD_RUN_PROJECT
     if output[-1]=='output':
         output=output[-4:-1]
+        keys=['date','run', 'project']
     #If old version of data that isn't in a 'output' subfolder
+    elif len(output)==5:
+        keys=['date','machine','assay','run','version','project']
+        #check that the third item is the assay
+        if not output[2] in ASSAY_CODES.values():
+            #is the second item is the assay?
+            if not output[2] in ASSAY_CODES.values():
+                print "not a good path", output
+            project=output[1]+output[3].strip('run')
+            output=[output[0],output[2],output[1],output[3], output[4],project] 
+        else:
+            project=output[2]+output[3].strip('run')
+            output=[output[0],output[1],output[2],output[3], output[4],project] 
+#        path_info=munge_old_path(pth)
     else:
         output=output[-3:]
-    keys=['date','run', 'project']
+        keys=['date','run', 'project']
     pathinfo = dict(zip(keys,output))
+    print "pathinfo:", pathinfo
     pathinfo['date']=munge_date(pathinfo['date'])
-    #Lowercase project
-    pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
-    if re.search('HA', pathinfo['run']):
-        pathinfo['machine']='hiseq'
-    elif re.search('MA', pathinfo['run']):
-        pathinfo['machine']='miseq'
-    elif re.search('NA', pathinfo['run']):
-        pathinfo['machine']='nextseq'
+    if re.search('[%s][A-Z]\d+' % ''.join(MACHINE_CODES.keys()), pathinfo['run']):
+        pathinfo['machine']= MACHINE_CODES[pathinfo['run'][0]]
     #Set assay
-    if re.search('colo', pathinfo['project']):
-        pathinfo['assay']='coloseq'
-    elif re.search('onco', pathinfo['project']):
-        pathinfo['assay']='oncoplex'
-    elif re.search('epi', pathinfo['project']):
-        pathinfo['assay']='epiplex'
-    elif re.search('imm', pathinfo['project']):
-        pathinfo['assay']='immunoplex'
-    elif re.search('marrow', pathinfo['project']):
-        pathinfo['assay']='marrowseq'
-    elif re.search('hh', pathinfo['project']):
-        pathinfo['assay']='hotspot-heme'
+    for a in ASSAY_CODES.keys():
+        if re.search(a, pathinfo['project']):
+            pathinfo['assay'] = ASSAY_CODES[a]
     #Set prep type
     if re.search('kapa', pathinfo['project']):
         pathinfo['prep_type']='kapa'
