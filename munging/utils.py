@@ -186,7 +186,6 @@ def munge_path(pth):
         else:
             project=output[2]+output[3].strip('run')
             output=[output[0],output[1],output[2],output[3], output[4],project] 
-#        path_info=munge_old_path(pth)
     else:
         output=output[-3:]
         keys=['date','run', 'project']
