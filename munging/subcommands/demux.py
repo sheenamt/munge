@@ -3,7 +3,7 @@ Run bcl2fastq to demultiplex a sequencing run
 
 Usage:
 
- munge demux run-folder cores sequencer
+ munge demux run-folder cores
 
 """
 
