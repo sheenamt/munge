@@ -3,7 +3,7 @@ Run bcl2fastq to demultiplex a sequencing run
 
 Usage:
 
- munge demux run-folder cores sequencer
+ munge demux run-folder cores
 
 """
 
@@ -85,6 +85,7 @@ def run_bcl2fastqv2(run_info, cores, index=None):
                          '--with-failed-reads',
                          '--no-lane-splitting',
                          '--barcode-mismatches', '0',
+                         '--min-log-level','WARNING',
                          '--use-bases-mask',bases_mask])
     return run_info
 
