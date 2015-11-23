@@ -190,8 +190,8 @@ def munge_path(pth):
         output=output[-3:]
         keys=['date','run', 'project']
     pathinfo = dict(zip(keys,output))
-    print "pathinfo:", pathinfo
     pathinfo['date']=munge_date(pathinfo['date'])
+    pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
     if re.search('[%s][A-Z]\d+' % ''.join(MACHINE_CODES.keys()), pathinfo['run']):
         pathinfo['machine']= MACHINE_CODES[pathinfo['run'][0]]
