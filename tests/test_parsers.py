@@ -54,7 +54,7 @@ class TestParsers(TestBase):
                                          'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 'HiSeq_Freq',
                                          'HiSeq_Count', 'NextSeq_Freq', 'NextSeq_Count','MiSeq_Freq', 'MiSeq_Count', 
                                          '1000g_ALL', 'EVS_esp6500_ALL', '1000g_AMR', 'EVS_esp6500_AA', '1000g_EUR',
-                                         'EVS_esp6500_EU', '1000g_ASN', '1000g_AFR', '6037_NA12878_Ref|Var',
+                                         'EVS_esp6500_EU', '1000g_EAS', '1000g_SAS','1000g_AFR', '6037_NA12878_Ref|Var',
                                                          '5437_NA12878_Ref|Var', '0228T_Ref|Var', 'Count']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
