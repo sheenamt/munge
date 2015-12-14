@@ -10,6 +10,7 @@ Usage:
 # import argparse
 import os
 import csv
+import re
 
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
@@ -113,24 +114,24 @@ WELL_MAPPING={'A01':'01',
               'G12':'95',
               'H12':'96'}
 
-ASSAYS={'OPXv4':'OncoPlex',    
-        'OPXv5':'OncoPlex',    
-        'OPXv3':'OncoPlex',    
-        'BROv7':'ColoSeq',
-        'BROv8':'ColoSeq',
-        'BROv6':'ColoSeq',
-        'EPIv1':'EpiPlex',
-        'MRWv3':'MarrowSeq',
-        'IMDv1':'ImmunoPlex'}
+ASSAYS={'OPX':'OncoPlex',    
+        'BRO':'ColoSeq',
+        'EPI':'EpiPlex',
+        'MRW':'MarrowSeq',
+        'IMD':'ImmunoPlex'}
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
+    #Grab the assay based on the recipe, don't care about verion of assay for this part
+    assay = [value for key,value in ASSAYS.items() if re.search(key, ldetail['Recipe'])][0]
     if ldetail['Description'].upper()=='KAPA':
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description'].upper()+ldetail['PlateNumber']
+        sample_project=assay+ldetail['Description'].upper()+ldetail['PlateNumber']
     elif ldetail['Description'].upper()=='STANDARD' or ldetail['Description'].upper()=='SURE SELECT':
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['PlateNumber']
+        sample_project=assay+ldetail['PlateNumber']
     else:
-        sample_project=ASSAYS[ldetail['Recipe']]+ldetail['Description']+ldetail['PlateNumber']
+        sample_project=assay+ldetail['Description']+ldetail['PlateNumber']
+    # append assay version to the end - used in case of multiple assay versions
+    sample_project +='-'+ldetail['Recipe']
     return sample_project
 
 def _lane_detail_to_ss(fcid, ldetail, r):
@@ -174,15 +175,14 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
     writer = csv.writer(out_file)
     writer.writerow(["[Data]",])
-    writer.writerow(["Sample_ID","Sample_Project","Lane","index"])
+    writer.writerow(["Sample_ID","Sample_Project","index"])
     so_writer = csv.writer(signout)
     so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
 
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
         info=_lane_detail_to_ss(fcid, ldetail, 1)
-        for r in range(1,3):
-            writer.writerow([info[2],info[9],r,info[4]])
+        writer.writerow([info[2],info[9],info[4]])
     return out_file
 
 
@@ -191,7 +191,7 @@ def _get_flowcell_id(reader, require_single=True):
     """
     fc_ids = set([x['FCID'] for x in reader])
     if require_single and len(fc_ids) > 1:
-        raise ValueError("There are several FCIDs in the same samplesheet file: %s" % reader)
+        raise ValueError("There are several FCIDs in the same samplesheet file: %s" % fc_ids)
     else:
         return fc_ids
 

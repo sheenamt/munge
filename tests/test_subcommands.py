@@ -133,6 +133,19 @@ class TestSummary(TestBase):
         self.assertEqual(variant_phred, '30')
 
 
+    def testMungeLJBScores(self):
+        """
+        Return sift, polyphen and gerp from ljb_all file
+        """
+        data={'ljb_Scores':'0.18,T,0.462,P,0.065,B,0.000,D,0.000,P,1.375,L,-0.78,T,-1.076,T,0.000,T,0.397,2.791,15.29,4.74,1.898,3.792,13.742'}
+
+        polyphen, sift, gerp, mutation_taster=annovar_summary.munge_ljb_scores(data)
+        self.assertEqual(polyphen, '0.462')
+        self.assertEqual(sift, '0.18')
+        self.assertEqual(gerp, '4.74')
+        self.assertEqual(mutation_taster,'0.000')
+
+
 
 class TestAnnovarBedParser(TestBase):
     """
@@ -270,7 +283,7 @@ class TestLoadListtoSampleSheet(TestBase):
         output=loadlist2samplesheet._lane_detail_to_ss(fcid, ldetail, 1)
         self.assertIn('6036-D05-OPXv4', output)
         #test correct creation of Project name
-        self.assertIn('OncoPlex60', output)
+        self.assertIn('OncoPlex60-OPXv4', output)
 
     def testGetFlowCellID01(self):
         """Test that only 1 flowcell ID is allowed"""

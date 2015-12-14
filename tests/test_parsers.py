@@ -48,14 +48,14 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_snp'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)   
-        self.assertListEqual(sorted(prefixes),sorted(['5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_CON_Ref|Var', 'Count']))
+        self.assertListEqual(sorted(prefixes),sorted(['5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count']))
         self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Gene', 'Variant_Type',
                                          'Transcripts', 'Clinically_Flagged', 'Cosmic', 'Segdup', 
                                          'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 'HiSeq_Freq',
                                          'HiSeq_Count', 'NextSeq_Freq', 'NextSeq_Count','MiSeq_Freq', 'MiSeq_Count', 
                                          '1000g_ALL', 'EVS_esp6500_ALL', '1000g_AMR', 'EVS_esp6500_AA', '1000g_EUR',
-                                         'EVS_esp6500_EU', '1000g_ASN', '1000g_AFR', '6037_NA12878_Ref|Var',
-                                                         '5437_NA12878_Ref|Var', '0228T_CON_Ref|Var', 'Count']))
+                                         'EVS_esp6500_EU', '1000g_EAS', '1000g_SAS','1000g_AFR', '6037_NA12878_Ref|Var',
+                                                         '5437_NA12878_Ref|Var', '0228T_Ref|Var', 'Count']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testCNVGeneParser(self):
@@ -67,8 +67,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_cnv_gene'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)   
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
         self.assertListEqual(variant_keys, ['Position', 'Gene'])
 
     def testCNVExonParser(self):
@@ -80,8 +80,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_cnv_exon'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)   
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_CON_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Transcripts', '0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log']))
         self.assertListEqual(variant_keys, ['Position', 'Gene'])
     
     def testQualityParser(self):
@@ -93,9 +93,9 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_quality'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)        
-        self.assertListEqual(fieldnames, ['MEAN_TARGET_COVERAGE', '0228T_CON','5437_NA12878','6037_NA12878'])
+        self.assertListEqual(fieldnames, ['MEAN_TARGET_COVERAGE', '0228T','5437_NA12878','6037_NA12878'])
         self.assertListEqual(variant_keys, ['MEAN_TARGET_COVERAGE'])
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON','5437_NA12878','6037_NA12878']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T','5437_NA12878','6037_NA12878']))
        
     def testPindelParser(self):
         specimens = defaultdict(dict)
@@ -106,8 +106,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_pindel'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)      
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON', '5437_NA12878', '6037_NA12878','Count']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Gene_Region', 'Event_Type', 'Size', 'Transcripts', '0228T_CON', '5437_NA12878', '6037_NA12878','Count']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T', '5437_NA12878', '6037_NA12878','Count']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Gene', 'Gene_Region', 'Event_Type', 'Size', 'Transcripts', '0228T', '5437_NA12878', '6037_NA12878','Count']))
         self.assertListEqual(variant_keys, ['Position', 'Gene'])
         
     def testClinFlaggedParser(self):
@@ -119,8 +119,8 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_clin_flagged'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_CON_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testHSParser(self):
@@ -167,13 +167,11 @@ class TestParsers(TestBase):
         analysis_type='parsers.parse_msi_flagged'
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
-        self.assertListEqual(sorted(prefixes),sorted(['0228T_CON_Variants|Total', '0228T_CON_Status','5437_NA12878_Variants|Total', '5437_NA12878_Status','6037_NA12878_Variants|Total','6037_NA12878_Status']))
-        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_CON_Variants|Total', '0228T_CON_Status','5437_NA12878_Variants|Total', '5437_NA12878_Status','6037_NA12878_Variants|Total','6037_NA12878_Status']))
+        self.assertListEqual(sorted(prefixes),sorted(['0228T_Variants|Total', '0228T_Status','5437_NA12878_Variants|Total', '5437_NA12878_Status','6037_NA12878_Variants|Total','6037_NA12878_Status']))
+        self.assertListEqual(sorted(fieldnames), sorted(['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants|Total', '0228T_Status','5437_NA12878_Variants|Total', '5437_NA12878_Status','6037_NA12878_Variants|Total','6037_NA12878_Status']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
-        self.assertEqual(specimens[('chr7:55259524','T','A')]['0228T_CON_Status'], 'REVIEW')
-        self.assertEqual(specimens[('chr3:37034946', 'G', 'A')]['0228T_CON_Status'], 'POS')
-        self.assertEqual(specimens[('chr12:25380283', 'C', 'T')]['0228T_CON_Status'], 'NEG')
-        self.assertEqual(specimens[('chr13:32936674', 'C', 'T')]['0228T_CON_Status'], 'IND')
+        self.assertEqual(specimens[('chr7:55259524','T','A')]['0228T_Status'], 'REVIEW')
+        self.assertEqual(specimens[('chr3:37034946', 'G', 'A')]['0228T_Status'], 'POS')
+        self.assertEqual(specimens[('chr12:25380283', 'C', 'T')]['0228T_Status'], 'NEG')
+        self.assertEqual(specimens[('chr13:32936674', 'C', 'T')]['0228T_Status'], 'IND')
 
-    def testShortenName(self):
-        names = ['LMG-240', ]
