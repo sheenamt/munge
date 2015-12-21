@@ -181,15 +181,14 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
     writer = csv.writer(out_file)
     writer.writerow(["[Data]",])
-    writer.writerow(["Sample_ID","Sample_Project","Lane","index"])
+    writer.writerow(["Sample_ID","Sample_Project","index"])
     so_writer = csv.writer(signout)
     so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
 
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
         info=_lane_detail_to_ss(fcid, ldetail, 1)
-        for r in range(1,3):
-            writer.writerow([info[2],info[9],r,info[4]])
+        writer.writerow([info[2],info[9],info[4]])
     return out_file
 
 

@@ -166,7 +166,8 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'EVS_esp6500_AA',
         '1000g_EUR',
         'EVS_esp6500_EU',
-        '1000g_ASN',
+        '1000g_SAS',
+        '1000g_EAS',
         '1000g_AFR']
 
     for pth in files:

@@ -3,7 +3,7 @@ Run bcl2fastq to demultiplex a sequencing run
 
 Usage:
 
- munge demux run-folder cores sequencer
+ munge demux run-folder cores
 
 """
 
@@ -22,6 +22,10 @@ def build_parser(parser):
                     help="Number of cores for demux")
     parser.add_argument('-s','--samplesheet',
                     help="Absolute path to sample sheet")
+    parser.add_argument('-m','--smmips',
+                    action='store_true', 
+                    default=False,
+                    help="Run uses 10bp index")
     parser.add_argument('-f','--fileshare',
                     default='/mnt/disk3/genetics/fastqs',
                     help="Absolute path to fastq output on file share")
@@ -59,12 +63,16 @@ def parse_flowcell_dir(run_folder):
     run_info=zip(fc_dict, fc_values)
     return run_info
 
-def run_bcl2fastqv2(run_info, cores):
+def run_bcl2fastqv2(run_info, cores, index=None):
     """Run bcl2fastqv2 for de-multiplexing and fastq 
     generation of reads from the HiSeq, MiSeq, and NextSeq. 
     run_folder -- directory of Illumina outputs
     ss_csv -- Samplesheet CSV file describing samples.
     """
+    if index:
+        bases_mask='Y*,I10,I10,Y*'
+    else:
+        bases_mask='Y*,I8,Y*'
     runfolder_dir = os.path.join(run_info['drive'],run_info['flowcell_dir'])
     fastq_output_dir = os.path.join(run_info['drive'],run_info['run_date']+"_"+run_info['machine']+run_info['machine_run'])
     run_info.update({'fastq_output_dir':fastq_output_dir})
@@ -77,7 +85,8 @@ def run_bcl2fastqv2(run_info, cores):
                          '--with-failed-reads',
                          '--no-lane-splitting',
                          '--barcode-mismatches', '0',
-                         '--use-bases-mask','Y*,I8,Y*'])
+                         '--min-log-level','WARNING',
+                         '--use-bases-mask',bases_mask])
     return run_info
 
 def rename_fastqs(run_info, fileshare):
@@ -105,10 +114,10 @@ def rename_fastqs(run_info, fileshare):
                     newname = os.path.join(project_dir, '%s_%s.2.fastq.gz' % (pfx.replace('-','_'), run))
                     shutil.copy2(f, newname)
 
-
 def action(args):
     info=vars(args)
     run_info={}
+
     # Parse the flowcell dir to create the run_info
     run_info.update(parse_flowcell_dir(info['run_folder']))
     # Add the sample sheet to the run dict
@@ -118,6 +127,6 @@ def action(args):
         run_info.update({'SampleSheet': os.path.join(info['run_folder'],'SampleSheet.csv')})
     # Add server based on seq machine id
     run_info.update(SEQ_MACHINES[run_info['Illumina_id']])
-    run_bcl2fastqv2(run_info, info['cores'])
+    run_bcl2fastqv2(run_info, info['cores'], args.smmips)
     print "run info:", run_info
     rename_fastqs(run_info, args.fileshare)
