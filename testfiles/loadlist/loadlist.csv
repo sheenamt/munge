@@ -1,0 +1,4 @@
+FCID,PlateNumber,Operator,Well,SampleProject,Description,ControlWell,Accession,Patient Name,MRN,Recipe,Bar code Number (ILMN#),Index,,,,,,,
+HYMVWADXX,106,SF,A01,ColoSeq106,standard,NA12878,LMG-240,NA12878 (BROCA),LMG-240,BROv8,1,AACGTGAT,,,,,,,
+HYMVWADXX,106,SF,B01,ColoSeq106,standard,A01,,,,BROv8,2,AAACATCG,,,,,,,
+HYMVWADYX,106,SF,C01,ColoSeq106,standard,A01,,,,BROv8,3,ATGCCTAA,,,,,,,
