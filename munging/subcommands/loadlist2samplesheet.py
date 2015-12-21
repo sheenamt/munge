@@ -197,7 +197,7 @@ def _get_flowcell_id(reader, require_single=True):
 
 def action(args):
     out_dir='./'
-    reader=csv.DictReader(open(args.loadlist))
+    reader=csv.DictReader(open(args.loadlist,'rU'))
     #strip whitespace from header names in case tech used wrong template
     reader.fieldnames=[i.strip() for i in reader.fieldnames]
     lane_details = [row for row in reader]
