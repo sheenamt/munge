@@ -62,4 +62,4 @@ def action(args):
         header.append(sample)
         sample_info=merged[header]
         sample_out=path.join('output',pfx,pfx+'.Amplicon_Analysis.txt')
-        sample_info.to_csv(sample_out, index=False)
+        sample_info.to_csv(sample_out, index=False, sep='\t')
