@@ -53,7 +53,7 @@ def action(args):
     merged = pd.merge(amplicons,clean_metrics, how='inner', left_on='Target', right_on='Target')
 
     #Print top-level-output
-    merged.to_csv(args.top_output, index=False)
+    merged.to_csv(args.top_output, index=False,sep='\t')
 
     #Print sample level output
     for sample in samples:
