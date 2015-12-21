@@ -162,11 +162,11 @@ def munge_path(pth):
     #Lowercase project
     pathinfo['project']=pathinfo['project'].lower()
     #Set Machine
-    if re.search('HA', pathinfo['run']):
+    if re.search('H', pathinfo['run']):
         pathinfo['machine']='hiseq'
-    elif re.search('MA', pathinfo['run']):
+    elif re.search('M', pathinfo['run']):
         pathinfo['machine']='miseq'
-    elif re.search('NA', pathinfo['run']):
+    elif re.search('N', pathinfo['run']):
         pathinfo['machine']='nextseq'
     #Set assay
     if re.search('colo', pathinfo['project']):
