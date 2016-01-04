@@ -6,7 +6,7 @@ Usage:
  munge summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
 
 """
-
+import pprint
 import logging
 import sys
 import re
@@ -22,94 +22,36 @@ variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
 # (pattern, header_ids, var_key_ids)
 
 file_types = {
-#gatk files
-    'gatk.variant_function': ({0: 'var_type_1',
-                          1: 'Gene',
-                          7: 'Zygosity',
-                          12: 'rsid_1',
-                          8: 'GATK_Score'},
-                         [2, 3, 4, 5, 6]),
-    'gatk.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'gatk.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-
-# varscanINDELS files
-    'varscan.variant_function': ({0: 'var_type_1',
-                                  1: 'Gene',
-                                  19: 'Reads'},
-                                 [2, 3, 4, 5, 6]),
-    'varscan.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscan.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-
- #varscanSNP files
-    'varscanSNP.variant_function': ({0: 'var_type_1',
-                                     1: 'Gene',
-                                     19: 'Reads'},
-                                    [2, 3, 4, 5, 6]),
-    'varscanSNP.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscanSNP.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+#merged files
+    'merged.variant_function': ({0: 'var_type_1',
+                                 1: 'Gene',
+                                 7: 'Zygosity',
+                                 12: 'rsid_1',
+                                 19: 'Reads',
+                                 8: 'GATK_Score'},
+                                [2, 3, 4, 5, 6]),
+    'merged.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'merged.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
 }
-
-log = logging.getLogger(__name__)
-
 
 def get_reads(data):
     """Parse the reads from
@@ -143,10 +85,9 @@ def munge_gene_and_Transcripts(data, RefSeqs):
         if 'NM' in Gene_tail:
             # overrides value of Transcripts
             Transcripts = data['Gene'].replace('(', ':').strip(')')
-
-    return Gene, Transcripts
-
-
+    trans = ", ".join(str(e) for e in set(Transcripts.split(',')) if e)
+    return Gene, trans
+ 
 def munge_transcript(data, RefSeqs):
     """
     Return HGVS correct transcript annotations
@@ -157,13 +98,12 @@ def munge_transcript(data, RefSeqs):
     transcripts = data.get('Transcripts')
     if transcripts is not None:
         # Split incoming trans, strip the trailing )
-        data = multi_split(transcripts.replace('(', ':'), ',(')
-        for d in data:
+        for data in transcripts.split(','):
+            d = data.replace('(', ':') 
             # Split the actual transcript info which is colon separated
             x = d.split(':')
             try:
                 gene, txpt, exon, codon, prot = x
-
             except ValueError:
                 try:
                     gene, txpt, exon, codon = x
@@ -177,8 +117,7 @@ def munge_transcript(data, RefSeqs):
             coding = coding + ' ' + code
             protein = protein + ' ' + prot
     return coding.strip(), protein.strip()
-
-
+                 
 def map_headers(fname, header_ids, variant_idx):
     """
     Gets header(s) and info from each file
@@ -230,7 +169,12 @@ def munge_ljb_scores(data):
     except AttributeError:
         return -1, -1, -1, -1 
     return polyphen, sift, gerp, mutation_taster 
-    
+
+def merge_two_dicts(x, y):
+    '''Given two dicts, merge them into a new dict as a shallow copy.'''
+    z = x.copy()
+    z.update(y)
+    return z    
 
 def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
@@ -260,45 +204,45 @@ def action(args):
                     RefSeqs[transcript.split('.')[0]] = transcript
 
     headers = ['Position'] + variant_headers[3:5] + [
-        'Clinically_Flagged',
+#        'Clinically_Flagged',
         'Variant_Type',
-        'HiSeq_Freq',
-        'NextSeq_Freq',
-        '1000g_ALL',
-        'EVS_esp6500_ALL',
-        'EXAC',
+ #       'HiSeq_Freq',
+  #      'NextSeq_Freq',
+   #     '1000g_ALL',
+    #    'EVS_esp6500_ALL',
+     #   'EXAC',
         'Gene',
         'p.',
         'c.',
-        'Faves_Y/N',
-        'Ref_Reads',
-        'Var_Reads',
-        'Allele_Frac',
-        'Variant_Phred',
-        'Cosmic',
-        'CADD',
-        'ClinVar',
-        'Polyphen',
-        'Sift',
-        'Mutation_Taster',
-        'Gerp',
-        '1000g_AMR',
-        '1000g_EUR',
-        '1000g_SAS',
-        '1000g_EAS',
-        '1000g_AFR',
-        'EVS_esp6500_AA',
-        'EVS_esp6500_EU',
-        'Transcripts',
-        'Zygosity',
-        'Segdup',
-        'NCI60',
-        'dbSNP_ID',
-        'HiSeq_Count',
-        'NextSeq_Count',
-        'MiSeq_Freq',
-        'MiSeq_Count',
-        'GATK_Score'
+      #  'Faves_Y/N',
+        # 'Ref_Reads',
+        # 'Var_Reads',
+        # 'Allele_Frac',
+        # 'Variant_Phred',
+        # 'Cosmic',
+        # 'CADD',
+        # 'ClinVar',
+        # 'Polyphen',
+        # 'Sift',
+        # 'Mutation_Taster',
+        # 'Gerp',
+        # '1000g_AMR',
+        # '1000g_EUR',
+        # '1000g_SAS',
+        # '1000g_EAS',
+        # '1000g_AFR',
+        # 'EVS_esp6500_AA',
+        # 'EVS_esp6500_EU',
+         'Transcripts',
+        # 'Zygosity',
+        # 'Segdup',
+        # 'NCI60',
+        # 'dbSNP_ID',
+        # 'HiSeq_Count',
+        # 'NextSeq_Count',
+        # 'MiSeq_Freq',
+        # 'MiSeq_Count',
+        # 'GATK_Score'
         ]
 
     # accumulate data from all input files for each variant
@@ -321,7 +265,10 @@ def action(args):
             continue
 
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
-            output[var_key].update(data)
+            if var_key in output and data.get('Transcripts'):
+                output[var_key]['Transcripts']=output[var_key]['Transcripts']+data.get('Transcripts')
+            else:
+                output[var_key].update(data)
 
     writer = csv.DictWriter(args.outfile,
                             fieldnames=headers,
@@ -335,7 +282,8 @@ def action(args):
     # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
         # # modify any specific fields here
-        data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2', '').strip() else data.get('var_type_1')
+#        data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2', '').strip() else data.get('var_type_1')
+        data['Variant_Type'] = ','.join([data.get('var_type_2', '').strip(), data.get('var_type_1')])
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
         data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)        
