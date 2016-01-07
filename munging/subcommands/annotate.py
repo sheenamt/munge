@@ -79,8 +79,8 @@ def action(args):
         cmd = filter(None, annovar_cmd)
         subprocess.check_call(cmd)
         if a.anno_type=='--genericdbfile':
-            generic_file = os.path.join(args.output_dir,pfx_info['pfx']+'.hg19_generic_dropped')
-            specific_file = os.path.join(args.output_dir,pfx_info['pfx']+'.'+a.args[0]+'_dropped')
+            generic_file = os.path.join(os.path.dirname(args.input_file),pfx_info['pfx']+'.hg19_generic_dropped')
+            specific_file = os.path.join(os.path.dirname(args.input_file),pfx_info['pfx']+'.'+a.args[0]+'_dropped')
             mvcmd=['mv' , generic_file, specific_file]
             subprocess.check_call(mvcmd)
 
