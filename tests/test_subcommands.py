@@ -131,11 +131,19 @@ class TestSummary(TestBase):
         """
         Return Ref_Reads, Var_Reads, Variant_Phred
         """
-        data='1/1:255:289:289:18:267:92.39%:3.3502E-142:24:30:7:11:48:219'
-        ref_reads, var_reads, variant_phred = annovar_summary.get_reads(data)
+        varscan_header='GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR'
+        data1='1/1:255:289:289:18:267:92.39%:3.3502E-142:24:30:7:11:48:219'
+        ref_reads, var_reads, variant_phred = annovar_summary.get_reads(varscan_header,data1)
         self.assertEqual(ref_reads, '18')
         self.assertEqual(var_reads, '267')
         self.assertEqual(variant_phred, '30')
+
+        data2='1/1:0,2:2:6:65,6,0'
+        gatk_header='GT:AD:DP:GQ:PL'
+        ref_reads, var_reads, variant_phred = annovar_summary.get_reads(gatk_header,data2)
+        self.assertEqual(ref_reads, '0')
+        self.assertEqual(var_reads, '2')
+        self.assertEqual(variant_phred, '')
 
 
     def testMungeLJBScores(self):
