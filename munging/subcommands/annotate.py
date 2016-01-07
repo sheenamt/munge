@@ -11,13 +11,14 @@ import csv
 from munging.utils import munge_path, munge_pfx
 
 def build_parser(parser):
-    parser.add_argument('output_dir',
+    parser.add_argument('run_dir',
                         help='Directory where input file is located and where output files will be created')
-    parser.add_argument('library_dir', 
-                        help='Directory holding Annovar library files')
-    parser.add_argument('--input-file', default=None,
+    parser.add_argument('input_file', default=None,
                         help='Explicitly specify input file of variants in Annovar format')
-    parser.add_argument('--annovar-bin', default='',
+    parser.add_argument('--library_dir', default='/mnt/disk2/com/Genomes/Annovar_files',
+                        help='Directory holding Annovar library files')
+
+    parser.add_argument('--annovar_bin', default='',
                         help='Location of the Annovar perl executables')
 
 ANNOTATIONS = [('snp138',),  # dbsnp
@@ -48,11 +49,10 @@ def action(args):
     ANNOVAR_VARIANTS = os.path.join(args.annovar_bin, 'annotate_variation.pl')
     GENERIC_DB = 'hg19_clinical_variants'
 
-    pathinfo = munge_path(os.path.dirname(args.input_file))
+    pathinfo = munge_path(args.run_dir)
     internal_freq_file = '_'.join(['hg19',pathinfo['machine'],pathinfo['assay']])
     internal_cadd_file = '_'.join(['hg19','CADD',pathinfo['assay']])
     
-    # list all variants to file
     variants_file = args.input_file
 
     pfx_info = munge_pfx(os.path.basename(args.input_file))
@@ -73,13 +73,15 @@ def action(args):
                        + list(a.args) + \
                        ['--otherinfo', 
                         '--separate',
-                        '-outfile', os.path.join(args.output_dir, pfx_info['pfx']), 
+                        '-outfile', os.path.join(os.path.dirname(args.input_file), pfx_info['pfx']), 
                         variants_file, 
                         args.library_dir]
         cmd = filter(None, annovar_cmd)
         subprocess.check_call(cmd)
         if a.anno_type=='--genericdbfile':
-            mvcmd=['mv' , os.path.join(args.output_dir,'variants.hg19_generic_dropped'), os.path.join(args.output_dir,'variants.'+a.args[0]+'_dropped') ]
+            generic_file = os.path.join(args.output_dir,pfx_info['pfx']+'.hg19_generic_dropped')
+            specific_file = os.path.join(args.output_dir,pfx_info['pfx']+'.'+a.args[0]+'_dropped')
+            mvcmd=['mv' , generic_file, specific_file]
             subprocess.check_call(mvcmd)
 
 
