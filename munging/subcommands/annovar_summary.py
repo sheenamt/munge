@@ -27,6 +27,7 @@ file_types = {
                                  1: 'Gene',
                                  7: 'Zygosity',
                                  12: 'rsid_1',
+                                 18: 'Read_Headers',
                                  19: 'Reads',
                                  8: 'GATK_Score'},
                                 [2, 3, 4, 5, 6]),
@@ -44,9 +45,7 @@ file_types = {
     'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
     'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
     'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
+    'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
     'hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
@@ -55,22 +54,21 @@ file_types = {
     'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
 
-def get_reads(data):
+def get_reads(headers, data):
     """Parse the reads from
     GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
+    OR
+    GT:AD:DP:GQ:PL
     RD:Depth of reference-supporting bases (reads1)
-    AD:Depth of variant-supporting bases (reads2)
+    AD:Depth of variant-supporting bases (reads2) OR (reads1,reads2)
     ABQ:Average quality of variant-supporting bases (qual2)
     """
-    try:
-        all_data = data.split(':')
-        if not len(all_data) == 14:
-            print """Info from varscan or varscanSNP doesn't appear to be right.
-            Ensure GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR is present"""
-            sys.exit(1)
-        return all_data[4], all_data[5], all_data[9]
-    except AttributeError:
-        return '-1', '-1', ''
+    info = dict(zip(headers.split(':'), data.split(':')))
+    if len(info['AD'].split(','))==2:
+        reads=info['AD'].split(',')
+        return reads[0],reads[1],''
+    else:
+        return info['RD'],info['AD'],info['ABQ']
 
 
 def munge_gene_and_Transcripts(data, RefSeqs):
@@ -87,7 +85,7 @@ def munge_gene_and_Transcripts(data, RefSeqs):
         if 'NM' in Gene_tail:
             # overrides value of Transcripts
             Transcripts = data['Gene'].replace('(', ':').strip(')')
-    trans = ", ".join(str(e) for e in set(Transcripts.split(',')) if e)
+    trans = ", ".join(str(e) for e in set(Transcripts.split(',') if Transcripts else []) if e)
     return Gene, trans
  
 def munge_transcript(data, RefSeqs):
@@ -140,11 +138,7 @@ def map_headers(fname, header_ids, variant_idx):
             data = dict((key, row[i]) for i, key in header_ids.items() if row[i].strip())
             data['Position'] = get_location(**variant_dict)
 
-            # if 'var_type_2' in header_ids.values():
-            #     print variant_id, fname, data['var_type_2']
-
             yield (variant_id, dict(data, **variant_dict))
-
 
 def get_allele_freq(data):
     """
@@ -208,8 +202,7 @@ def action(args):
     headers = ['Position'] + variant_headers[3:5] + [
         'Clinically_Flagged',
         'Variant_Type',
-        'HiSeq_Freq',
-        'NextSeq_Freq',
+        'UW_Freq',
         '1000g_ALL',
         'EVS_esp6500_ALL',
         'EXAC',
@@ -240,10 +233,7 @@ def action(args):
         'Segdup',
         'NCI60',
         'dbSNP_ID',
-        'HiSeq_Count',
-        'NextSeq_Count',
-        'MiSeq_Freq',
-        'MiSeq_Count',
+        'UW_Count',
         'GATK_Score'
     ]
 
@@ -284,11 +274,12 @@ def action(args):
     # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
         # # modify any specific fields here
-#        data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2', '').strip() else data.get('var_type_1')
         data['Variant_Type'] = ','.join([data.get('var_type_2', '').strip(), data.get('var_type_1')])
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
-        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)        
+        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
+        data['Allele_Frac'] = get_allele_freq(data)
+        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data) 
         data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL'] = data.get('1000g_ALL') or -1
         data['1000g_AMR'] = data.get('1000g_AMR') or -1
@@ -302,9 +293,5 @@ def action(args):
         data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU') or -1
         #CADD is raw score, phred score. We only care about phred
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
-        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Reads'))
-        data['MiSeq_Freq'], data['MiSeq_Count'] = split_string_in_two(data.get('Mi_Freq_list'))
-        data['HiSeq_Freq'], data['HiSeq_Count'] = split_string_in_two(data.get('Hi_Freq_list'))
-        data['NextSeq_Freq'], data['NextSeq_Count'] = split_string_in_two(data.get('NS_Freq_list'))
-        data['Allele_Frac'] = get_allele_freq(data)
+        data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
         writer.writerow(data)
