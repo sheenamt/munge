@@ -51,6 +51,8 @@ file_types = {
     'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
 
 def get_reads(data):
@@ -190,7 +192,7 @@ def build_parser(parser):
         '--strict', action='store_true', default=False,
         help='Exit with error if an input file has no match.')
 
-
+log = logging.getLogger(__name__)
 def action(args):
 
     (infiles, ) = args.infiles
@@ -204,46 +206,46 @@ def action(args):
                     RefSeqs[transcript.split('.')[0]] = transcript
 
     headers = ['Position'] + variant_headers[3:5] + [
-#        'Clinically_Flagged',
+        'Clinically_Flagged',
         'Variant_Type',
- #       'HiSeq_Freq',
-  #      'NextSeq_Freq',
-   #     '1000g_ALL',
-    #    'EVS_esp6500_ALL',
-     #   'EXAC',
+        'HiSeq_Freq',
+        'NextSeq_Freq',
+        '1000g_ALL',
+        'EVS_esp6500_ALL',
+        'EXAC',
         'Gene',
         'p.',
         'c.',
-      #  'Faves_Y/N',
-        # 'Ref_Reads',
-        # 'Var_Reads',
-        # 'Allele_Frac',
-        # 'Variant_Phred',
-        # 'Cosmic',
-        # 'CADD',
-        # 'ClinVar',
-        # 'Polyphen',
-        # 'Sift',
-        # 'Mutation_Taster',
-        # 'Gerp',
-        # '1000g_AMR',
-        # '1000g_EUR',
-        # '1000g_SAS',
-        # '1000g_EAS',
-        # '1000g_AFR',
-        # 'EVS_esp6500_AA',
-        # 'EVS_esp6500_EU',
-         'Transcripts',
-        # 'Zygosity',
-        # 'Segdup',
-        # 'NCI60',
-        # 'dbSNP_ID',
-        # 'HiSeq_Count',
-        # 'NextSeq_Count',
-        # 'MiSeq_Freq',
-        # 'MiSeq_Count',
-        # 'GATK_Score'
-        ]
+        'Faves_Y/N',
+        'Ref_Reads',
+        'Var_Reads',
+        'Allele_Frac',
+        'Variant_Phred',
+        'Cosmic',
+        'CADD',
+        'ClinVar',
+        'Polyphen',
+        'Sift',
+        'Mutation_Taster',
+        'Gerp',
+        '1000g_AMR',
+        '1000g_EUR',
+        '1000g_SAS',
+        '1000g_EAS',
+        '1000g_AFR',
+        'EVS_esp6500_AA',
+        'EVS_esp6500_EU',
+        'Transcripts',
+        'Zygosity',
+        'Segdup',
+        'NCI60',
+        'dbSNP_ID',
+        'HiSeq_Count',
+        'NextSeq_Count',
+        'MiSeq_Freq',
+        'MiSeq_Count',
+        'GATK_Score'
+    ]
 
     # accumulate data from all input files for each variant
     output = defaultdict(dict)
@@ -259,7 +261,7 @@ def action(args):
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
             if re.search('dropped', fname):
-                log.warning('no match: %s' % fname)
+                log.warning('not processing: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
