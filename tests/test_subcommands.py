@@ -44,19 +44,14 @@ data1 = {'Gene': 'SCN1A',
          'Transcripts': 'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,',
          'Variant_Type': '',
          'Var_Reads': '-1', 'Ref_Reads': '-1'}
+#Duplicate transcript entry to test parsing of duplicates
 data2 = {'Gene': 'SYNGAP1',
-         'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
+         'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
          'Variant_Type': 'upstream',
          'Var_Reads': '10', 'Ref_Reads': '90'}
 data3 = {'Gene': 'BRCA1',
          'Transcripts': 'BRCA1:NM_007300:exon10:c.3113A>G:p.E1038G,BRCA1:NM_007297:exon9:c.2972A>G:p.E991G,BRCA1:NM_007294:exon10:c.3113A>G:p.E1038G',
          'Variant_Type': ''}
-#Duplicate transcript entry to test parsing of duplicates
-data4 = {'Gene': 'SYNGAP1',
-         'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
-         'Variant_Type': 'upstream',
-         'Var_Reads': '10', 'Ref_Reads': '90'}
- 
 
 class TestSummary(TestBase):
     """
@@ -95,12 +90,14 @@ class TestSummary(TestBase):
         data2['Gene'], data2['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data2, NM_dict)
         data3['Gene'], data3['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data3, NM_dict)
 
-
         #Data 1 gene should be SCN1A
         self.assertTrue(data1['Gene'], 'SCN1A')
         #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
         self.assertEqual(data2['Gene'], '')
         self.assertEqual(data3['Gene'], 'BRCA1')
+        #test that duplicate transcripts are not
+        dup_trans='SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S'
+        self.assertEqual(dup_trans, data2['Transcripts'])
 
 
     def testMungeTranscript(self):
