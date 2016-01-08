@@ -67,6 +67,8 @@ def get_reads(headers, data):
     if len(info['AD'].split(','))==2:
         reads=info['AD'].split(',')
         return reads[0],reads[1],''
+    if len(info['AD'].split(','))>2:
+        return '-1','-1',''
     else:
         return info['RD'],info['AD'],info['ABQ']
 
