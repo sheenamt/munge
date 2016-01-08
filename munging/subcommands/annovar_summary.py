@@ -273,10 +273,19 @@ def action(args):
     writer.writeheader()
     sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop']]
 
+    def parse_variant_type(data):
+        """
+        Parse the variant type from the various fields into one cell for output
+        """
+        if data.get('var_type_2', '').strip():
+            return ','.join([data.get('var_type_2', '').strip(), data.get('var_type_1')])
+        else:
+            return data.get('var_type_1')
+
     # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
         # # modify any specific fields here
-        data['Variant_Type'] = ','.join([data.get('var_type_2', '').strip(), data.get('var_type_1')])
+        data['Variant_Type'] = parse_variant_type(data)
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
         data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
@@ -289,10 +298,10 @@ def action(args):
         data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
-        data['EXAC'] = data.get('EXAC') or -1
-        data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL') or -1
-        data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA') or -1
-        data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU') or -1
+        data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1
+        data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
+        data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
+        data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
         #CADD is raw score, phred score. We only care about phred
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
