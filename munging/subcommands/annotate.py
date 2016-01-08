@@ -82,7 +82,7 @@ def action(args):
             generic_file = os.path.join(os.path.dirname(args.input_file),pfx_info['pfx']+'.hg19_generic_dropped')
             gen_file_basename = a.args[0].replace(pathinfo['assay'],'').strip('_')
             if pathinfo['machine'] in a.args[0]:
-                gen_file_basename = gen_file_basename.replace(pathinfo['machine'],'UW_freq')
+                gen_file_basename = gen_file_basename.replace(pathinfo['machine']+'_'+pathinfo['assay'],'UW_freq')
             specific_file = os.path.join(os.path.dirname(args.input_file),pfx_info['pfx']+'.'+gen_file_basename+'_dropped')
             mvcmd=['mv' , generic_file, specific_file]
             subprocess.check_call(mvcmd)
