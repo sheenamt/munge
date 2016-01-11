@@ -199,10 +199,12 @@ def munge_path(pth):
     for a in ASSAY_CODES.keys():
         if re.search(a, pathinfo['project'], re.IGNORECASE):
             pathinfo['assay'] = ASSAY_CODES[a]
+        elif re.search('MSI', pathinfo['project'], re.IGNORECASE):
+            pathinfo['assay'] = 'msi-plus'
     #Set prep type
     if re.search('kapa', pathinfo['project']):
         pathinfo['prep_type']='kapa'
-    elif re.search('hotspot', pathinfo['assay']):
+    elif re.search('hotspot', pathinfo.get('assay')):
         pathinfo['prep_type']='truseq'
     else:
         pathinfo['prep_type']='sure_select'

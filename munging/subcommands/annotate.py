@@ -60,7 +60,9 @@ def action(args):
     annots = [AnnotInfo(*a) for a in ANNOTATIONS]
 
     #Add the generics dbs to the annotation info
-    annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
+    if not pathinfo['assay'] == 'msi-plus':
+        annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
+        GENERIC_DB='hg19_clinical_variants_msiplus'
     annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
     annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[GENERIC_DB, '-filter']))
 
