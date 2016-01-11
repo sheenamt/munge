@@ -1,10 +1,9 @@
 """
-Run annovar to generate standard set of annotations to bring into the DB using annotation_importer
+Run annovar to generate standard set of annotations
 """
 import sys
 from collections import namedtuple
 import os
-#from os.path import join, isfile, dirname
 import subprocess
 import argparse
 import csv
@@ -17,7 +16,6 @@ def build_parser(parser):
                         help='Explicitly specify input file of variants in Annovar format')
     parser.add_argument('--library_dir', default='/mnt/disk2/com/Genomes/Annovar_files',
                         help='Directory holding Annovar library files')
-
     parser.add_argument('--annovar_bin', default='',
                         help='Location of the Annovar perl executables')
 
@@ -33,7 +31,7 @@ ANNOTATIONS = [('snp138',),  # dbsnp
                ('esp6500siv2_all',),  # alternative allele frequency in the NHLBI-ESP project with 6500 exomes, including the indel calls and the chrY calls. evs-all
                ('esp6500siv2_aa',),  # evs-african american
                ('esp6500siv2_ea',),  # evs-european
-               ('cosmic70',),  # cosmic67
+               ('cosmic70',),  # cosmic
                ('clinvar_20150629',),  # CLINVAR database with Variant Clinical Significance (unknown, untested, non-pathogenic, probable-non-pathogenic, probable-pathogenic, pathogenic, drug-response, histocompatibility, other) and Variant disease name
                ('nci60',),  # NCI-60 human tumor cell line panel exome sequencing allele frequency data
                ('segdup', '--regionanno',),  # segdup annotation:               
