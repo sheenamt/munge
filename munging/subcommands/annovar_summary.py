@@ -1,12 +1,11 @@
 """
-Summarize output from Annovar and EVS
+Summarize output from Annovar
 
 Usage:
 
  munge summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
 
 """
-import pprint
 import logging
 import sys
 import re
@@ -51,6 +50,7 @@ file_types = {
     'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
     'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
 
@@ -205,6 +205,8 @@ def action(args):
         'Clinically_Flagged',
         'Variant_Type',
         'UW_Freq',
+        'Alter_Splice_Ada',
+        'Alter_Splice_RF',
         '1000g_ALL',
         'EVS_esp6500_ALL',
         'EXAC',
@@ -298,7 +300,8 @@ def action(args):
         data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
-        data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1
+        data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
+        data['Alter_Splice_Ada'],data['Alter_Splice_RF'] = split_string_in_two(data.get('splicing'))
         data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
         data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
         data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
