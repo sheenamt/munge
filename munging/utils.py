@@ -204,7 +204,7 @@ def munge_path(pth):
     #Set prep type
     if re.search('kapa', pathinfo['project']):
         pathinfo['prep_type']='kapa'
-    elif re.search('hotspot', pathinfo.get('assay')):
+    elif re.search('hotspot', pathinfo['assay']):
         pathinfo['prep_type']='truseq'
     else:
         pathinfo['prep_type']='sure_select'
