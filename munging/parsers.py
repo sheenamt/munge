@@ -4,6 +4,7 @@ pindel, cnv_exon, cnv_gene, snp, msi, quality, clin_flagged
 """
 import os
 import csv
+import re
 import sys
 import copy
 
@@ -33,6 +34,8 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
+                if re.search('version',row['MEAN_TARGET_COVERAGE']):
+                    continue
                 variant = tuple(k for k in variant_keys)
                 specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
                 annotation[variant] = specimens[variant]
