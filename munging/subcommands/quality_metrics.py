@@ -23,7 +23,6 @@ def build_parser(parser):
         type=argparse.FileType('w'))
 
 def action(args):
-    print args
     variant_keys = []
     if args.quality_metrics:
         quality_metricsfile=args.quality_metrics
