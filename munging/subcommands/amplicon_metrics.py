@@ -61,5 +61,6 @@ def action(args):
         header=['Target','Gene','Position']
         header.append(sample)
         sample_info=merged[header]
-        sample_out=path.join('output',pfx,pfx+'.Amplicon_Analysis.txt')
-        sample_info.to_csv(sample_out, index=False, sep='\t')
+        #Expected : project/pfx/pfx.Amplicon_Analysis.txt
+        sample_out = path.join('output',pfx,pfx+'.Amplicon_Analysis.txt')
+        sample_info.to_csv(sample_out,index=False, sep='\t')
