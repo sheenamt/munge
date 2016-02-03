@@ -27,7 +27,7 @@ def build_parser(parser):
         default=sys.stdin)
     parser.add_argument(
         '--top_output', type=argparse.FileType('w'),
-        default=sys.stdin)
+        default=sys.stdout)
 
 def action(args):
     #get run-amplicon file
