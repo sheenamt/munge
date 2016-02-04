@@ -12,10 +12,10 @@ from munging import parsers
 
 def build_parser(parser):
     parser.add_argument(
-        '-qm', '--quality_metrics', 
+        '--quality_metrics', 
         type=argparse.FileType('rU'))
     parser.add_argument(
-        '-hs', '--hsmetrics', 
+        '--hsmetrics', 
         type=argparse.FileType('rU'))        
     parser.add_argument(
         '-o', '--outfile',
