@@ -88,8 +88,6 @@ def process_files(infiles, tab, filetype):
                 #48_A03_BROv7_HA0186_NA12878_Amplicon_Analysis
                 elif sheet_name[-2] == 'Amplicon':
                     sheet_name = '11_Amplicons'
-                if sheet_name == tab:
-                    return sheet_name, fname
                 #48_A03_BROv7_HA0186_NA12878_Analysis
                 elif sheet_name[-2] == 'SNP':
                     sheet_name = '10_SNP_Indel'
