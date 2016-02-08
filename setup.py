@@ -23,7 +23,14 @@ params = {'author': 'Sheena Scroggins',
           'scripts': ['munge'],
           'version': __version__,
           'package_data': {'munging': [join('data',f) for f in ['sha','ver']]},
-          }
+          'install_requires': [
+              'numpy==1.10.1',
+              'pandas==0.17.1',
+              'wsgiref==0.1.2',
+              'xlrd==0.9.3',
+              'xlwt==0.7.5'
+          ]
+      }
 
 setup(**params)
 
