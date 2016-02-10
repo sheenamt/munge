@@ -11,7 +11,7 @@ import csv
 import pandas as pd
 import glob
 from itertools import ifilter
-from os import path
+from os import path, makedirs
 
 from munging import parsers,filters
 from munging.utils import walker
@@ -62,5 +62,8 @@ def action(args):
         header.append(sample)
         sample_info=merged[header]
         #Expected : project/pfx/pfx.Amplicon_Analysis.txt
-        sample_out = path.join('output',pfx,pfx+'.Amplicon_Analysis.txt')
+        outdir = path.join('output',pfx)
+        if not path.exists(outdir):
+            makedirs(outdir)
+        sample_out = path.join(outdir,pfx+'.Amplicon_Analysis.txt')
         sample_info.to_csv(sample_out,index=False, sep='\t')
