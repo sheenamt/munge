@@ -14,7 +14,7 @@ def build_parser(parser):
     parser.add_argument('run_dir',
                         help='Directory where input file is located and where output files will be created')
     parser.add_argument('input_file', default=None,
-                        help='Explicitly specify input file of variants in Annovar format'
+                        help='Explicitly specify input file of variants in Annovar format')
     parser.add_argument('--clinically_flagged', default='/mnt/disk2/com/Genomes/Annovar_files/hg19_clinical_variants',
                         help='Clinically flagged variants file')
     parser.add_argument('--library_dir', default='/mnt/disk2/com/Genomes/Annovar_files',
