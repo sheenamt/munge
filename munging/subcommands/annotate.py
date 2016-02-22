@@ -14,7 +14,9 @@ def build_parser(parser):
     parser.add_argument('run_dir',
                         help='Directory where input file is located and where output files will be created')
     parser.add_argument('input_file', default=None,
-                        help='Explicitly specify input file of variants in Annovar format')
+                        help='Explicitly specify input file of variants in Annovar format'
+    parser.add_argument('--clinically_flagged', default='/mnt/disk2/com/Genomes/Annovar_files/hg19_clinical_variants',
+                        help='Clinically flagged variants file')
     parser.add_argument('--library_dir', default='/mnt/disk2/com/Genomes/Annovar_files',
                         help='Directory holding Annovar library files')
     parser.add_argument('--annovar_bin', default='',
@@ -61,12 +63,9 @@ def action(args):
     annots = [AnnotInfo(*a) for a in ANNOTATIONS]
 
     #Add the generics dbs to the annotation info
+    GENERIC_DB = args.clinically_flagged
 
-    if pathinfo['assay'] == 'msi-plus':
-        GENERIC_DB='hg19_clinical_variants-msiplus'
-    else:
-        GENERIC_DB = 'hg19_clinical_variants'
-        #msi-plus doesn't get frequency info
+    if not pathinfo['assay'] == 'msi-plus':
         annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
 
     annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[GENERIC_DB, '-filter']))
