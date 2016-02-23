@@ -42,7 +42,7 @@ ANNOTATIONS = [('snp138',),  # dbsnp
                ('nci60',),  # NCI-60 human tumor cell line panel exome sequencing allele frequency data
                ('segdup', '--regionanno',),  # segdup annotation:               
                ('refGene', '--geneanno', ['--splicing_threshold','10', '--hgvs']),  # Gene level annotation:
-               ]
+ ]
 
 # Named tuple for parsing annotation defs
 AnnotInfo =  namedtuple('AnnotInfo', ['dbtype', 'anno_type', 'args'])
@@ -63,7 +63,7 @@ def action(args):
     annots = [AnnotInfo(*a) for a in ANNOTATIONS]
 
     #Add the generics dbs to the annotation info
-    GENERIC_DB = args.clinically_flagged
+    GENERIC_DB = os.path.basename(args.clinically_flagged)
 
     if not pathinfo['assay'] == 'msi-plus':
         annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
@@ -86,12 +86,14 @@ def action(args):
         subprocess.check_call(cmd)
         if a.anno_type=='--genericdbfile':
             generic_file = os.path.join(os.path.dirname(args.input_file),pfx_info['pfx']+'.hg19_generic_dropped')
+            #Case for moving frequency file
             if pathinfo['machine'] in a.args[0]:
                 gen_file_basename = a.args[0].replace(pathinfo['machine']+'_'+pathinfo['assay'],'UW_freq')
-            elif GENERIC_DB in a.args:
-                gen_file_basename = 'hg19_clinical_variants'
-            else:
+            #Case for moving CADD file and cli
+            elif pathinfo['assay'] in a.args[0]:
                 gen_file_basename = a.args[0].replace(pathinfo['assay'],'').strip('_')
+            else:
+                gen_file_basename = GENERIC_DB
             specific_file = os.path.join(os.path.dirname(args.input_file),pfx_info['pfx']+'.'+gen_file_basename+'_dropped')
             mvcmd=['mv' , generic_file, specific_file]
             subprocess.check_call(mvcmd)
