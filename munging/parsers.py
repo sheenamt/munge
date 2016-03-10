@@ -23,10 +23,10 @@ sample counts, and scores calculated based on counts
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     """ Parse the sample quality analysis file, from hs_metrics"""
     files = ifilter(filters.quality_analysis, files)
+    #sort the files so that the output in the workbook is sorted
     files=sorted(files)    
     variant_keys = ['MEAN_TARGET_COVERAGE']
  
-    #sort the files so that the output in the workbook is sorted
     for pth in files:      
         pfx = munge_pfx(pth.fname)
         log_pfx=pfx['mini-pfx']
@@ -34,7 +34,7 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
-                if re.search('version',row['MEAN_TARGET_COVERAGE']):
+                if not row['MEAN_TARGET_COVERAGE']:
                     continue
                 variant = tuple(k for k in variant_keys)
                 specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
