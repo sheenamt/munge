@@ -45,7 +45,6 @@ file_types = {
     'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
     'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
@@ -206,7 +205,6 @@ def action(args):
         'Variant_Type',
         'UW_Freq',
         'ADA_Alter_Splice',
-        'RF_Alter_Splice',
         '1000g_ALL',
         'EVS_esp6500_ALL',
         'EXAC',
@@ -218,6 +216,7 @@ def action(args):
         'Var_Reads',
         'Allele_Frac',
         'Variant_Phred',
+        'RF_Alter_Splice',
         'Cosmic',
         'CADD',
         'ClinVar',
@@ -307,5 +306,6 @@ def action(args):
         data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
         #CADD is raw score, phred score. We only care about phred
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
+        data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
         writer.writerow(data)
