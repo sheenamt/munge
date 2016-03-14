@@ -204,7 +204,7 @@ def action(args):
         'Clinically_Flagged',
         'Variant_Type',
         'UW_Freq',
-        'ADA_Alter_Splice',
+        'Filter',
         '1000g_ALL',
         'EVS_esp6500_ALL',
         'EXAC',
@@ -216,7 +216,6 @@ def action(args):
         'Var_Reads',
         'Allele_Frac',
         'Variant_Phred',
-        'RF_Alter_Splice',
         'Cosmic',
         'CADD',
         'ClinVar',
@@ -237,7 +236,9 @@ def action(args):
         'NCI60',
         'dbSNP_ID',
         'UW_Count',
-        'GATK_Score'
+        'GATK_Score',
+        'ADA_Alter_Splice',
+        'RF_Alter_Splice'
     ]
 
     # accumulate data from all input files for each variant
