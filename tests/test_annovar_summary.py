@@ -17,14 +17,8 @@ import __init__ as config
 log = logging.getLogger(__name__)
 
 summary_testfiles = path.join(config.datadir, 'annovar_summary')
-annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
-control_testfiles = path.join(config.datadir, 'control_parser')
-qc_testfiles = path.join(config.datadir, 'qc_variants')
-quality_testfiles = path.join(config.datadir, 'quality_metrics')
-analysis_testfiles = path.join(config.datadir, 'analysis_files')
-load_list = path.join(config.datadir, 'loadlist')
 
-control ='5437_E05_OPXv4_NA12878_MA0013'
+control ='NA12878-GEN08-HHv1'
 NM_dict = {
     'NM_001202435': 'NM_001202435.1',
     'NM_006772': 'NM_006772.1',
@@ -58,7 +52,7 @@ class TestSummary(TestBase):
         """
         Gets header(s) and info from each file
         """
-        fname = path.join(summary_testfiles, '{}.gatk.variant_function').format(control)
+        fname = path.join(summary_testfiles, '{}.variant_function').format(control)
         header_ids = {0: 'var_type_1',
                       1: 'gene',
                       7: 'zygosity',
@@ -67,7 +61,7 @@ class TestSummary(TestBase):
         variant_idx = [2, 3, 4, 5, 6]
         out = annovar_summary.map_headers(fname, header_ids, variant_idx)
         out = list(out)
-        self.assertEqual(len(out), 1265)
+        self.assertEqual(len(out), 2546)
         header_keys = set(header_ids.values())
         # confirm that all keys in header_ids are contained in each row of the output
         for pos, data in out:
@@ -133,8 +127,8 @@ class TestSummary(TestBase):
         data2='1/1:0,2:2:6:65,6,0'
         gatk_header='GT:AD:DP:GQ:PL'
         ref_reads, var_reads, variant_phred = annovar_summary.get_reads(gatk_header,data2)
-        self.assertEqual(ref_reads, '0')
-        self.assertEqual(var_reads, '2')
+        self.assertEqual(ref_reads, '-1')
+        self.assertEqual(var_reads, '-1')
         self.assertEqual(variant_phred, '')
 
 
