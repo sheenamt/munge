@@ -55,23 +55,22 @@ file_types = {
 
 def get_reads(headers, data):
     """Parse the reads from
-    GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
-    OR
-    GT:AD:DP:GQ:PL
+    Varscan:
+        GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
     RD:Depth of reference-supporting bases (reads1)
-    AD:Depth of variant-supporting bases (reads2) OR (reads1,reads2)
+    AD:Depth of variant-supporting bases (reads2)
     ABQ:Average quality of variant-supporting bases (qual2)
+    OR
+    GATK:
+        GT:AD:DP:GQ:PL
+    AD:Depth of variant-supporting bases (reads1,reads2)
     """
     info = dict(zip(headers.split(':'), data.split(':')))
-    if len(info['AD'].split(','))==2:
-        reads=info['AD'].split(',')
-        return reads[0],reads[1],''
-    if len(info['AD'].split(','))>2:
-        return '-1','-1',''
-    else:
+    if 'RD' in info.keys():
         return info['RD'],info['AD'],info['ABQ']
-
-
+    else:
+        return '-1','-1',''
+        
 def munge_gene_and_Transcripts(data, RefSeqs):
     """
     Return modified values of (Gene, Transcripts). Note that
@@ -273,7 +272,7 @@ def action(args):
                             delimiter='\t')
 
     writer.writeheader()
-    sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop']]
+    sort_key = lambda row: [(row[k]) for k in ['chr','start','stop']]
 
     def parse_variant_type(data):
         """
