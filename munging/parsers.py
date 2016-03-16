@@ -157,8 +157,6 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'Sift',
         'Mutation_Taster',
         'Gerp',
-        'ADA_Alter_Splice',
-        'RF_Alter_Splice',
         'UW_Freq',
         'UW_Count',
         '1000g_ALL',
@@ -169,7 +167,10 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'EVS_esp6500_EU',
         '1000g_SAS',
         '1000g_EAS',
-        '1000g_AFR']
+        '1000g_AFR',
+        'ADA_Alter_Splice',
+        'RF_Alter_Splice',
+]
 
     for pth in files:
         pfx = munge_pfx(pth.fname)
