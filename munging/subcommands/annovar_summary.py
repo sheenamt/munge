@@ -39,17 +39,18 @@ file_types = {
     'gatk.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'gatk.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    'gatk.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 
 # varscanINDELS files
     'varscan.variant_function': ({0: 'var_type_1',
@@ -65,19 +66,21 @@ file_types = {
     'varscan.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscan.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'varscan.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    'varscan.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+
 
  #varscanSNP files
     'varscanSNP.variant_function': ({0: 'var_type_1',
@@ -93,19 +96,20 @@ file_types = {
     'varscanSNP.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_miseq_dropped': ({1: 'Mi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_hiseq_dropped': ({1: 'Hi_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_nextseq_dropped': ({1: 'NS_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'varscanSNP.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'varscanSNP.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    'varscanSNP.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
 
 log = logging.getLogger(__name__)
@@ -127,7 +131,6 @@ def get_reads(data):
         return all_data[4], all_data[5], all_data[9]
     except AttributeError:
         return '-1', '-1', ''
-
 
 def munge_gene_and_Transcripts(data, RefSeqs):
     """
@@ -219,18 +222,21 @@ def get_allele_freq(data):
 
 def munge_ljb_scores(data):
     """
+SIFT_score[0]
+Polyphen2_HDIV_score [2]
+MutationTaster_score [8]
+GERP++_RS [28]
     Parse sift, polyphen and gerp from ljb_all file
     """
     try:
         info = data.get('ljb_Scores').split(',')
-        sift = info[0]
         polyphen = info[2]
-        gerp = info[21]
+        sift = info[0]
+        gerp = info[28]
         mutation_taster = info[8]
     except AttributeError:
         return -1, -1, -1, -1 
-    return polyphen, sift, gerp, mutation_taster 
-    
+    return polyphen, sift, mutation_taster, gerp
 
 def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
@@ -262,10 +268,10 @@ def action(args):
     headers = ['Position'] + variant_headers[3:5] + [
         'Clinically_Flagged',
         'Variant_Type',
-        'HiSeq_Freq',
-        'NextSeq_Freq',
+        'UW_Freq',
+        'Filter',
         '1000g_ALL',
-        'EVS_esp6500_ALL',
+        'EVS_esp6500_ALL',        
         'EXAC',
         'Gene',
         'p.',
@@ -294,11 +300,10 @@ def action(args):
         'Segdup',
         'NCI60',
         'dbSNP_ID',
-        'HiSeq_Count',
-        'NextSeq_Count',
-        'MiSeq_Freq',
-        'MiSeq_Count',
-        'GATK_Score'
+        'UW_Count',
+        'GATK_Score',
+        'ADA_Alter_Splice',
+        'RF_Alter_Splice',
         ]
 
     # accumulate data from all input files for each variant
@@ -338,7 +343,7 @@ def action(args):
         data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2', '').strip() else data.get('var_type_1')
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
-        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)        
+        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
         data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL'] = data.get('1000g_ALL') or -1
         data['1000g_AMR'] = data.get('1000g_AMR') or -1
@@ -346,15 +351,14 @@ def action(args):
         data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
-        data['EXAC'] = data.get('EXAC') or -1
-        data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL') or -1
-        data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA') or -1
-        data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU') or -1
+        data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
+        data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
+        data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
+        data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
         #CADD is raw score, phred score. We only care about phred
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
+        data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
+        data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
         data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Reads'))
-        data['MiSeq_Freq'], data['MiSeq_Count'] = split_string_in_two(data.get('Mi_Freq_list'))
-        data['HiSeq_Freq'], data['HiSeq_Count'] = split_string_in_two(data.get('Hi_Freq_list'))
-        data['NextSeq_Freq'], data['NextSeq_Count'] = split_string_in_two(data.get('NS_Freq_list'))
         data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)
