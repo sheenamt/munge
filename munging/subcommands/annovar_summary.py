@@ -20,117 +20,58 @@ from munging.annotation import get_location, multi_split, split_string_in_two
 variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
 
 # (pattern, header_ids, var_key_ids)
-
 file_types = {
-#gatk files
-    'gatk.variant_function': ({0: 'var_type_1',
+#files
+    'variant_function': ({0: 'var_type_1',
                           1: 'Gene',
                           7: 'Zygosity',
                           12: 'rsid_1',
+                          18: 'Read_Headers',
+                          19: 'Reads',
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
-    'gatk.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'gatk.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'gatk.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
-    'gatk.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
-
-# varscanINDELS files
-    'varscan.variant_function': ({0: 'var_type_1',
-                                  1: 'Gene',
-                                  19: 'Reads'},
-                                 [2, 3, 4, 5, 6]),
-    'varscan.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscan.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscan.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
-    'varscan.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
-
-
- #varscanSNP files
-    'varscanSNP.variant_function': ({0: 'var_type_1',
-                                     1: 'Gene',
-                                     19: 'Reads'},
-                                    [2, 3, 4, 5, 6]),
-    'varscanSNP.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'varscanSNP.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'varscanSNP.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
-    'varscanSNP.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
+    'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
+    'hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
+    'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
-
 log = logging.getLogger(__name__)
 
 
-def get_reads(data):
+def get_reads(headers, data):
     """Parse the reads from
     GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
+    OR
+    GT:AD:DP:GQ:PL
     RD:Depth of reference-supporting bases (reads1)
-    AD:Depth of variant-supporting bases (reads2)
+    AD:Depth of variant-supporting bases (reads2) OR (reads1,reads2)
     ABQ:Average quality of variant-supporting bases (qual2)
     """
-    try:
-        all_data = data.split(':')
-        if not len(all_data) == 14:
-            print """Info from varscan or varscanSNP doesn't appear to be right.
-            Ensure GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR is present"""
-            sys.exit(1)
-        return all_data[4], all_data[5], all_data[9]
-    except AttributeError:
-        return '-1', '-1', ''
+    info = dict(zip(headers.split(':'), data.split(':')))
+    #Do not return GATK reads. They are downsampled to 250 
+    if len(info['AD'].split(','))>=2:
+        return '-1','-1',''
+    else:
+        return info['RD'],info['AD'],info['ABQ']
+
 
 def munge_gene_and_Transcripts(data, RefSeqs):
     """
@@ -202,9 +143,6 @@ def map_headers(fname, header_ids, variant_idx):
             data = dict((key, row[i]) for i, key in header_ids.items() if row[i].strip())
             data['Position'] = get_location(**variant_dict)
 
-            # if 'var_type_2' in header_ids.values():
-            #     print variant_id, fname, data['var_type_2']
-
             yield (variant_id, dict(data, **variant_dict))
 
 
@@ -222,10 +160,6 @@ def get_allele_freq(data):
 
 def munge_ljb_scores(data):
     """
-SIFT_score[0]
-Polyphen2_HDIV_score [2]
-MutationTaster_score [8]
-GERP++_RS [28]
     Parse sift, polyphen and gerp from ljb_all file
     """
     try:
@@ -306,6 +240,14 @@ def action(args):
         'RF_Alter_Splice',
         ]
 
+    writer = csv.DictWriter(args.outfile,
+                            fieldnames=headers,
+                            quoting=csv.QUOTE_MINIMAL,
+                            extrasaction='ignore',
+                            delimiter='\t')
+
+    writer.writeheader()
+
     # accumulate data from all input files for each variant
     output = defaultdict(dict)
     for fname in infiles:
@@ -324,23 +266,31 @@ def action(args):
             if args.strict:
                 sys.exit(1)
             continue
-
+        multi_trans_keys=['Transcripts','var_type_1','var_type_2']
+    
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
-            output[var_key].update(data)
-
-    writer = csv.DictWriter(args.outfile,
-                            fieldnames=headers,
-                            quoting=csv.QUOTE_MINIMAL,
-                            extrasaction='ignore',
-                            delimiter='\t')
-
-    writer.writeheader()
-    sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop']]
-
-    # write each row (with all data aggregated), modifying fields as necessary
+            #If position already in output{}, update certain fields
+            if var_key in output:
+                for key in multi_trans_keys:
+                    if key in output[var_key].keys() and data.get(key):
+                        if data.get(key) not in output[var_key][key]:
+                            output[var_key][key]=','.join([output[var_key][key],data.get(key)])
+                    elif key in output[var_key].keys() and not data.get(key):
+                        output[var_key][key]=output[var_key][key]
+                    elif key not in output[var_key].keys() and data.get(key):
+                        output[var_key][key]=data.get(key)
+                #grab the keys of data, removing keys list, and update those keys
+                data_keys=data.keys()
+                for k in data_keys:
+                    if k not in multi_trans_keys:
+                        output[var_key][k]=data.get(k)
+            else:
+                output[var_key].update(data)
+    sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
+    # # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
-        # # modify any specific fields here
-        data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2', '').strip() else data.get('var_type_1')
+        # # # modify any specific fields here
+        data['Variant_Type'] = data.get('var_type_2') if data.get('var_type_2') else data.get('var_type_1')
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
         data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
@@ -359,6 +309,6 @@ def action(args):
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
         data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
-        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Reads'))
+        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
         data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)
