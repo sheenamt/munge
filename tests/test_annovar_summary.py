@@ -30,9 +30,8 @@ data1 = {'Gene': 'SCN1A',
          'Transcripts': 'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,',
          'Variant_Type': '',
          'Var_Reads': '-1', 'Ref_Reads': '-1'}
-#Duplicate transcript entry to test parsing of duplicates
 data2 = {'Gene': 'SYNGAP1',
-         'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
+         'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
          'Variant_Type': 'upstream',
          'Var_Reads': '10', 'Ref_Reads': '90'}
 data3 = {'Gene': 'BRCA1',
@@ -101,8 +100,8 @@ class TestSummary(TestBase):
         # #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
         self.assertEqual(data2['c.'], 'NM_006772.1:c.1713G>A')
         #Data 3 p. and c. should have multiple entries
-        self.assertEqual('p.E991G p.E1038G',data3['p.']) #, 'p.E1038G p.E991G')
-        self.assertEqual(data3['c.'], 'NM_007297.2:c.2972A>G NM_007300.1:c.3113A>G')
+        self.assertEqual('p.E1038G p.E991G',data3['p.']) #, 'p.E1038G p.E991G')
+        self.assertEqual(data3['c.'], 'NM_007300.1:c.3113A>G NM_007297.2:c.2972A>G')
 
     def testGetAlleleFreq(self):
         """
@@ -136,13 +135,14 @@ class TestSummary(TestBase):
         """
         Return sift, polyphen and gerp from ljb_all file
         """
-        data={'ljb_Scores':'0.18,T,0.462,P,0.065,B,0.000,D,0.000,P,1.375,L,-0.78,T,-1.076,T,0.000,T,0.397,2.791,15.29,4.74,1.898,3.792,13.742'}
+        data={'ljb_Scores':'0.0,D,1.0,D,0.999,D,0.000,D,1,D,.,.,2.42,T,-5.24,D,0.996,6.636,32,0.865,0.963,D,-0.482,T,0.337,T,0.732,0,5.74,0.991,1.061,0.999,0.999,15.535'}
 
         polyphen, sift, gerp, mutation_taster=annovar_summary.munge_ljb_scores(data)
-        self.assertEqual(polyphen, '0.462')
-        self.assertEqual(sift, '0.18')
-        self.assertEqual(gerp, '4.74')
-        self.assertEqual(mutation_taster,'0.000')
+
+        self.assertEqual(polyphen, '1.0')
+        self.assertEqual(sift, '0.0')
+        self.assertEqual(gerp, '1')
+        self.assertEqual(mutation_taster,'5.74')
 
 
 
