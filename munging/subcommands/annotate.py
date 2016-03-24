@@ -57,8 +57,7 @@ def action(args):
     internal_cadd_file = '_'.join(['hg19','CADD',pathinfo['assay']])
     
     variants_file = args.input_file
-    file_pfx = os.path.basename(args.input_file).replace('.ann','')
-
+    file_pfx = os.path.basename(args.input_file).replace('.merged.ann','')
     annots = [AnnotInfo(*a) for a in ANNOTATIONS]
 
     #Add the generics dbs to the annotation info
@@ -78,6 +77,7 @@ def action(args):
                        a.anno_type ] \
                        + list(a.args) + \
                        ['--otherinfo', 
+                        '--separate', 
                         '-outfile', os.path.join(os.path.dirname(args.input_file),file_pfx),
                         variants_file, 
                         args.library_dir]
