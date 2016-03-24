@@ -67,10 +67,12 @@ def get_reads(headers, data):
     """
     info = dict(zip(headers.split(':'), data.split(':')))
     #Do not return GATK reads. They are downsampled to 250 
-    if len(info['AD'].split(','))>=2:
-        return '-1','-1',''
-    else:
+    if 'RD' in info.keys():
         return info['RD'],info['AD'],info['ABQ']
+    else:
+        return '-1','-1',''
+
+        
 
 
 def munge_gene_and_Transcripts(data, RefSeqs):
@@ -267,7 +269,6 @@ def action(args):
                 sys.exit(1)
             continue
         multi_trans_keys=['Transcripts','var_type_1','var_type_2']
-    
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
             #If position already in output{}, update certain fields
             if var_key in output:
@@ -281,6 +282,16 @@ def action(args):
                         output[var_key][key]=data.get(key)
                 #grab the keys of data, removing keys list, and update those keys
                 data_keys=data.keys()
+                if output[var_key].has_key('Reads'):
+                    if 'RD' in output[var_key]['Read_Headers']:
+                        output[var_key]['Read_Headers']=output[var_key]['Read_Headers']
+                        output[var_key]['Reads']=output[var_key]['Reads']
+                        data_keys.remove('Reads')
+                        data_keys.remove('Read_Headers')
+                    else:
+                        output[var_key]['Read_Headers']=data.get('Read_Headers')
+                        output[var_key]['Reads']=data.get('Reads')
+                  
                 for k in data_keys:
                     if k not in multi_trans_keys:
                         output[var_key][k]=data.get(k)
