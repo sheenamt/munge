@@ -30,7 +30,7 @@ file_types = {
                           19: 'Reads',
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
-#    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
     'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
     'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
     'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
@@ -78,10 +78,6 @@ def munge_gene_and_Transcripts(data, RefSeqs):
     """
     Transcripts = data.get('Transcripts')
     Gene = data.get('Gene', '')
-    if 'Variant_Type' in data.keys() and data['Variant_Type'] in ('splicing',):
-        print "Transcripts before:", Transcripts
-        print "Gene before:", Gene
-        print "variant_type:", data['Variant_Type']
     if not Gene or data['Variant_Type'] in ('upstream','downstream','intergenic','ncRNA_exonic'):
         Gene = ''
     elif '(' in Gene:
@@ -93,12 +89,6 @@ def munge_gene_and_Transcripts(data, RefSeqs):
                 Transcripts = ','.join([Transcripts, trans])
             else:
                 Transcripts = trans
-    if 'Variant_Type' in data.keys() and data['Variant_Type'] in ('splicing',):
-        print "Transcripts after:", Transcripts
-        print "Gene after:", Gene
-        print "variant_type:", data['Variant_Type']
-        print "------------"
-
     return Gene, Transcripts
 
 def munge_transcript(data, RefSeqs):
@@ -123,7 +113,11 @@ def munge_transcript(data, RefSeqs):
                 gene, txpt, exon, codon = x
             elif len(x)==3:
             #3: ['RAD50', 'NM_005732', 'c.-38G>A']
-                gene, txpt, codon = x
+                if 'NM' in x[1]:
+                    gene, txpt, codon = x
+            #3: ['NM_005590','exon5','c.315-4T>-']
+                elif 'NM' in x[0]:
+                    txpt, exon, codon = x
             elif len(x)==2:
             #2: ['NM_001290310', 'c.*513_*514insATC']
                 txpt, codon = x
@@ -319,7 +313,8 @@ def action(args):
     sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
     # # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
-        data['Variant_Type'] = ','.join(filter(None,[data.get('var_type_2'),data.get('var_type_1')]))
+        variants=[data.get('var_type_2'),data.get('var_type_1')]
+        data['Variant_Type'] = ','.join(filter(None, variants))
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
         data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
