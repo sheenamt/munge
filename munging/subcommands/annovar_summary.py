@@ -81,14 +81,19 @@ def munge_gene_and_Transcripts(data, RefSeqs):
     if not Gene or data['Variant_Type'] in ('upstream','downstream','intergenic','ncRNA_exonic'):
         Gene = ''
     elif '(' in Gene:
-        Gene, Gene_tail = data['Gene'].split('(', 1)
-        if 'NM' in Gene_tail:
-            trans = data['Gene'].replace('(', ':').strip(')')
-            #  add to Transcripts
-            if Transcripts:
-                Transcripts = ','.join([Transcripts, trans])
+        #BCOR,BCOR(NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)
+        #PHF6(NM_001015877:exon10:c.969-9T>C,NM_032458:exon10:c.969-9T>C),PTEN
+        gene_parts=re.split('[(,)]',Gene)
+        Gene = gene_parts[0]
+        for part in gene_parts:
+            if 'NM' in part:
+                if Transcripts:
+                    Transcripts = ','.join([Transcripts, part])
+                else:
+                    Transcripts = part
             else:
-                Transcripts = trans
+                if part not in Gene:
+                    Gene = ','.join(filter(None, [Gene, part]))
     return Gene, Transcripts
 
 def munge_transcript(data, RefSeqs):
@@ -122,8 +127,7 @@ def munge_transcript(data, RefSeqs):
             #2: ['NM_001290310', 'c.*513_*514insATC']
                 txpt, codon = x
             elif len(x)==1:
-            #2: ['MUTYH']
-                gene = x
+                continue
             else:
                 sys.exit("don't know how to parse %s" % d)
                     
