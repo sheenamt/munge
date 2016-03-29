@@ -29,7 +29,9 @@ ASSAY_CODES={'colo':'coloseq',
              'epi':'epiplex',
              'imm':'immunoplex',
              'marrow':'marrowseq',
-             'hh':'hotspot-heme'}
+             'hh':'hotspot-heme',
+             'glt':'hotspot-hereditary',
+             'sth':'hotspot-herediatry'}
 
 
 def dict_factory(cursor, row):
