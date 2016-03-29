@@ -63,11 +63,14 @@ def action(args):
     #Add the generics dbs to the annotation info
     GENERIC_DB = os.path.basename(args.clinically_flagged)
 
-    if not pathinfo['assay'] == 'msi-plus':
+    #There is not always an internal frequency file
+    if os.path.isfile(os.path.join(args.library_dir, internal_freq_file)):
         annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
-
+    #There is not always an internal cadd file
+    if os.path.isfile(os.path.join(args.library_dir, internal_cadd_file)):
+        annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
+    #There is always a clin flagged
     annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[GENERIC_DB, '-filter']))
-    annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
 
     # run annotate_variants based on the spec in ANNOTATIONS
     for a in annots:
