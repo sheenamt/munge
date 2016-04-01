@@ -130,7 +130,7 @@ def munge_transcript(data, RefSeqs):
                 continue
             else:
                 sys.exit("don't know how to parse %s" % d)
-                    
+
             pref_trans = RefSeqs.get(txpt)
             #Want to return None for all values if not pref_trans
             if not pref_trans:
@@ -216,8 +216,8 @@ def action(args):
         for row in refs:
             if row['RefSeq'] :
                 for transcript in row['RefSeq'].split('/'):
-                    RefSeqs[transcript.split('.')[0]] = transcript
-
+                    RefSeqs[transcript] = transcript.split('.')[0]
+                    
     headers = ['Position'] + variant_headers[3:5] + [
         'Clinically_Flagged',
         'Variant_Type',
