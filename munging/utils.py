@@ -29,6 +29,7 @@ ASSAY_CODES={'colo':'coloseq',
              'epi':'epiplex',
              'imm':'immunoplex',
              'marrow':'marrowseq',
+             'broca-hr':'broca-hr',
              'hh':'hotspot-heme',
              'glt':'hotspot-hereditary',
              'sth':'hotspot-herediatry'}
