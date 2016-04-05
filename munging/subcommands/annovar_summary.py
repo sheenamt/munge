@@ -106,7 +106,9 @@ def munge_transcript(data, RefSeqs):
     transcripts = data.get('Transcripts')
     if transcripts is not None:
         # Split incoming trans, strip the trailing )
-        data = multi_split(transcripts.replace('(', ':'), ',(')
+        data1 = multi_split(transcripts.replace('(', ':'), ',(')
+        #Remove duplicate transcription entries
+        data = list(set(data1))
         for d in data:
             # Split the actual transcript info which is colon separated
             x = d.split(':')
@@ -183,12 +185,14 @@ def munge_ljb_scores(data):
     """
     try:
         info = data.get('ljb_Scores').split(',')
-        polyphen = info[2]
         sift = info[0]
-        gerp = info[28]
+        polyphen = info[2]
         mutation_taster = info[8]
+        gerp = info[28]
+
     except AttributeError:
         return -1, -1, -1, -1 
+
     return polyphen, sift, mutation_taster, gerp
 
 def build_parser(parser):
