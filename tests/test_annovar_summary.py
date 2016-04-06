@@ -17,20 +17,16 @@ import __init__ as config
 log = logging.getLogger(__name__)
 
 summary_testfiles = path.join(config.datadir, 'annovar_summary')
-annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
-control_testfiles = path.join(config.datadir, 'control_parser')
-qc_testfiles = path.join(config.datadir, 'qc_variants')
-quality_testfiles = path.join(config.datadir, 'quality_metrics')
-analysis_testfiles = path.join(config.datadir, 'analysis_files')
-load_list = path.join(config.datadir, 'loadlist')
 
-control ='5437_E05_OPXv4_NA12878_MA0013'
+control ='NA12878-GEN08-HHv1'
 NM_dict = {
     'NM_001202435': 'NM_001202435.1',
     'NM_006772': 'NM_006772.1',
     'NM_000038': 'NM_000038.5',
     'NM_007300': 'NM_007300.1',
-    'NM_007297': 'NM_007297.2'
+    'NM_007297': 'NM_007297.2',
+    'NM_001015877':'NM_001015877',
+    'NM_001123383':'NM_001123383',
 }
 data1 = {'Gene': 'SCN1A',
          'Transcripts': 'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,',
@@ -44,7 +40,12 @@ data2 = {'Gene': 'SYNGAP1',
 data3 = {'Gene': 'BRCA1',
          'Transcripts': 'BRCA1:NM_007300:exon10:c.3113A>G:p.E1038G,BRCA1:NM_007297:exon9:c.2972A>G:p.E991G,BRCA1:NM_007294:exon10:c.3113A>G:p.E1038G',
          'Variant_Type': ''}
-
+data4 = {'Gene': 'PHF6(NM_001015877:exon10:c.969-9T>C,NM_032458:exon10:c.969-9T>C),PTEN',
+         'Transcripts': '',
+         'Variant_Type':'exonic'}
+data5 = {'Gene':'BCOR,BCOR(NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)',
+         'Transcripts':'NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)',
+         'Variant_Type':'exonic'}
 class TestSummary(TestBase):
     """
     Test the summary script with creates the Analysis.txt file from
@@ -58,7 +59,7 @@ class TestSummary(TestBase):
         """
         Gets header(s) and info from each file
         """
-        fname = path.join(summary_testfiles, '{}.gatk.variant_function').format(control)
+        fname = path.join(summary_testfiles, '{}.variant_function').format(control)
         header_ids = {0: 'var_type_1',
                       1: 'gene',
                       7: 'zygosity',
@@ -67,7 +68,7 @@ class TestSummary(TestBase):
         variant_idx = [2, 3, 4, 5, 6]
         out = annovar_summary.map_headers(fname, header_ids, variant_idx)
         out = list(out)
-        self.assertEqual(len(out), 1265)
+        self.assertEqual(len(out), 2546)
         header_keys = set(header_ids.values())
         # confirm that all keys in header_ids are contained in each row of the output
         for pos, data in out:
@@ -81,7 +82,8 @@ class TestSummary(TestBase):
         data1['Gene'], data1['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data1, NM_dict)
         data2['Gene'], data2['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data2, NM_dict)
         data3['Gene'], data3['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data3, NM_dict)
-
+        data4['Gene'], data4['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data4, NM_dict)
+        data5['Gene'], data5['Transcripts'] = annovar_summary.munge_gene_and_Transcripts(data5, NM_dict)
         #Data 1 gene should be SCN1A
         self.assertTrue(data1['Gene'], 'SCN1A')
         #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
@@ -89,8 +91,10 @@ class TestSummary(TestBase):
         self.assertEqual(data3['Gene'], 'BRCA1')
         #test that duplicate transcripts are not
         dup_trans='SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S'
-        self.assertEqual(dup_trans, data2['Transcripts'])
+#        self.assertEqual(dup_trans, data2['Transcripts'])
 
+        self.assertEqual(data4['Gene'], 'PHF6,PTEN')
+        self.assertEqual(data5['Gene'], 'BCOR')
 
     def testMungeTranscript(self):
         """
@@ -101,14 +105,24 @@ class TestSummary(TestBase):
         data1['c.'], data1['p.'] = annovar_summary.munge_transcript(data1, NM_dict)
         data2['c.'], data2['p.'] = annovar_summary.munge_transcript(data2, NM_dict)
         data3['c.'], data3['p.']  = annovar_summary.munge_transcript(data3, NM_dict)
-
+        data4['c.'], data4['p.']  = annovar_summary.munge_transcript(data4, NM_dict)
+        data5['c.'], data5['p.']  = annovar_summary.munge_transcript(data5, NM_dict)
         # #Data 1 gene should be SCN1A
         self.assertEqual(data1['p.'], 'p.A1067T')
         # #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
         self.assertEqual(data2['c.'], 'NM_006772.1:c.1713G>A')
         #Data 3 p. and c. should have multiple entries
-        self.assertEqual('p.E991G p.E1038G',data3['p.']) #, 'p.E1038G p.E991G')
-        self.assertEqual(data3['c.'], 'NM_007297.2:c.2972A>G NM_007300.1:c.3113A>G')
+        self.assertIn('p.E1038G',data3['p.']) 
+        self.assertIn('p.E991G',data3['p.']) 
+        self.assertIn('NM_007297.2:c.2972A>G',data3['c.'])
+        self.assertIn('NM_007300.1:c.3113A>G',data3['c.'])
+
+        #4 & 5 should not have a p. but should have a c.
+        self.assertIn('NM_001015877:c.969-9T>C',data4['c.'])
+        self.assertIn('NM_001123383:c.3503-2A>T',data5['c.'])
+        self.assertEqual('',data4['p.'])
+        self.assertEqual('',data5['p.'])
+
 
     def testGetAlleleFreq(self):
         """
@@ -133,8 +147,8 @@ class TestSummary(TestBase):
         data2='1/1:0,2:2:6:65,6,0'
         gatk_header='GT:AD:DP:GQ:PL'
         ref_reads, var_reads, variant_phred = annovar_summary.get_reads(gatk_header,data2)
-        self.assertEqual(ref_reads, '0')
-        self.assertEqual(var_reads, '2')
+        self.assertEqual(ref_reads, '-1')
+        self.assertEqual(var_reads, '-1')
         self.assertEqual(variant_phred, '')
 
 
@@ -142,13 +156,14 @@ class TestSummary(TestBase):
         """
         Return sift, polyphen and gerp from ljb_all file
         """
-        data={'ljb_Scores':'0.18,T,0.462,P,0.065,B,0.000,D,0.000,P,1.375,L,-0.78,T,-1.076,T,0.000,T,0.397,2.791,15.29,4.74,1.898,3.792,13.742'}
+        data={'ljb_Scores':'0.012,D,1.0,D,0.81,P,0.092,N,0.999,D,1.355,L,-1.17,T,-1.57,N,0.612,4.883,24.9,0.999,0.919,D,0.022,D,0.529,D,0.706,0,5.51,0.871,0.935,0.826,0.727,16.149'}
 
-        polyphen, sift, gerp, mutation_taster=annovar_summary.munge_ljb_scores(data)
-        self.assertEqual(polyphen, '0.462')
-        self.assertEqual(sift, '0.18')
-        self.assertEqual(gerp, '4.74')
-        self.assertEqual(mutation_taster,'0.000')
+        polyphen, sift, mutation_taster, gerp=annovar_summary.munge_ljb_scores(data)
+        self.assertEqual(polyphen, '1.0')
+        self.assertEqual(sift, '0.012')
+        self.assertEqual(mutation_taster,'0.999')
+        self.assertEqual(gerp, '5.51')
+
 
 
 

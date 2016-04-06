@@ -23,10 +23,10 @@ sample counts, and scores calculated based on counts
 def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     """ Parse the sample quality analysis file, from hs_metrics"""
     files = ifilter(filters.quality_analysis, files)
+    #sort the files so that the output in the workbook is sorted
     files=sorted(files)    
     variant_keys = ['MEAN_TARGET_COVERAGE']
  
-    #sort the files so that the output in the workbook is sorted
     for pth in files:      
         pfx = munge_pfx(pth.fname)
         log_pfx=pfx['mini-pfx']
@@ -157,8 +157,6 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'Sift',
         'Mutation_Taster',
         'Gerp',
-        'ADA_Alter_Splice',
-        'RF_Alter_Splice',
         'UW_Freq',
         'UW_Count',
         '1000g_ALL',
@@ -169,7 +167,10 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'EVS_esp6500_EU',
         '1000g_SAS',
         '1000g_EAS',
-        '1000g_AFR']
+        '1000g_AFR',
+        'ADA_Alter_Splice',
+        'RF_Alter_Splice',
+]
 
     for pth in files:
         pfx = munge_pfx(pth.fname)

@@ -53,7 +53,7 @@ class TestParsers(TestBase):
                                                          'Transcripts', 'Clinically_Flagged', 'Cosmic', 'Segdup', 
                                                          'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 'UW_Freq', 'UW_Count',
                                                          '1000g_ALL', 'EVS_esp6500_ALL', '1000g_AMR', 'EVS_esp6500_AA', '1000g_EUR',
-                                                         'EVS_esp6500_EU', '1000g_EAS', '1000g_SAS','1000g_AFR', '6037_NA12878_Ref|Var',
+                                                         'EVS_esp6500_EU', '1000g_EAS', '1000g_SAS','1000g_AFR', 'ADA_Alter_Splice', 'RF_Alter_Splice', '6037_NA12878_Ref|Var',
                                                          '5437_NA12878_Ref|Var', '0228T_Ref|Var', 'Count']))
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         

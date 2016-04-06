@@ -57,7 +57,7 @@ def action(args):
 
     #Print sample level output
     for sample in samples:
-        pfx=sample+'-'+args.project
+        pfx=sample.replace('_','-')+'-'+args.project
         header=['Target','Gene','Position']
         header.append(sample)
         sample_info=merged[header]

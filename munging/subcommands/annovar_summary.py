@@ -1,11 +1,12 @@
 """
-Summarize output from Annovar
+Summarize output from Annovar and EVS
 
 Usage:
 
  munge summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
 
 """
+
 import logging
 import sys
 import re
@@ -19,17 +20,16 @@ from munging.annotation import get_location, multi_split, split_string_in_two
 variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
 
 # (pattern, header_ids, var_key_ids)
-
 file_types = {
 #files
     'variant_function': ({0: 'var_type_1',
-                                 1: 'Gene',
-                                 7: 'Zygosity',
-                                 12: 'rsid_1',
-                                 18: 'Read_Headers',
-                                 19: 'Reads',
-                                 8: 'GATK_Score'},
-                                [2, 3, 4, 5, 6]),
+                          1: 'Gene',
+                          7: 'Zygosity',
+                          12: 'rsid_1',
+                          18: 'Read_Headers',
+                          19: 'Reads',
+                          8: 'GATK_Score'},
+                         [2, 3, 4, 5, 6]),
     'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
     'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
     'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
@@ -40,12 +40,11 @@ file_types = {
     'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
     'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'hg19_ljb26_all_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
     'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
     'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'hg19_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
     'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
@@ -53,6 +52,8 @@ file_types = {
     'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
+log = logging.getLogger(__name__)
+
 
 def get_reads(headers, data):
     """Parse the reads from
@@ -64,14 +65,11 @@ def get_reads(headers, data):
     ABQ:Average quality of variant-supporting bases (qual2)
     """
     info = dict(zip(headers.split(':'), data.split(':')))
-    if len(info['AD'].split(','))==2:
-        reads=info['AD'].split(',')
-        return reads[0],reads[1],''
-    if len(info['AD'].split(','))>2:
-        return '-1','-1',''
-    else:
+    #Do not return GATK reads. They are downsampled to 250 
+    if 'RD' in info.keys():
         return info['RD'],info['AD'],info['ABQ']
-
+    else:
+        return '-1','-1',''
 
 def munge_gene_and_Transcripts(data, RefSeqs):
     """
@@ -83,13 +81,21 @@ def munge_gene_and_Transcripts(data, RefSeqs):
     if not Gene or data['Variant_Type'] in ('upstream','downstream','intergenic','ncRNA_exonic'):
         Gene = ''
     elif '(' in Gene:
-        Gene, Gene_tail = data['Gene'].split('(', 1)
-        if 'NM' in Gene_tail:
-            # overrides value of Transcripts
-            Transcripts = data['Gene'].replace('(', ':').strip(')')
-    trans = ", ".join(str(e) for e in set(Transcripts.split(',') if Transcripts else []) if e)
-    return Gene, trans
- 
+        #BCOR,BCOR(NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)
+        #PHF6(NM_001015877:exon10:c.969-9T>C,NM_032458:exon10:c.969-9T>C),PTEN
+        gene_parts=re.split('[(,)]',Gene)
+        Gene = gene_parts[0]
+        for part in gene_parts:
+            if 'NM' in part:
+                if Transcripts:
+                    Transcripts = ','.join([Transcripts, part])
+                else:
+                    Transcripts = part
+            else:
+                if part not in Gene:
+                    Gene = ','.join(filter(None, [Gene, part]))
+    return Gene, Transcripts
+
 def munge_transcript(data, RefSeqs):
     """
     Return HGVS correct transcript annotations
@@ -100,17 +106,33 @@ def munge_transcript(data, RefSeqs):
     transcripts = data.get('Transcripts')
     if transcripts is not None:
         # Split incoming trans, strip the trailing )
-        for data in transcripts.split(','):
-            d = data.replace('(', ':') 
+        data1 = multi_split(transcripts.replace('(', ':'), ',(')
+        #Remove duplicate transcription entries
+        data = list(set(data1))
+        for d in data:
             # Split the actual transcript info which is colon separated
             x = d.split(':')
-            try:
+            #5: ['PRSS1', 'NM_002769', 'exon4', 'c.567T>C', 'p.L189L']
+            if len(x)==5:
                 gene, txpt, exon, codon, prot = x
-            except ValueError:
-                try:
-                    gene, txpt, exon, codon = x
-                except ValueError:
-                    continue
+            elif len(x)==4:
+            #4: ['POLE', 'NM_006231', 'exon25', 'c.2865-4T>-']
+                gene, txpt, exon, codon = x
+            elif len(x)==3:
+            #3: ['RAD50', 'NM_005732', 'c.-38G>A']
+                if 'NM' in x[1]:
+                    gene, txpt, codon = x
+            #3: ['NM_005590','exon5','c.315-4T>-']
+                elif 'NM' in x[0]:
+                    txpt, exon, codon = x
+            elif len(x)==2:
+            #2: ['NM_001290310', 'c.*513_*514insATC']
+                txpt, codon = x
+            elif len(x)==1:
+                continue
+            else:
+                sys.exit("don't know how to parse %s" % d)
+
             pref_trans = RefSeqs.get(txpt)
             #Want to return None for all values if not pref_trans
             if not pref_trans:
@@ -118,8 +140,10 @@ def munge_transcript(data, RefSeqs):
             code = pref_trans + ':' + codon
             coding = coding + ' ' + code
             protein = protein + ' ' + prot
+
     return coding.strip(), protein.strip()
-                 
+
+
 def map_headers(fname, header_ids, variant_idx):
     """
     Gets header(s) and info from each file
@@ -142,6 +166,7 @@ def map_headers(fname, header_ids, variant_idx):
 
             yield (variant_id, dict(data, **variant_dict))
 
+
 def get_allele_freq(data):
     """
     Return allele frequency of var_reads/ref_reads
@@ -162,17 +187,13 @@ def munge_ljb_scores(data):
         info = data.get('ljb_Scores').split(',')
         sift = info[0]
         polyphen = info[2]
-        gerp = info[21]
         mutation_taster = info[8]
+        gerp = info[28]
+
     except AttributeError:
         return -1, -1, -1, -1 
-    return polyphen, sift, gerp, mutation_taster 
 
-def merge_two_dicts(x, y):
-    '''Given two dicts, merge them into a new dict as a shallow copy.'''
-    z = x.copy()
-    z.update(y)
-    return z    
+    return polyphen, sift, mutation_taster, gerp
 
 def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
@@ -188,7 +209,7 @@ def build_parser(parser):
         '--strict', action='store_true', default=False,
         help='Exit with error if an input file has no match.')
 
-log = logging.getLogger(__name__)
+
 def action(args):
 
     (infiles, ) = args.infiles
@@ -199,16 +220,15 @@ def action(args):
         for row in refs:
             if row['RefSeq'] :
                 for transcript in row['RefSeq'].split('/'):
-                    RefSeqs[transcript.split('.')[0]] = transcript
-
+                    RefSeqs[transcript] = transcript.split('.')[0]
+                    
     headers = ['Position'] + variant_headers[3:5] + [
         'Clinically_Flagged',
         'Variant_Type',
         'UW_Freq',
-        'ADA_Alter_Splice',
-        'RF_Alter_Splice',
+        'Filter',
         '1000g_ALL',
-        'EVS_esp6500_ALL',
+        'EVS_esp6500_ALL',        
         'EXAC',
         'Gene',
         'p.',
@@ -238,8 +258,18 @@ def action(args):
         'NCI60',
         'dbSNP_ID',
         'UW_Count',
-        'GATK_Score'
-    ]
+        'GATK_Score',
+        'ADA_Alter_Splice',
+        'RF_Alter_Splice',
+        ]
+
+    writer = csv.DictWriter(args.outfile,
+                            fieldnames=headers,
+                            quoting=csv.QUOTE_MINIMAL,
+                            extrasaction='ignore',
+                            delimiter='\t')
+
+    writer.writeheader()
 
     # accumulate data from all input files for each variant
     output = defaultdict(dict)
@@ -255,44 +285,47 @@ def action(args):
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
             if re.search('dropped', fname):
-                log.warning('not processing: %s' % fname)
+                log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
-
+        multi_trans_keys=['Transcripts','Gene','var_type_1','var_type_2']
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
-            if var_key in output and data.get('Transcripts'):
-                output[var_key]['Transcripts']=output[var_key]['Transcripts']+data.get('Transcripts')
+            #If position already in output{}, update certain fields
+            if var_key in output:
+                for key in multi_trans_keys:
+                    if key in output[var_key].keys() and data.get(key):
+                        if data.get(key) not in output[var_key][key]:
+                            output[var_key][key]=','.join([output[var_key][key],data.get(key)])
+                    elif key in output[var_key].keys() and not data.get(key):
+                        output[var_key][key]=output[var_key][key]
+                    elif key not in output[var_key].keys() and data.get(key):
+                        output[var_key][key]=data.get(key)
+                #grab the keys of data, removing keys list, and update those keys
+                data_keys=data.keys()
+                if output[var_key].has_key('Reads'):
+                    if 'RD' in output[var_key]['Read_Headers']:
+                        output[var_key]['Read_Headers']=output[var_key]['Read_Headers']
+                        output[var_key]['Reads']=output[var_key]['Reads']
+                        data_keys.remove('Reads')
+                        data_keys.remove('Read_Headers')
+                    else:
+                        output[var_key]['Read_Headers']=data.get('Read_Headers')
+                        output[var_key]['Reads']=data.get('Reads')
+                  
+                for k in data_keys:
+                    if k not in multi_trans_keys:
+                        output[var_key][k]=data.get(k)
             else:
                 output[var_key].update(data)
-
-    writer = csv.DictWriter(args.outfile,
-                            fieldnames=headers,
-                            quoting=csv.QUOTE_MINIMAL,
-                            extrasaction='ignore',
-                            delimiter='\t')
-
-    writer.writeheader()
-    sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop']]
-
-    def parse_variant_type(data):
-        """
-        Parse the variant type from the various fields into one cell for output
-        """
-        if data.get('var_type_2', '').strip():
-            return ','.join([data.get('var_type_2', '').strip(), data.get('var_type_1')])
-        else:
-            return data.get('var_type_1')
-
-    # write each row (with all data aggregated), modifying fields as necessary
+    sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
+    # # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
-        # # modify any specific fields here
-        data['Variant_Type'] = parse_variant_type(data)
+        variants=[data.get('var_type_2'),data.get('var_type_1')]
+        data['Variant_Type'] = ','.join(filter(None, variants))
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
-        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
-        data['Allele_Frac'] = get_allele_freq(data)
-        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data) 
+        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
         data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL'] = data.get('1000g_ALL') or -1
         data['1000g_AMR'] = data.get('1000g_AMR') or -1
@@ -301,11 +334,13 @@ def action(args):
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
         data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
-        data['Alter_Splice_Ada'],data['Alter_Splice_RF'] = split_string_in_two(data.get('splicing'))
         data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
         data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
         data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
         #CADD is raw score, phred score. We only care about phred
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
+        data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
+        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
+        data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)
