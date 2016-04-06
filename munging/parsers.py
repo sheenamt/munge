@@ -34,7 +34,7 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
-                if not row['MEAN_TARGET_COVERAGE']:
+                if re.search('version',row['MEAN_TARGET_COVERAGE']):
                     continue
                 variant = tuple(k for k in variant_keys)
                 specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
