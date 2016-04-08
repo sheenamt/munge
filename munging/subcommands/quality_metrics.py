@@ -38,8 +38,8 @@ def action(args):
     else:
         hsmetrics_dict={}
         hsmetrics_keys=[]
-    variant_keys = quality_keys + hsmetrics_keys
-    output_dict = dict(quality_dict,**hsmetrics_dict)
+    variant_keys = hsmetrics_keys + quality_keys
+    output_dict = dict(hsmetrics_dict,**quality_dict)
     writer = csv.DictWriter(args.outfile, fieldnames=variant_keys, quoting=csv.QUOTE_MINIMAL,extrasaction='ignore', delimiter='\t')
     writer.writeheader()
     writer.writerow(output_dict)
