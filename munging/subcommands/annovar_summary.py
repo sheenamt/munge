@@ -102,6 +102,7 @@ def munge_transcript(data, RefSeqs):
     Filtered with a preferred transcript list
     NM_006772.1:c.1713G>A
     """
+
     codon, prot, protein, coding, txpt = ' ', ' ', ' ', ' ', None
     transcripts = data.get('Transcripts')
     if transcripts is not None:
@@ -132,7 +133,6 @@ def munge_transcript(data, RefSeqs):
                 continue
             else:
                 sys.exit("don't know how to parse %s" % d)
-
             pref_trans = RefSeqs.get(txpt)
             #Want to return None for all values if not pref_trans
             if not pref_trans:
@@ -140,7 +140,6 @@ def munge_transcript(data, RefSeqs):
             code = pref_trans + ':' + codon
             coding = coding + ' ' + code
             protein = protein + ' ' + prot
-
     return coding.strip(), protein.strip()
 
 
@@ -220,8 +219,8 @@ def action(args):
         for row in refs:
             if row['RefSeq'] :
                 for transcript in row['RefSeq'].split('/'):
-                    RefSeqs[transcript] = transcript.split('.')[0]
-                    
+                    RefSeqs[transcript.split('.')[0]] = transcript
+
     headers = ['Position'] + variant_headers[3:5] + [
         'Clinically_Flagged',
         'Variant_Type',
