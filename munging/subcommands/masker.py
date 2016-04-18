@@ -122,7 +122,8 @@ def action(args):
         #Create file names for new output
         full_output=os.path.join(pth.dir, (pfx+'.full.txt'))
         masked_output=os.path.join(pth.dir, (pfx+'.masked.txt'))
-
+        if os.path.isfile(full_output):
+            os.rename(full_output, os.path.join(pth.dir,pth.fname))
         #Open data for masking
         data=csv.DictReader(open(os.path.join(pth.dir,pth.fname)),delimiter='\t')
 
