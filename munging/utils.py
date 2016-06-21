@@ -1,5 +1,5 @@
 from collections import Iterable
-import datetime
+from datetime import datetime
 import re
 import os
 import shutil
@@ -213,3 +213,83 @@ def munge_path(pth):
         pathinfo['prep_type']='sure_select'
 
     return pathinfo
+
+
+#############################
+def cast(val):
+    """Attempt to coerce `val` into a numeric type, or a string stripped
+    of whitespace.
+    """
+
+    for func in [int, float, lambda x: x.strip(), lambda x: x]:
+        try:
+            return func(val)
+        except ValueError:
+            pass
+
+class Opener(object):
+    """Factory for creating file objects
+
+    Keyword Arguments:
+    - mode -- A string indicating how the file is to be opened. Accepts the
+      same values as the builtin open() function.
+    - bufsize -- The file's desired buffer size. Accepts the same values as
+      the builtin open() function.
+    """
+
+    def __init__(self, mode='r', bufsize=-1):
+        self._mode = mode
+        self._bufsize = bufsize
+
+    def __call__(self, string):
+        if string is sys.stdout or string is sys.stdin:
+            return string
+        elif string == '-':
+            return sys.stdin if 'r' in self._mode else sys.stdout
+        elif string.endswith('.bz2'):
+            return bz2.BZ2File(string, self._mode, self._bufsize)
+        elif string.endswith('.gz'):
+            return gzip.open(string, self._mode, self._bufsize)
+        else:
+            return open(string, self._mode, self._bufsize)
+
+    def __repr__(self):
+        args = self._mode, self._bufsize
+        args_str = ', '.join(repr(arg) for arg in args if arg != -1)
+        return '{}({})'.format(type(self).__name__, args_str)
+
+
+def opener(pth, mode='r', bufsize=-1):
+    return Opener(mode, bufsize)(pth)
+
+def make_local_copy(outdir, subdir, fname):
+    """Copy fname from package data to outdir/subdir (creating dir if
+    necessary), and return the path to the copy of fname relative to
+    outdir.
+    """
+    destdir = os.path.join(outdir, subdir)
+    mkdir(destdir)
+    shutil.copyfile(fname, os.path.join(destdir, fname))
+    return os.path.join(subdir, fname)
+
+def create_static_files(file_names, outdir, subdir):
+    '''
+    Takes a list of files and copies them into a particular directory.
+    '''
+    file_list = []
+    for i in range(len(file_names)):
+        file_list.append(make_local_copy(outdir, subdir, file_names[i]))
+    return file_list
+
+def include_file(outdir, fname):
+    mkdir(outdir)
+    dest = os.path.join(outdir, os.path.basename(fname))
+    shutil.copyfile(fname, dest)
+    return os.path.join(os.path.basename(outdir), os.path.basename(fname))
+
+
+def timestamp_now():
+    """
+    Produce a string with date and time information for a report
+    """
+    return datetime.now().strftime("%A, %B %d, %Y, %I:%M %p")
