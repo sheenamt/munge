@@ -156,7 +156,7 @@ def munge_date(date):
     """
     #only convert if new date format
     if len(date)<7:
-        d = datetime.datetime.strptime(date, '%y%m%d')
+        d = datetime.strptime(date, '%y%m%d')
         return d.strftime('%Y-%m-%d')
     else:
         return date
