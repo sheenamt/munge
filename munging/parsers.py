@@ -146,6 +146,9 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
                         specimens[variant][status_pfx]='NEG'
                     elif 0.25 < float(frac) < 0.70 :
                         specimens[variant][status_pfx]='HET'
+                    else:
+                        specimens[variant][status_pfx]='REVIEW'
+                    
                 else:
                     specimens[variant][status_pfx]='REVIEW'
                 annotation[variant] = row
