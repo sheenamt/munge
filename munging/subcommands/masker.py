@@ -143,10 +143,12 @@ def action(args):
         #Create file names for new output
         full_output=os.path.join(pth.dir, (pfx+'.full.txt'))
         masked_output=os.path.join(pth.dir, (pfx+'.masked.txt'))
+        default_name = os.path.join(pth.dir,pth.fname)
         if os.path.isfile(full_output):
-            os.rename(full_output, os.path.join(pth.dir,pth.fname))
+            print "masking ran before, moving full files back to default name"
+            os.rename(full_output, default_name)
         #Open data for masking
-        data=csv.DictReader(open(os.path.join(pth.dir,pth.fname)),delimiter='\t')
+        data=csv.DictReader(open(default_name),delimiter='\t')
 
         #Open output for writing
         writer = csv.DictWriter(open(masked_output, 'w'),
@@ -159,5 +161,5 @@ def action(args):
         print "filtering %s" % analysis_type
         writer.writerows(mask_file_by_gene(data, mask))
         #Move the files so the masked is Analysis.txt and the full is labeled
-        copyfile(os.path.join(pth.dir,pth.fname),full_output)
-        os.rename(masked_output, os.path.join(pth.dir,pth.fname))
+        copyfile(default_name,full_output)
+        os.rename(masked_output, default_name)
