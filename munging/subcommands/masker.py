@@ -10,7 +10,6 @@ import sys
 import logging
 import os
 import csv
-
 from munging.utils import walker
 from itertools import ifilter
 from shutil import copyfile
@@ -81,6 +80,10 @@ def build_parser(parser):
                         help='Path to analysis files')
     parser.add_argument('mask_list', nargs='+',
                        help="Order code or list of genes that were tested, must have spece between names")
+    parser.add_argument('--mask_codes', choices=['1','2'],
+                        help='Print the built in masking codes (1) and their gene lists (2)')
+
+
     #This script filters:
     # 4_SV_Crest
     # 5_SV_Breakdancer
@@ -118,6 +121,11 @@ def mask_file_by_gene(data, genes):
     return output
 
 def action(args):
+    if args.mask_codes == '1':
+        print 'Codes are: ', MASK_CODES.keys() 
+    if args.mask_codes == '2':
+        for key, value in MASK_CODES.items():
+            print 'Code: %s is gene list: \n %s' % (key, value['Genes'])
     infiles = walker(args.path)  
     files=[i for i in infiles]
     if len(files)<1:
@@ -129,6 +137,15 @@ def action(args):
         mask=MASK_CODES[args.mask_list[0]]['Genes'] 
     except KeyError:
         mask=args.mask_list 
+    
+    #test that the mask is good:
+    for m in mask:
+        if m not in MASK_CODES.values():
+            response = raw_input("%s may not be valid. Use anyways?  (y/n) " % m )
+            if response in ['y', 'Y']:
+                continue
+            else:
+                sys.exit()
     print 'Genes in output: %s ' % ([i for i in mask])
     #Grab files for filtering
     files = ifilter(any_analysis, files)
