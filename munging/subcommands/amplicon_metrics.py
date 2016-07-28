@@ -10,6 +10,7 @@ import sys
 import csv
 import pandas as pd
 import glob
+import re
 from itertools import ifilter
 from os import path, makedirs
 
@@ -19,15 +20,19 @@ from munging.utils import walker
 def build_parser(parser):
     parser.add_argument(
         'amplicons', type=argparse.FileType('rU'),
+        help='path to amplicon info file',
         default=sys.stdin)
     parser.add_argument(
         'run_metrics_dir', help='run directory')
     parser.add_argument(
-        'project',
-        default=sys.stdin)
-    parser.add_argument(
-        '--top_output', type=argparse.FileType('w'),
+        'top_output', type=argparse.FileType('w'),
+        help='path and name of top-level output to write',
         default=sys.stdout)
+    parser.add_argument(
+        'sample_dirs',
+        nargs='+',
+        help='List of sample folders',
+        default=sys.stdin)
 
 def action(args):
     #get run-amplicon file
@@ -43,8 +48,8 @@ def action(args):
             clean_metrics = run_metrics.dropna(axis='columns',how='all')
 
             #Grab samples from file, removing 'Target' columns 
-            samples=list(clean_metrics.columns.values)
-            samples.remove('Target')
+            sample_names=list(clean_metrics.columns.values)
+            sample_names.remove('Target')
 
     #grab amplicon bed
     amplicons=pd.read_csv(args.amplicons)
@@ -54,15 +59,16 @@ def action(args):
 
     #Print top-level-output
     merged.to_csv(args.top_output, index=False,sep='\t')
-
+    sample_dirs = args.sample_dirs
     #Print sample level output
-    for sample in samples:
-        pfx=sample.replace('_','-')+'-'+args.project
+    for sample in sample_names:
+        pfx=sample.replace('_','-')
         header=['Target','Gene','Position']
         header.append(sample)
         sample_info=merged[header]
         #Expected : project/pfx/pfx.Amplicon_Analysis.txt
-        outdir = path.join('output',pfx)
+        x =re.compile(pfx)
+        outdir = str(filter(x.search, sample_dirs)[0])
         if not path.exists(outdir):
             makedirs(outdir)
         sample_out = path.join(outdir,pfx+'.Amplicon_Analysis.txt')
