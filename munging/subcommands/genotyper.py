@@ -17,8 +17,8 @@ pd.options.display.width = 180
 def build_parser(parser):
     parser.add_argument('clin_flagged', 
                         help='A required input file')
-    parser.add_argument('specimen',
-                        help='A required specimen ID')
+    parser.add_argument('specimen_folder',
+                        help='A required specimen ID folder')
     parser.add_argument('varscan',
                         help='Absolute path to varscan jar file')
     parser.add_argument('--min_coverage', default=8, type=int,
@@ -119,8 +119,8 @@ def action(args):
     flagged_variants['chrom'] = flagged_variants['chrom'].astype('str')
 
     #setup the sample files. 
-    sample_id = args.specimen 
-    sample_path = os.path.join(os.getcwd(),'output',sample_id)
+    sample_path = args.specimen_folder
+    sample_id = os.path.basename(sample_path)
 
     #mpileup that readcounts runs on 
     mpileup = os.path.join(sample_path, sample_id+'.mpileup')
@@ -141,7 +141,7 @@ def action(args):
     varscan_format_variants.to_csv(genotype_positions, index=False, columns = var_cals, header=None,sep='\t')
 
     #Run varscan readcount, creates output file we process next
-#    readcounts = run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
+    readcounts = run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
 
     #parse the varscan output into preferred format 
     reader = open(genotype_calls, 'rU')
