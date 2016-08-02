@@ -68,7 +68,11 @@ def action(args):
         sample_info=merged[header]
         #Expected : project/pfx/pfx.Amplicon_Analysis.txt
         x =re.compile(pfx)
-        outdir = str(filter(x.search, sample_dirs)[0])
+        try:
+            outdir = str(filter(x.search, sample_dirs)[0])
+        except IndexError:
+            print "%s found in amplicons but not being run" % pfx
+            continue
         if not path.exists(outdir):
             makedirs(outdir)
         sample_out = path.join(outdir,pfx+'.Amplicon_Analysis.txt')
