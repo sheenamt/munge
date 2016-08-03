@@ -30,27 +30,27 @@ file_types = {
                           19: 'Reads',
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
-    # 'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    # 'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    # 'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    # 'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    # 'hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    # 'hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    # 'hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    # 'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    # 'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    # 'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    # 'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    # 'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    # 'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    # 'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    # 'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    # 'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    # 'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    # 'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-    # 'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    # 'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
-    # 'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
+    'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
+    'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
+    'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
 log = logging.getLogger(__name__)
 
@@ -288,8 +288,7 @@ def action(args):
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
             if re.search('dropped', fname):
-                continue
-#                log.warning('no match: %s' % fname)
+                log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
