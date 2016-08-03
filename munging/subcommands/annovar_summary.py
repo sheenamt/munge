@@ -30,27 +30,27 @@ file_types = {
                           19: 'Reads',
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
-    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-    'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
-    'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    # 'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    # 'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    # 'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    # 'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    # 'hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    # 'hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    # 'hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    # 'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
+    # 'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    # 'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    # 'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    # 'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    # 'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    # 'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    # 'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
+    # 'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
+    # 'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    # 'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    # 'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    # 'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    # 'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
 }
 log = logging.getLogger(__name__)
 
@@ -66,8 +66,12 @@ def get_reads(headers, data):
     """
     info = dict(zip(headers.split(':'), data.split(':')))
     #Do not return GATK reads. They are downsampled to 250 
+
     if 'RD' in info.keys():
         return info['RD'],info['AD'],info['ABQ']
+    elif ['GT', 'AD'] == info.keys():
+        reads = info['AD'].split(',')
+        return reads[0], reads[1], ''
     else:
         return '-1','-1',''
 
@@ -284,39 +288,47 @@ def action(args):
             header_ids, var_key_ids = file_types[file_type]
         except KeyError:
             if re.search('dropped', fname):
-                log.warning('no match: %s' % fname)
+                continue
+#                log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
         multi_trans_keys=['Transcripts','Gene','var_type_1','var_type_2']
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
+            data_keys=data.keys()
             #If position already in output{}, update certain fields
             if var_key in output:
                 for key in multi_trans_keys:
+                    #if key is already in output dict and in new file
                     if key in output[var_key].keys() and data.get(key):
+                        #Make sure the data isn't a duplicate
                         if data.get(key) not in output[var_key][key]:
+                            #Make a comma delimited list of info
                             output[var_key][key]=','.join([output[var_key][key],data.get(key)])
+                    #If position has been seen but this file has no data for this key, set to original data
                     elif key in output[var_key].keys() and not data.get(key):
                         output[var_key][key]=output[var_key][key]
+                    #If position has been seen but there was not data for this data, add this file's data 
                     elif key not in output[var_key].keys() and data.get(key):
                         output[var_key][key]=data.get(key)
-                #grab the keys of data, removing keys list, and update those keys
-                data_keys=data.keys()
-                if output[var_key].has_key('Reads'):
-                    if 'RD' in output[var_key]['Read_Headers']:
-                        output[var_key]['Read_Headers']=output[var_key]['Read_Headers']
-                        output[var_key]['Reads']=output[var_key]['Reads']
-                        data_keys.remove('Reads')
-                        data_keys.remove('Read_Headers')
+                # #Keep the highest read count 
+                if output[var_key].has_key('Reads') and data.get('Reads'):                    
+                    old_ref_read, old_var_read, old_phred = get_reads(output[var_key]['Read_Headers'],output[var_key]['Reads'])
+                    new_ref_read, new_var_read, new_phred = get_reads(data.get('Read_Headers'),data.get('Reads'))
+                    if int(old_var_read) >  int(new_var_read):
+                        output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = old_ref_read, old_var_read, old_phred
                     else:
-                        output[var_key]['Read_Headers']=data.get('Read_Headers')
-                        output[var_key]['Reads']=data.get('Reads')
-                  
+                        output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = new_ref_read, new_var_read, new_phred
+                elif "Reads" not in output[var_key].keys() and data.get('Reads'):
+                    output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
+                #grab the keys of data, removing keys list, and update those keys
+                multi_trans_keys.extend(['Reads', 'Read_Headers'])
                 for k in data_keys:
                     if k not in multi_trans_keys:
                         output[var_key][k]=data.get(k)
             else:
                 output[var_key].update(data)
+
     sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
     # # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
