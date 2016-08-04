@@ -30,7 +30,6 @@ file_types = {
                           19: 'Reads',
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
-    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
     'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
     'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
     'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
@@ -51,6 +50,8 @@ file_types = {
     'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
     'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+
 }
 log = logging.getLogger(__name__)
 
@@ -286,14 +287,16 @@ def action(args):
             #header ids are output columns
             #var_key_ids are chrm:str:stp:ref:var
             header_ids, var_key_ids = file_types[file_type]
+        
         except KeyError:
             if re.search('dropped', fname):
+                continue
                 log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
-        multi_trans_keys=['Transcripts','Gene','var_type_1','var_type_2']
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
+            multi_trans_keys=['Transcripts','Gene','var_type_1','var_type_2']
             data_keys=data.keys()
             #If position already in output{}, update certain fields
             if var_key in output:
@@ -311,14 +314,14 @@ def action(args):
                     elif key not in output[var_key].keys() and data.get(key):
                         output[var_key][key]=data.get(key)
                 # #Keep the highest read count 
-                if output[var_key].has_key('Reads') and data.get('Reads'):                    
-                    old_ref_read, old_var_read, old_phred = get_reads(output[var_key]['Read_Headers'],output[var_key]['Reads'])
+                if output[var_key].has_key('Var_Reads') and data.get('Reads'):                    
+                    old_ref_read, old_var_read, old_phred = output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred']
                     new_ref_read, new_var_read, new_phred = get_reads(data.get('Read_Headers'),data.get('Reads'))
                     if int(old_var_read) >  int(new_var_read):
                         output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = old_ref_read, old_var_read, old_phred
                     else:
                         output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = new_ref_read, new_var_read, new_phred
-                elif "Reads" not in output[var_key].keys() and data.get('Reads'):
+                elif "Var_Reads" not in output[var_key].keys() and data.get('Reads'):
                     output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
                 #grab the keys of data, removing keys list, and update those keys
                 multi_trans_keys.extend(['Reads', 'Read_Headers'])
@@ -351,6 +354,5 @@ def action(args):
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
         data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
-        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
         data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)

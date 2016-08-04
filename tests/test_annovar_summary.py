@@ -89,9 +89,6 @@ class TestSummary(TestBase):
         #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
         self.assertEqual(data2['Gene'], '')
         self.assertEqual(data3['Gene'], 'BRCA1')
-        #test that duplicate transcripts are not
-        dup_trans='SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S'
-#        self.assertEqual(dup_trans, data2['Transcripts'])
 
         self.assertEqual(data4['Gene'], 'PHF6,PTEN')
         self.assertEqual(data5['Gene'], 'BCOR')
