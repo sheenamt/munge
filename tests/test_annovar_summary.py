@@ -31,18 +31,23 @@ NM_dict = {
 data1 = {'Gene': 'SCN1A',
          'Transcripts': 'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,',
          'Variant_Type': '',
+         'Variant_Phred':'',
          'Var_Reads': '-1', 'Ref_Reads': '-1'}
 #Duplicate transcript entry to test parsing of duplicates
 data2 = {'Gene': 'SYNGAP1',
          'Transcripts': 'SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S,SYNGAP1:NM_006772:exon11:c.1713G>A:p.S571S',
          'Variant_Type': 'upstream',
+         'Variant_Phred':'',
          'Var_Reads': '10', 'Ref_Reads': '90'}
 data3 = {'Gene': 'BRCA1',
          'Transcripts': 'BRCA1:NM_007300:exon10:c.3113A>G:p.E1038G,BRCA1:NM_007297:exon9:c.2972A>G:p.E991G,BRCA1:NM_007294:exon10:c.3113A>G:p.E1038G',
          'Variant_Type': ''}
 data4 = {'Gene': 'PHF6(NM_001015877:exon10:c.969-9T>C,NM_032458:exon10:c.969-9T>C),PTEN',
          'Transcripts': '',
-         'Variant_Type':'exonic'}
+         'Variant_Type':'exonic',
+         'Read_Headers':'GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR',
+         'Reads':'0/1:24:725:724:714:8:1.1%:3.8308E-3:37:37:357:357:4:4',
+         }
 data5 = {'Gene':'BCOR,BCOR(NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)',
          'Transcripts':'NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)',
          'Variant_Type':'exonic'}
@@ -160,6 +165,16 @@ class TestSummary(TestBase):
         self.assertEqual(sift, '0.012')
         self.assertEqual(mutation_taster,'0.999')
         self.assertEqual(gerp, '5.51')
+        
+    def testLargestVariantReads(self):
+        """
+        Return the read info with the highest variant count
+        """
+        read_info1=annovar_summary.largest_variant_reads(data2,data4)
+        read_info2=annovar_summary.largest_variant_reads(data1,data4)
+
+        self.assertEqual(read_info1,('90', '10', ''))
+        self.assertTrue(read_info1,('714', '8', '37'))
 
 
 
