@@ -14,7 +14,7 @@ import argparse
 import csv
 from collections import defaultdict
 from os import path
-
+from IPython.core.debugger import Tracer
 from munging.annotation import get_location, multi_split, split_string_in_two
 
 variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
@@ -175,6 +175,7 @@ def get_allele_freq(data):
     """
     Return allele frequency of var_reads/ref_reads
     """
+
     if int(data['Var_Reads']) == -1 and int(data['Ref_Reads']) == -1:
         freq = 'NA'
     else:
@@ -330,29 +331,31 @@ def action(args):
                         output[var_key][k]=data.get(k)
             else:
                 output[var_key].update(data)
-
+                if output[var_key].has_key('Reads') and not output[var_key].has_key('Var_Reads'):
+                    output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
     sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
     # # write each row (with all data aggregated), modifying fields as necessary
+    Tracer()
     for data in sorted(output.values(), key=sort_key):
-        variants=[data.get('var_type_2'),data.get('var_type_1')]
-        data['Variant_Type'] = ','.join(filter(None, variants))
-        data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
-        data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
-        data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
-        data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
-        data['1000g_ALL'] = data.get('1000g_ALL') or -1
-        data['1000g_AMR'] = data.get('1000g_AMR') or -1
-        data['1000g_SAS'] = data.get('1000g_SAS') or -1
-        data['1000g_EAS'] = data.get('1000g_EAS') or -1
-        data['1000g_AFR'] = data.get('1000g_AFR') or -1
-        data['1000g_EUR'] = data.get('1000g_EUR') or -1
-        data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
-        data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
-        data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
-        data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
-        #CADD is raw score, phred score. We only care about phred
-        _, data['CADD'] = split_string_in_two(data.get('CADD'))
-        data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
-        data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
+        # variants=[data.get('var_type_2'),data.get('var_type_1')]
+        # data['Variant_Type'] = ','.join(filter(None, variants))
+        # data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
+        # data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
+        # data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
+        # data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
+        # data['1000g_ALL'] = data.get('1000g_ALL') or -1
+        # data['1000g_AMR'] = data.get('1000g_AMR') or -1
+        # data['1000g_SAS'] = data.get('1000g_SAS') or -1
+        # data['1000g_EAS'] = data.get('1000g_EAS') or -1
+        # data['1000g_AFR'] = data.get('1000g_AFR') or -1
+        # data['1000g_EUR'] = data.get('1000g_EUR') or -1
+        # data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
+        # data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
+        # data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
+        # data['EVS_esp6500_EU'] = data.get('EVS_esp6500_EU').split(',')[0] if data.get('EVS_esp6500_EU') else -1
+        # #CADD is raw score, phred score. We only care about phred
+        # _, data['CADD'] = split_string_in_two(data.get('CADD'))
+        # data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
+        # data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
         data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)
