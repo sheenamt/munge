@@ -189,7 +189,7 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
                 #Update the specimen dict for this variant, for this pfx, report the Reads found
-                specimens[variant][pfx['mini-pfx']] = row['Reads']
+                specimens[variant][pfx['mini-pfx']] = max(row['bbmergedReads'], row['bwamemReads'])
                 annotation[variant] = row
 
     #Update the specimen dict for this variant, count samples present
