@@ -7,6 +7,7 @@ import tempfile
 import logging
 import shutil
 import os
+import argparse
 import pandas as pd
 import csv 
 from collections import namedtuple
@@ -21,6 +22,9 @@ def build_parser(parser):
                         help='A required specimen ID folder')
     parser.add_argument('varscan',
                         help='Absolute path to varscan jar file')
+    parser.add_argument('output', type=argparse.FileType('w'),
+                        help='path and name of output to write',
+                        default=sys.stdout)
     parser.add_argument('--min_coverage', default=8, type=int,
                         help='Minimum read depth at a position to make a call')
     parser.add_argument('--min_base_qual', default=30, type=int,
@@ -132,7 +136,7 @@ def action(args):
     genotype_calls=os.path.join(sample_path,sample_id+'.genotype_output') 
 
     #final analysis file
-    genotype_analysis=os.path.join(sample_path,sample_id+'.Genotype_Analysis.txt')
+    genotype_analysis=args.output
 
     #Process the clinically flagged positions, format for varscan readcounts function    
     varscan_format_variants = flagged_variants.apply(format_indels, axis = 1)
