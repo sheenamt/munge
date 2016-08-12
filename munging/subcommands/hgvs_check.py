@@ -37,7 +37,7 @@ def build_parser(parser):
                         help='Name of column with protein HGVS annotation')
 
 
-def get_soap_connection(URL):
+def get_mutalyzer_connection(URL):
     c = Client(URL, cache=None)
     o = c.service
     return o
@@ -111,7 +111,7 @@ def action(args):
         input_rows.append(line)
 
     # connect to mutalyzer and query batch file
-    conn = get_soap_connection(MUTALYZER_URL)
+    conn = get_mutalyzer_connection(MUTALYZER_URL)
     results = query_mutalyzer(conn, batch_file_entries)
 
     # split header from results; mutalyzer adds an extra blank row which we remove
