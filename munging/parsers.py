@@ -143,11 +143,11 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
                     frac = '0'
                 specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
                 if int(row['Valid_Reads']) >= 100:
-                    if float(frac) >= 0.70:
+                    if float(frac) > 0.70:
                         specimens[variant][status_pfx]='HOMO'
                     elif float(frac) <= 0.10:
                         specimens[variant][status_pfx]='NEG'
-                    elif 0.25 < float(frac) < 0.70 :
+                    elif 0.20 <= float(frac) <= 0.70 :
                         specimens[variant][status_pfx]='HET'
                     else:
                         specimens[variant][status_pfx]='REVIEW'
@@ -156,10 +156,10 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
                     specimens[variant][status_pfx]='REVIEW'
                 annotation[variant] = row
 
-# HET = 0.25 - 0.70 VAF
+# HET = 0.20 - 0.70 VAF
 # HOMO > 0.70 VAF
 # NEG = < 0.10 VAF
-# REVIEW = 0.10 - 0.25 VAF   
+# REVIEW = 0.10 - 0.20 VAF   
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
