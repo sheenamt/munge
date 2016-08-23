@@ -129,7 +129,6 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
         status_pfx=pfx['mini-pfx']+'_Status'
         prefixes.append(reads_pfx)
         prefixes.append(status_pfx)
-
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
@@ -155,11 +154,10 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
                 else:
                     specimens[variant][status_pfx]='REVIEW'
                 annotation[variant] = row
-
-# HET = 0.20 - 0.70 VAF
+# HET = 0.25 - 0.70 VAF
 # HOMO > 0.70 VAF
 # NEG = < 0.10 VAF
-# REVIEW = 0.10 - 0.20 VAF   
+# REVIEW = 0.10 - 0.25 VAF   
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
@@ -192,7 +190,7 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
                 #Update the specimen dict for this variant, for this pfx, report the Reads found
-                specimens[variant][pfx['mini-pfx']] = max(row['bbmergedReads'], row['bwamemReads'])
+                specimens[variant][pfx['mini-pfx']] = row['Reads']
                 annotation[variant] = row
 
     #Update the specimen dict for this variant, count samples present
