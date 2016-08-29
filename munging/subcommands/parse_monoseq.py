@@ -46,10 +46,7 @@ def action(args):
         if float(call_info[key])>0.0:
             output[key]=call_info[key]
 
-    print output
     header = sorted(output.keys(), reverse=True)
-    print 'header:', header
-#    writer = csv.DictWriter(open(args.outfile, 'w'),
     writer = csv.DictWriter(open(args.outfile, 'w'),
                         fieldnames = header, 
                         quoting=csv.QUOTE_NONE,

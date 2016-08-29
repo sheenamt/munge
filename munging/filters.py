@@ -86,6 +86,13 @@ def genotype_analysis(pth):
     """
     return pth.fname.split('.')[-2] in set (['Genotype_Analysis'])
 
+def polyhunter_analysis(pth):
+    """
+    True only for pfx.Genotype_Analysis.{txt,csv}
+    """
+    return pth.fname.split('.')[-2] in set (['PolyHunter_Analysis'])
+
+
 def amplicon_coverage(pth):
     """
     True only for AmpliconCoverage*
