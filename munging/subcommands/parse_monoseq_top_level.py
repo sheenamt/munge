@@ -7,7 +7,6 @@ import sys
 import copy
 import argparse
 import collections
-from IPython.core.debugger import Tracer
 from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
 
