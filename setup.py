@@ -29,6 +29,7 @@ params = {'author': 'Sheena Todhunter',
               'wsgiref==0.1.2',
               'xlrd==0.9.3',
               'xlwt==0.7.5'        
+              ]
       }
 
 setup(**params)
