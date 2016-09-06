@@ -16,7 +16,9 @@ ASSAYS={'OPX':'OncoPlex',
         'EPI':'EpiPlex',
         'MRW':'MarrowSeq',
         'IMD':'ImmunoPlex',
-        'HH':'HotSpot-Heme',
+        'HP':'HotSpot-Heme',
+        'STH':'HotSpot-Heme',
+        'GLT':'HotSpot-Hereditary',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus'}
 
@@ -30,9 +32,9 @@ ASSAY_CODES={'colo':'coloseq',
              'imm':'immunoplex',
              'marrow':'marrowseq',
              'broca-hr':'broca-hr',
-             'hh':'hotspot-heme',
+             'hp':'hotspot-heme',
              'glt':'hotspot-hereditary',
-             'sth':'hotspot-herediatry'}
+             'sth':'hotspot-heme'}
 
 
 def dict_factory(cursor, row):

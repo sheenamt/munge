@@ -58,9 +58,26 @@ class TestUtils(TestBase):
                    'mini-pfx': '6037'}
         test_info=munge_pfx('6037_MSI-Plus')
 
+    def testMungePFX5(self):
+        real_info={'sample_id': '6037', 
+                   'pfx': '6037',
+                   'assay':'hotspot-hereditary',
+                   'mini-pfx': '6037'}
+        test_info=munge_pfx('6037_GLT06')
+
+    def testMungePFX6(self):
+        real_info={'sample_id': '6037', 
+                   'pfx': '6037',
+                   'assay':'hotspot-heme',
+                   'mini-pfx': '6037'}
+        test_info=munge_pfx('6037_HP06')
+
     def testMungePath(self):
         test_id1=munge_path('140915_HA000_ColoTestFiles')
         test_id2=munge_path('testfiles/140915_MA0001_OncoPlexKapa')
+        test_id3=munge_path('testfiles/160727_MB0745_GLT005-HHv1')
+        test_id4=munge_path('testfiles/160820_MD0020_HP66-HHv1')
+        test_id5=munge_path('testfiles/160209_MA0829_STH12-HHv1')
 
         self.assertEqual(test_id1,({'date':'2014-09-15',
                                     'run': 'HA000', 
@@ -75,6 +92,27 @@ class TestUtils(TestBase):
                                     'assay':'oncoplex', 
                                     'prep_type':'kapa',
                                     'project': 'oncoplexkapa'}))
+
+        self.assertEqual(test_id3,({'date':'2016-07-27',
+                                    'run': 'MB0745', 
+                                    'machine': 'miseq',
+                                    'assay':'hotspot-hereditary', 
+                                    'prep_type':'truseq',
+                                    'project': 'glt005-hhv1'}))
+
+        self.assertEqual(test_id4,({'date':'2016-08-20',
+                                    'run': 'MD0020', 
+                                    'machine': 'miseq',
+                                    'assay':'hotspot-heme', 
+                                    'prep_type':'truseq',
+                                    'project': 'hp66-hhv1'}))
+
+        self.assertEqual(test_id5,({'date':'2016-02-09',
+                                    'run': 'MA0829', 
+                                    'machine': 'miseq',
+                                    'assay':'hotspot-heme', 
+                                    'prep_type':'truseq',
+                                    'project': 'sth12-hhv1'}))
 
     def testMungedate(self):
         test_id1=munge_date('140915')
