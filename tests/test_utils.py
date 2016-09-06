@@ -75,9 +75,9 @@ class TestUtils(TestBase):
     def testMungePath(self):
         test_id1=munge_path('140915_HA000_ColoTestFiles')
         test_id2=munge_path('testfiles/140915_MA0001_OncoPlexKapa')
-        test_id3=munge_path('testfiles/160727_MB0745_GLT005-HHv1')
+        test_id3=munge_path('testfiles/160727_MB0745_GEN005-GLTv1')
         test_id4=munge_path('testfiles/160820_MD0020_HP66-HHv1')
-        test_id5=munge_path('testfiles/160209_MA0829_STH12-HHv1')
+        test_id5=munge_path('testfiles/160209_MA0829_GEN06-STHv1')
 
         self.assertEqual(test_id1,({'date':'2014-09-15',
                                     'run': 'HA000', 
@@ -98,7 +98,7 @@ class TestUtils(TestBase):
                                     'machine': 'miseq',
                                     'assay':'hotspot-hereditary', 
                                     'prep_type':'truseq',
-                                    'project': 'glt005-hhv1'}))
+                                    'project': 'gen005-gltv1'}))
 
         self.assertEqual(test_id4,({'date':'2016-08-20',
                                     'run': 'MD0020', 
@@ -112,7 +112,7 @@ class TestUtils(TestBase):
                                     'machine': 'miseq',
                                     'assay':'hotspot-heme', 
                                     'prep_type':'truseq',
-                                    'project': 'sth12-hhv1'}))
+                                    'project': 'gen06-sthv1'}))
 
     def testMungedate(self):
         test_id1=munge_date('140915')
