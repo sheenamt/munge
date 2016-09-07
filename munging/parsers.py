@@ -129,22 +129,24 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
         status_pfx=pfx['mini-pfx']+'_Status'
         prefixes.append(reads_pfx)
         prefixes.append(status_pfx)
-
         with open(os.path.join(pth.dir, pth.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
+                #Skip lines with no read info
+                if not row['Variant_Reads'] and not row['Valid_Reads']:
+                    continue
                 try:
                     frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
                 except ZeroDivisionError:
                     frac = '0'
                 specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
                 if int(row['Valid_Reads']) >= 100:
-                    if float(frac) >= 0.70:
+                    if float(frac) > 0.70:
                         specimens[variant][status_pfx]='HOMO'
                     elif float(frac) <= 0.10:
                         specimens[variant][status_pfx]='NEG'
-                    elif 0.25 < float(frac) < 0.70 :
+                    elif 0.20 <= float(frac) <= 0.70 :
                         specimens[variant][status_pfx]='HET'
                     else:
                         specimens[variant][status_pfx]='REVIEW'
@@ -152,7 +154,6 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
                 else:
                     specimens[variant][status_pfx]='REVIEW'
                 annotation[variant] = row
-
 # HET = 0.25 - 0.70 VAF
 # HOMO > 0.70 VAF
 # NEG = < 0.10 VAF
@@ -189,7 +190,10 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
                 #Update the specimen dict for this variant, for this pfx, report the Reads found
-                specimens[variant][pfx['mini-pfx']] = max(row['bbmergedReads'], row['bwamemReads'])
+                try:
+                    specimens[variant][pfx['mini-pfx']] = max(row['bbmergedReads'], row['bwamemReads'])
+                except KeyError:
+                    specimens[variant][pfx['mini-pfx']] = row['Reads']
                 annotation[variant] = row
 
     #Update the specimen dict for this variant, count samples present

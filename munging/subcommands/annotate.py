@@ -13,7 +13,9 @@ from munging.utils import munge_path, munge_pfx
 
 def build_parser(parser):
     parser.add_argument('run_dir',
-                        help='Directory where input file is located and where output files will be created')
+                        help='Directory where input file is located')
+    parser.add_argument('out_dir',
+                        help='Directory where output files will be created')
     parser.add_argument('input_file', default=None,
                         help='Explicitly specify input file of variants in Annovar format')
     parser.add_argument('--ref_gene_only', action='store_true',
@@ -91,14 +93,14 @@ def action(args):
                        + list(a.args) + \
                        ['--otherinfo', 
                         '--separate', 
-                        '-outfile', os.path.join(os.path.dirname(args.input_file),file_pfx),
+                        '-outfile', os.path.join(os.path.dirname(args.out_dir),file_pfx),
                         variants_file, 
                         args.library_dir]
         cmd = filter(None, annovar_cmd)
 
         subprocess.check_call(cmd)
         if a.anno_type=='--genericdbfile':
-            generic_file = os.path.join(os.path.dirname(args.input_file),file_pfx+'.hg19_generic_dropped')
+            generic_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.hg19_generic_dropped')
             #Case for moving frequency file
             if pathinfo['machine'] in a.args[0]:
                 gen_file_basename = a.args[0].replace(pathinfo['machine']+'_'+pathinfo['assay'],'UW_freq')
@@ -107,7 +109,7 @@ def action(args):
                 gen_file_basename = a.args[0].replace(pathinfo['assay'],'').strip('_')
             else:
                 gen_file_basename = GENERIC_DB
-            specific_file = os.path.join(os.path.dirname(args.input_file),file_pfx+'.'+gen_file_basename+'_dropped')
+            specific_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.'+gen_file_basename+'_dropped')
             mvcmd=['mv' , generic_file, specific_file]
             subprocess.check_call(mvcmd)
 
