@@ -28,7 +28,9 @@ params = {'author': 'Sheena Todhunter',
               'pandas==0.17.1',
               'wsgiref==0.1.2',
               'xlrd==0.9.3',
-              'xlwt==0.7.5'        
+              'xlwt==0.7.5',
+              'suds==0.4'
+
               ]
       }
 
