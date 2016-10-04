@@ -25,14 +25,12 @@ def build_parser(parser):
     parser.add_argument(
         'run_metrics_dir', help='run directory')
     parser.add_argument(
+        'project',
+        default=sys.stdin)
+    parser.add_argument(
         'top_output', type=argparse.FileType('w'),
         help='path and name of top-level output to write',
         default=sys.stdout)
-    parser.add_argument(
-        'sample_dirs',
-        nargs='+',
-        help='List of sample folders',
-        default=sys.stdin)
 
 def action(args):
     #get run-amplicon file
@@ -59,20 +57,15 @@ def action(args):
 
     #Print top-level-output
     merged.to_csv(args.top_output, index=False,sep='\t')
-    sample_dirs = args.sample_dirs
+
     #Print sample level output
     for sample in sample_names:
-        pfx=sample.replace('_','-')
+        pfx=sample.replace('_','-')+'-'+args.project
         header=['Target','Gene','Position']
         header.append(sample)
         sample_info=merged[header]
         #Expected : project/pfx/pfx.Amplicon_Analysis.txt
-        x =re.compile(pfx)
-        try:
-            outdir = str(filter(x.search, sample_dirs)[0])
-        except IndexError:
-            print "%s found in amplicons but not being run" % pfx
-            continue
+        outdir = path.join('output',pfx)
         if not path.exists(outdir):
             makedirs(outdir)
         sample_out = path.join(outdir,pfx+'.Amplicon_Analysis.txt')
