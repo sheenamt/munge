@@ -10,6 +10,7 @@ import sys
 import csv
 import pandas as pd
 import glob
+import re
 from itertools import ifilter
 from os import path, makedirs
 
@@ -19,6 +20,7 @@ from munging.utils import walker
 def build_parser(parser):
     parser.add_argument(
         'amplicons', type=argparse.FileType('rU'),
+        help='path to amplicon info file',
         default=sys.stdin)
     parser.add_argument(
         'run_metrics_dir', help='run directory')
@@ -26,7 +28,8 @@ def build_parser(parser):
         'project',
         default=sys.stdin)
     parser.add_argument(
-        '--top_output', type=argparse.FileType('w'),
+        'top_output', type=argparse.FileType('w'),
+        help='path and name of top-level output to write',
         default=sys.stdout)
 
 def action(args):
@@ -43,8 +46,8 @@ def action(args):
             clean_metrics = run_metrics.dropna(axis='columns',how='all')
 
             #Grab samples from file, removing 'Target' columns 
-            samples=list(clean_metrics.columns.values)
-            samples.remove('Target')
+            sample_names=list(clean_metrics.columns.values)
+            sample_names.remove('Target')
 
     #grab amplicon bed
     amplicons=pd.read_csv(args.amplicons)
@@ -56,7 +59,7 @@ def action(args):
     merged.to_csv(args.top_output, index=False,sep='\t')
 
     #Print sample level output
-    for sample in samples:
+    for sample in sample_names:
         pfx=sample.replace('_','-')+'-'+args.project
         header=['Target','Gene','Position']
         header.append(sample)

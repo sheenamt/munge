@@ -22,7 +22,7 @@ variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
 # (pattern, header_ids, var_key_ids)
 file_types = {
 #files
-    'variant_function': ({0: 'var_type_1',
+    'merged.variant_function': ({0: 'var_type_1',
                           1: 'Gene',
                           7: 'Zygosity',
                           12: 'rsid_1',
@@ -30,27 +30,35 @@ file_types = {
                           19: 'Reads',
                           8: 'GATK_Score'},
                          [2, 3, 4, 5, 6]),
-    'exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
-    'hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
-    'hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
-    'hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
-    'hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
-    'hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
-    'hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
-    'hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
-    'hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
-    'hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
-    'hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
-    'hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
-    'hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
-    'hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
-    'hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
-    'hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
-    'hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
-    'hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_ALL.sites.2015_08_dropped': ({1: '1000g_ALL'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_AMR.sites.2015_08_dropped': ({1: '1000g_AMR'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_AFR.sites.2015_08_dropped': ({1: '1000g_AFR'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_SAS.sites.2015_08_dropped': ({1: '1000g_SAS'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_esp6500siv2_ea_dropped': ({1: 'EVS_esp6500_EU'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
+    'merged.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
+    'merged.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'pindel.variant_function': ({0: 'var_type_1',
+                                 1: 'Gene',
+                                 14: 'Sequence',
+                                 15: 'Read_Headers',
+                                 16: 'Reads',
+                                 17: 'Reads2'},
+                                [2, 3, 4, 5, 6]),
+    'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
 }
 log = logging.getLogger(__name__)
 
@@ -66,8 +74,12 @@ def get_reads(headers, data):
     """
     info = dict(zip(headers.split(':'), data.split(':')))
     #Do not return GATK reads. They are downsampled to 250 
+
     if 'RD' in info.keys():
         return info['RD'],info['AD'],info['ABQ']
+    elif ['GT', 'AD'] == info.keys():
+        reads = info['AD'].split(',')
+        return reads[0], reads[1], ''
     else:
         return '-1','-1',''
 
@@ -102,6 +114,7 @@ def munge_transcript(data, RefSeqs):
     Filtered with a preferred transcript list
     NM_006772.1:c.1713G>A
     """
+
     codon, prot, protein, coding, txpt = ' ', ' ', ' ', ' ', None
     transcripts = data.get('Transcripts')
     if transcripts is not None:
@@ -132,7 +145,6 @@ def munge_transcript(data, RefSeqs):
                 continue
             else:
                 sys.exit("don't know how to parse %s" % d)
-
             pref_trans = RefSeqs.get(txpt)
             #Want to return None for all values if not pref_trans
             if not pref_trans:
@@ -140,7 +152,6 @@ def munge_transcript(data, RefSeqs):
             code = pref_trans + ':' + codon
             coding = coding + ' ' + code
             protein = protein + ' ' + prot
-
     return coding.strip(), protein.strip()
 
 
@@ -171,7 +182,8 @@ def get_allele_freq(data):
     """
     Return allele frequency of var_reads/ref_reads
     """
-    if int(data['Var_Reads']) == -1 and int(data['Ref_Reads']) == -1:
+
+    if int(data['Var_Reads']) <= 0 and int(data['Ref_Reads']) <= 0:
         freq = 'NA'
     else:
         total = int(data['Var_Reads']) + int(data['Ref_Reads'])
@@ -194,6 +206,59 @@ def munge_ljb_scores(data):
         return -1, -1, -1, -1 
 
     return polyphen, sift, mutation_taster, gerp
+
+def largest_variant_reads(output,data):
+    """
+    return the read info that has the highest variant read
+    """
+    #Grab the higest read count from pindel
+    if data.has_key('Reads2'):
+        if data['Reads2'].split(',')[:-1]> data['Reads'].split(',')[:-1]:
+            data['Reads']=data['Reads2']
+
+    #Keep the highest variant readcount 
+    if output.has_key('Var_Reads') and data.get('Reads'):
+        old_ref_read, old_var_read, old_phred = output['Ref_Reads'], output['Var_Reads'], output['Variant_Phred']
+        new_ref_read, new_var_read, new_phred = get_reads(data.get('Read_Headers'),data.get('Reads'))
+        if int(old_var_read) >  int(new_var_read):
+            output['Ref_Reads'], output['Var_Reads'], output['Variant_Phred'] = old_ref_read, old_var_read, old_phred
+        else:
+            output['Ref_Reads'], output['Var_Reads'], output['Variant_Phred'] = new_ref_read, new_var_read, new_phred
+    elif "Var_Reads" not in output.keys() and data.get('Reads'):
+        output['Ref_Reads'], output['Var_Reads'], output['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
+
+    return output['Ref_Reads'], output['Var_Reads'], output['Variant_Phred']
+
+        
+def merge_data(output,data):
+    """
+    Merge data in certain columns 
+    """
+    multi_trans_keys=['Transcripts','Gene','var_type_1','var_type_2']
+    data_keys=data.keys()
+    #If position already in output{}, update certain fields
+    for key in multi_trans_keys:
+        #if key is already in output dict and in new file
+        if key in output.keys() and data.get(key):
+            #Make sure the data isn't a duplicate
+            if data.get(key) not in output[key]:
+                #Make a comma delimited list of info
+                output[key]=','.join([output[key],data.get(key)])
+            #If position has been seen but this file has no data for this key, set to original data
+        elif key in output.keys() and not data.get(key):
+            output[key]=output[key]
+            #If position has been seen but there was not data for this data, add this file's data 
+        elif key not in output.keys() and data.get(key):
+            output[key]=data.get(key)
+    if output.has_key('Reads') or data.has_key('Reads'):
+        output['Ref_Reads'], output['Var_Reads'], output['Variant_Phred'] = largest_variant_reads(output,data)
+
+    multi_trans_keys.extend(['Reads', 'Read_Headers'])
+    for k in data_keys:
+        if k not in multi_trans_keys:
+            output[k]=data.get(k)
+    return output
+
 
 def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
@@ -220,8 +285,8 @@ def action(args):
         for row in refs:
             if row['RefSeq'] :
                 for transcript in row['RefSeq'].split('/'):
-                    RefSeqs[transcript] = transcript.split('.')[0]
-                    
+                    RefSeqs[transcript.split('.')[0]] = transcript
+
     headers = ['Position'] + variant_headers[3:5] + [
         'Clinically_Flagged',
         'Variant_Type',
@@ -283,41 +348,21 @@ def action(args):
             #header ids are output columns
             #var_key_ids are chrm:str:stp:ref:var
             header_ids, var_key_ids = file_types[file_type]
+        
         except KeyError:
             if re.search('dropped', fname):
+                continue
                 log.warning('no match: %s' % fname)
             if args.strict:
                 sys.exit(1)
             continue
-        multi_trans_keys=['Transcripts','Gene','var_type_1','var_type_2']
         for var_key, data in map_headers(fname, header_ids, var_key_ids):
-            #If position already in output{}, update certain fields
             if var_key in output:
-                for key in multi_trans_keys:
-                    if key in output[var_key].keys() and data.get(key):
-                        if data.get(key) not in output[var_key][key]:
-                            output[var_key][key]=','.join([output[var_key][key],data.get(key)])
-                    elif key in output[var_key].keys() and not data.get(key):
-                        output[var_key][key]=output[var_key][key]
-                    elif key not in output[var_key].keys() and data.get(key):
-                        output[var_key][key]=data.get(key)
-                #grab the keys of data, removing keys list, and update those keys
-                data_keys=data.keys()
-                if output[var_key].has_key('Reads'):
-                    if 'RD' in output[var_key]['Read_Headers']:
-                        output[var_key]['Read_Headers']=output[var_key]['Read_Headers']
-                        output[var_key]['Reads']=output[var_key]['Reads']
-                        data_keys.remove('Reads')
-                        data_keys.remove('Read_Headers')
-                    else:
-                        output[var_key]['Read_Headers']=data.get('Read_Headers')
-                        output[var_key]['Reads']=data.get('Reads')
-                  
-                for k in data_keys:
-                    if k not in multi_trans_keys:
-                        output[var_key][k]=data.get(k)
+                output[var_key]=merge_data(output[var_key],data)
             else:
                 output[var_key].update(data)
+                if output[var_key].has_key('Reads') and not output[var_key].has_key('Var_Reads'):
+                    output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
     sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
     # # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):
@@ -341,6 +386,5 @@ def action(args):
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
         data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
-        data['Ref_Reads'], data['Var_Reads'], data['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
         data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)

@@ -8,13 +8,18 @@ import os
 import subprocess
 import argparse
 import csv
+import re
 from munging.utils import munge_path, munge_pfx
 
 def build_parser(parser):
     parser.add_argument('run_dir',
-                        help='Directory where input file is located and where output files will be created')
+                        help='Directory where input file is located')
+    parser.add_argument('out_dir',
+                        help='Directory where output files will be created')
     parser.add_argument('input_file', default=None,
                         help='Explicitly specify input file of variants in Annovar format')
+    parser.add_argument('--ref_gene_only', action='store_true',
+                        help='Run only the ref_gene annotation')
     parser.add_argument('--clinically_flagged', default='/mnt/disk2/com/Genomes/Annovar_files/hg19_clinical_variants',
                         help='Clinically flagged variants file')
     parser.add_argument('--library_dir', default='/mnt/disk2/com/Genomes/Annovar_files',
@@ -23,6 +28,7 @@ def build_parser(parser):
                         help='Location of the Annovar perl executables')
 
 log = logging.getLogger(__name__)
+
 
 ANNOTATIONS = [('snp138',),  # dbsnp
                ('exac03',),  # ExAC 65000 exome allele frequency data 
@@ -43,7 +49,6 @@ ANNOTATIONS = [('snp138',),  # dbsnp
                ('segdup', '--regionanno',),  # segdup annotation:              
                ('refGene', '--geneanno', ['--splicing_threshold','10', '--hgvs']),  # Gene level annotation:
  ]
-
 # Named tuple for parsing annotation defs
 AnnotInfo =  namedtuple('AnnotInfo', ['dbtype', 'anno_type', 'args'])
 AnnotInfo.__new__.__defaults__ = ('-filter','')
@@ -51,26 +56,33 @@ AnnotInfo.__new__.__defaults__ = ('-filter','')
 def action(args):
     BUILDVER = 'hg19'
     ANNOVAR_VARIANTS = os.path.join(args.annovar_bin, 'annotate_variation.pl')
-
+    
     pathinfo = munge_path(args.run_dir)
     internal_freq_file = '_'.join(['hg19',pathinfo['machine'],pathinfo['assay']])
     internal_cadd_file = '_'.join(['hg19','CADD',pathinfo['assay']])
     
     variants_file = args.input_file
-    file_pfx = os.path.basename(args.input_file).replace('.merged.ann','')
-    annots = [AnnotInfo(*a) for a in ANNOTATIONS]
+    file_pfx = os.path.basename(args.input_file).replace('.ann','')
 
-    #Add the generics dbs to the annotation info
-    GENERIC_DB = os.path.basename(args.clinically_flagged)
+    ref_gene_annotation = [('refGene', '--geneanno', ['--splicing_threshold','10', '--hgvs']),]
+    if not args.ref_gene_only:
+        annots = [AnnotInfo(*a) for a in ANNOTATIONS]
 
-    #There is not always an internal frequency file
-    if os.path.isfile(os.path.join(args.library_dir, internal_freq_file)):
-        annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
-    #There is not always an internal cadd file
-    if os.path.isfile(os.path.join(args.library_dir, internal_cadd_file)):
-        annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
-    #There is always a clin flagged
-    annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[GENERIC_DB, '-filter']))
+        #Add the generics dbs to the annotation info
+        GENERIC_DB = os.path.basename(args.clinically_flagged)
+
+        #There is not always an internal frequency file
+        if os.path.isfile(os.path.join(args.library_dir, internal_freq_file)):
+            annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
+        #There is not always an internal cadd file
+        if os.path.isfile(os.path.join(args.library_dir, internal_cadd_file)):
+            annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
+        #There is always a clin flagged
+        annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[GENERIC_DB, '-filter']))
+
+    #Sometimes all we want is the variant_function output 
+    else:
+        annots = [AnnotInfo(*a) for a in ref_gene_annotation]
 
     # run annotate_variants based on the spec in ANNOTATIONS
     for a in annots:
@@ -81,13 +93,14 @@ def action(args):
                        + list(a.args) + \
                        ['--otherinfo', 
                         '--separate', 
-                        '-outfile', os.path.join(os.path.dirname(args.input_file),file_pfx),
+                        '-outfile', os.path.join(os.path.dirname(args.out_dir),file_pfx),
                         variants_file, 
                         args.library_dir]
         cmd = filter(None, annovar_cmd)
+
         subprocess.check_call(cmd)
         if a.anno_type=='--genericdbfile':
-            generic_file = os.path.join(os.path.dirname(args.input_file),file_pfx+'.hg19_generic_dropped')
+            generic_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.hg19_generic_dropped')
             #Case for moving frequency file
             if pathinfo['machine'] in a.args[0]:
                 gen_file_basename = a.args[0].replace(pathinfo['machine']+'_'+pathinfo['assay'],'UW_freq')
@@ -96,7 +109,7 @@ def action(args):
                 gen_file_basename = a.args[0].replace(pathinfo['assay'],'').strip('_')
             else:
                 gen_file_basename = GENERIC_DB
-            specific_file = os.path.join(os.path.dirname(args.input_file),file_pfx+'.'+gen_file_basename+'_dropped')
+            specific_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.'+gen_file_basename+'_dropped')
             mvcmd=['mv' , generic_file, specific_file]
             subprocess.check_call(mvcmd)
 
