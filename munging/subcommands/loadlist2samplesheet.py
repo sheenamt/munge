@@ -118,7 +118,8 @@ ASSAYS={'OPX':'OncoPlex',
         'BRO':'ColoSeq',
         'EPI':'EpiPlex',
         'MRW':'MarrowSeq',
-        'IMD':'ImmunoPlex'}
+        'IMD':'ImmunoPlex',
+        'CFF':'CellFreeFetal'}
 
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
