@@ -30,6 +30,8 @@ source $venv/bin/activate
 venv=$VIRTUAL_ENV
 
 echo $venv
+$venv/bin/pip install -U pip
+$venv/bin/pip install -U setuptools
 $venv/bin/pip install -r requirements.txt
 
 python setup.py install
