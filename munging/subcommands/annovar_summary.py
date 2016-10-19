@@ -353,9 +353,9 @@ def action(args):
     # accumulate data from all input files for each variant
     output = defaultdict(dict)
     for fname in infiles:
-        if args.SNP:
+        if args.type == 'SNP':
             file_types = snp_file_types
-        elif args.INDEL:
+        elif args.type == 'INDEL':
             file_types = indel_file_types
         try:
             _, file_type = path.basename(fname).split('.', 1)

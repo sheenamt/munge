@@ -138,7 +138,7 @@ def action(args):
         tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene', '3_QC_by_Exon',
                 '4_SV_Crest', '5_SV_Breakdancer', '6_SV_Pindel',
                 '7_CNV_Gene', '8_CNV_Exon', '9_Clinically_Flagged', 
-                '10_SNP','11_INDEL' '12_MSI', '13_Amplicons', '14_PolyHunter']
+                '10_SNP','11_INDEL', '12_MSI', '13_Amplicons', '14_PolyHunter']
         #    for each tab, find its file and process.
         for tab in tabs:
             try:
