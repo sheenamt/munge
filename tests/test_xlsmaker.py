@@ -65,13 +65,13 @@ class TestXlsmaker(TestBase):
         """
         Rename the analysis files for workbook
         """
-        tab = '10_SNP_Indel'
+        tab = '10_SNP'
         filetype = 'Analysis'
         files = []
         files.append(path.join(summary_testfiles, '{}.SNP_Analysis.txt'.format(control)))
         files.append(path.join(summary_testfiles, '{}.Quality_Analysis.txt'.format(control)))
         data, fname = xlsmaker.process_files(files, tab, filetype)
-        self.assertEqual(data, '10_SNP_Indel')
+        self.assertEqual(data, '10_SNP')
         self.assertEqual(fname, 'testfiles/annovar_summary/{}.SNP_Analysis.txt'.format(control))
         self.assertNotEqual(fname, 'testfiles/annovar_summary/{}.Quality_Analysis.txt'.format(control))
 
