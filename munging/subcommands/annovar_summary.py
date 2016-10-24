@@ -51,14 +51,6 @@ snp_file_types = {
     'merged.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'merged.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'merged.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'pindel.variant_function': ({0: 'var_type_1',
-                                 1: 'Gene',
-                                 14: 'Sequence',
-                                 15: 'Read_Headers',
-                                 16: 'Reads',
-                                 17: 'Reads2'},
-                                [2, 3, 4, 5, 6]),
-    'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
 }
 
 indel_file_types = {
