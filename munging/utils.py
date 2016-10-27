@@ -17,7 +17,8 @@ ASSAYS={'OPX':'OncoPlex',
         'MRW':'MarrowSeq',
         'IMD':'ImmunoPlex',
         'HH':'HotSpot-Heme',
-        'GLT':'Hotspot-Hereditary',
+        'STH':'HotSpot-Heme',
+        'GLT':'HotSpot-Hereditary',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus'}
 

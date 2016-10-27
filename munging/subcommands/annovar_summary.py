@@ -20,7 +20,7 @@ from munging.annotation import get_location, multi_split, split_string_in_two
 variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
 
 # (pattern, header_ids, var_key_ids)
-file_types = {
+snp_file_types = {
 #files
     'merged.variant_function': ({0: 'var_type_1',
                           1: 'Gene',
@@ -51,6 +51,10 @@ file_types = {
     'merged.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'merged.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'merged.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+}
+
+indel_file_types = {
+#files
     'pindel.variant_function': ({0: 'var_type_1',
                                  1: 'Gene',
                                  14: 'Sequence',
@@ -264,6 +268,9 @@ def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
         help='Capture genes file with RefSeq in second column')
     parser.add_argument(
+        'type', choices=['SNP', 'INDEL'],
+        help='Type of files to create tab, SNP or INDEL')
+    parser.add_argument(
         'infiles', action='append', nargs='+',
         help='Input files')
     parser.add_argument(
@@ -273,7 +280,6 @@ def build_parser(parser):
     parser.add_argument(
         '--strict', action='store_true', default=False,
         help='Exit with error if an input file has no match.')
-
 
 def action(args):
 
@@ -339,6 +345,10 @@ def action(args):
     # accumulate data from all input files for each variant
     output = defaultdict(dict)
     for fname in infiles:
+        if args.type == 'SNP':
+            file_types = snp_file_types
+        elif args.type == 'INDEL':
+            file_types = indel_file_types
         try:
             _, file_type = path.basename(fname).split('.', 1)
         except ValueError:
@@ -363,6 +373,7 @@ def action(args):
                 output[var_key].update(data)
                 if output[var_key].has_key('Reads') and not output[var_key].has_key('Var_Reads'):
                     output[var_key]['Ref_Reads'], output[var_key]['Var_Reads'], output[var_key]['Variant_Phred'] = get_reads(data.get('Read_Headers'),data.get('Reads'))
+
     sort_key = lambda row: [(row[k]) for k in ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']]
     # # write each row (with all data aggregated), modifying fields as necessary
     for data in sorted(output.values(), key=sort_key):

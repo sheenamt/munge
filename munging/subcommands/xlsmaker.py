@@ -84,16 +84,19 @@ def process_files(infiles, tab, filetype):
                     sheet_name = '9_Clinically_Flagged'
                 #48_A03_BROv7_HA0186_NA12878_MSI_Analysis
                 elif sheet_name[-2] == 'MSI':
-                    sheet_name = '11_MSI'
+                    sheet_name = '12_MSI'
                 #48_A03_BROv7_HA0186_NA12878_Amplicon_Analysis
                 elif sheet_name[-2] == 'Amplicon':
-                    sheet_name = '12_Amplicons'
+                    sheet_name = '13_Amplicons'
                 #48_A03_BROv7_HA0186_NA12878_PolyHunter_Analysis
                 elif sheet_name[-2] == 'PolyHunter':
-                    sheet_name = '13_PolyHunter'
-                #48_A03_BROv7_HA0186_NA12878_Analysis
+                    sheet_name = '14_PolyHunter'
+                #48_A03_BROv7_HA0186_NA12878_SNP_Analysis
                 elif sheet_name[-2] == 'SNP':
-                    sheet_name = '10_SNP_Indel'
+                    sheet_name = '10_SNP'
+                #48_A03_BROv7_HA0186_NA12878_INDEL_Analysis
+                elif sheet_name[-2] == 'INDEL':
+                    sheet_name = '11_INDEL'
                 if sheet_name == tab:
                     return sheet_name, fname
 
@@ -135,7 +138,7 @@ def action(args):
         tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene', '3_QC_by_Exon',
                 '4_SV_Crest', '5_SV_Breakdancer', '6_SV_Pindel',
                 '7_CNV_Gene', '8_CNV_Exon', '9_Clinically_Flagged', 
-                '10_SNP_Indel', '11_MSI', '12_Amplicons', '13_PolyHunter']
+                '10_SNP','11_INDEL', '12_MSI', '13_Amplicons', '14_PolyHunter']
         #    for each tab, find its file and process.
         for tab in tabs:
             try:
