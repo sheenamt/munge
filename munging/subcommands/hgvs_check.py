@@ -157,7 +157,7 @@ def action(args):
             new_hgvs_dna = " ".join(correct_hgvs_dna)
             old_hgvs_protein = line[args.protein_column_name]
             new_hgvs_protein = " ".join(correct_hgvs_protein)
-            if old_hgvs_dna != new_hgvs_dna:
+            if (old_hgvs_dna != new_hgvs_dna) or (old_hgvs_protein != new_hgvs_protein):
                 log.info("updating DNA HGVS: %s --> %s and protein HGVS: %s --> %s"
                          % (old_hgvs_dna, new_hgvs_dna, old_hgvs_protein, new_hgvs_protein))
                 line[args.dna_column_name] = new_hgvs_dna
