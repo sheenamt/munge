@@ -3,7 +3,7 @@ Create masked output files
 
 Usage:
 
- munge mask_masker $SAVEPATH/$PFX order-code/gene list
+munge mask_masker file-to-mask order-code/gene-list
 
 """
 import argparse
@@ -32,13 +32,14 @@ MASK_CODES={
               'GABRG2', 'GNAO1', 'GRIN1', 'GRIN2A', 'GRIN2B', 
               'HCN1', 'HNRNPU', 'IQSEC2', 'KANSL1', 'KCNA2', 
               'KCNB1', 'KCNH1', 'KCNH5', 'KCNQ2', 'KCNQ3', 
-               'KCNT1', 'LGI1', 'MBD5', 'MECP2', 'MEF2C', 
+              'KCNT1', 'LGI1', 'MBD5', 'MECP2', 'MEF2C', 
               'MTOR', 'NDE1', 'PCDH19', 'PIGA', 'PLCB1', 'PNKP', 
               'PNPO', 'POLG', 'PTEN', 'PURA', 'SCN1A', 'SCN1B', 
               'SCN2A', 'SCN8A', 'SIK1', 'SLC13A5', 'SLC1A2', 
               'SLC25A22', 'SLC2A1', 'SLC35A2', 'SLC6A1', 'SLC9A6', 
               'SPTAN1', 'STX1B', 'STXBP1', 'SYN1', 'SYNGAP1', 
-              'TBC1D24', 'TCF4', 'TSC1', 'TSC2', 'UBE3A', 'WDR45', 'WWOX', 'ZEB2'),
+              'TBC1D24', 'TCF4', 'TSC1', 'TSC2', 'UBE3A', 
+              'WDR45', 'WWOX', 'ZEB2'),
     'MEGPX':('AKT1','AKT3','PTEN','PIK3CA','PIK3R2'),
     'MEGPX2':('ABCC9', 'AKT1', 'AKT2', 'AKT3', 'BRWD3', 
               'CCND2', 'CDKN1C', 'CUL4B', 'DEPDC5', 'DNMT3A', 
@@ -78,8 +79,8 @@ MASK_CODES={
 
 def build_parser(parser):
     parser.add_argument(
-        '-i', '--infiles', nargs='+',
-        help='Input files')
+        '-i', '--infile',
+        help='Input file')
     parser.add_argument(
         '-o', '--outfile',
         help='Output file', default=sys.stdout,
@@ -135,10 +136,10 @@ def action(args):
         for key, value in MASK_CODES.items():
             print 'Code: %s is gene list: \n %s' % (key, value)
 
-    files = args.infiles
+    infile = args.infile
 
-    print 'files:', files
-    if len(files)<1:
+    print 'files:', infile
+    if len(infile)<1:
         print "No files where found. Are there subfolders for each sample?"
         sys.exit(1)
 
@@ -162,21 +163,20 @@ def action(args):
     #test that the mask is good:
     print 'Genes in output: %s ' % ([i for i in mask])
 
-    for pth in files:
-        analysis_type=pth.split('.')[1]
-        #Create file names for new output
-        full_output=pth
-        masked_output=args.outfile
-        data=csv.DictReader(open(full_output),delimiter='\t')
+    analysis_type=infile.split('.')[1]
+    #Create file names for new output
+    full_output=infile
+    masked_output=args.outfile
+    data=csv.DictReader(open(full_output),delimiter='\t')
 
-        #Open output for writing
-        writer = csv.DictWriter(masked_output,
-                                fieldnames=data.fieldnames,
-                                quoting=csv.QUOTE_MINIMAL,
-                                extrasaction='ignore',
-                                delimiter='\t')
-        writer.writeheader()
-
-        # #Mask data
-        print "filtering %s" % analysis_type
-        writer.writerows(mask_file_by_gene(data, mask))
+    #Open output for writing
+    writer = csv.DictWriter(masked_output,
+                            fieldnames=data.fieldnames,
+                            quoting=csv.QUOTE_MINIMAL,
+                            extrasaction='ignore',
+                            delimiter='\t')
+    writer.writeheader()
+    
+    # #Mask data
+    print "filtering %s" % analysis_type
+    writer.writerows(mask_file_by_gene(data, mask))
