@@ -6,6 +6,7 @@ Usage:
  munge mask_masker $SAVEPATH/$PFX order-code/gene list
 
 """
+import argparse
 import sys
 import logging
 import os
@@ -76,12 +77,19 @@ MASK_CODES={
 }
 
 def build_parser(parser):
-    parser.add_argument('path',
-                        help='Path to analysis files')
-    parser.add_argument('mask_list', nargs='+',
-                       help="Order code or list of genes that were tested, must have spece between names")
-    parser.add_argument('--mask_codes', choices=['1','2'],
-                        help='Print the built in masking codes (1) and their gene lists (2)')
+    parser.add_argument(
+        '-i', '--infiles', nargs='+',
+        help='Input files')
+    parser.add_argument(
+        '-o', '--outfile',
+        help='Output file', default=sys.stdout,
+        type=argparse.FileType('w'))
+    parser.add_argument(
+        '-m', '--mask_list', nargs='+',
+        help="Order code or list of genes that were tested, must have spece between names")
+    parser.add_argument(
+        '--mask_codes', choices=['1','2'],
+        help='Print the built in masking codes (1) and their gene lists (2)')
 
 
     #This script filters:
@@ -126,8 +134,10 @@ def action(args):
     if args.mask_codes == '2':
         for key, value in MASK_CODES.items():
             print 'Code: %s is gene list: \n %s' % (key, value)
-    infiles = walker(args.path)  
-    files=[i for i in infiles]
+
+    files = args.infiles
+
+    print 'files:', files
     if len(files)<1:
         print "No files where found. Are there subfolders for each sample?"
         sys.exit(1)
@@ -138,6 +148,7 @@ def action(args):
     except KeyError:
         mask=args.mask_list 
 
+    #Check that mask code is valide 
     for m in mask:
         if any(m in s for s in MASK_CODES.values()):
             continue
@@ -150,35 +161,22 @@ def action(args):
 
     #test that the mask is good:
     print 'Genes in output: %s ' % ([i for i in mask])
-    #Grab files for filtering
-    files = ifilter(any_analysis, files)
-
-    #Filter to only those that are "maskable"
-    files = ifilter(maskable, files)
 
     for pth in files:
-        analysis_type=pth.fname.split('.')[1]
-        #In this case, pfx is actually PFX_analysis_type
-        pfx = pth.fname.strip('.txt')
+        analysis_type=pth.split('.')[1]
         #Create file names for new output
-        full_output=os.path.join(pth.dir, (pfx+'.full.txt'))
-        masked_output=os.path.join(pth.dir, (pfx+'.masked.txt'))
-        default_name = os.path.join(pth.dir,pth.fname)
-        if os.path.isfile(full_output):
-            data=csv.DictReader(open(full_output),delimiter='\t')
-        else:
-            data=csv.DictReader(open(os.path.join(pth.dir,pth.fname)),delimiter='\t')
+        full_output=pth
+        masked_output=args.outfile
+        data=csv.DictReader(open(full_output),delimiter='\t')
 
         #Open output for writing
-        writer = csv.DictWriter(open(masked_output, 'w'),
+        writer = csv.DictWriter(masked_output,
                                 fieldnames=data.fieldnames,
                                 quoting=csv.QUOTE_MINIMAL,
                                 extrasaction='ignore',
                                 delimiter='\t')
         writer.writeheader()
+
         # #Mask data
         print "filtering %s" % analysis_type
         writer.writerows(mask_file_by_gene(data, mask))
-        #Move the files so the masked is Analysis.txt and the full is labeled
-        copyfile(default_name,full_output)
-        os.rename(masked_output, default_name)
