@@ -118,8 +118,7 @@ def munge_transcript(data, RefSeqs):
     Filtered with a preferred transcript list
     NM_006772.1:c.1713G>A
     """
-
-    codon, prot, protein, coding, txpt = ' ', ' ', ' ', ' ', None
+    CODING, PROTEIN = [], []
     transcripts = data.get('Transcripts')
     if transcripts is not None:
         # Split incoming trans, strip the trailing )
@@ -127,6 +126,7 @@ def munge_transcript(data, RefSeqs):
         #Remove duplicate transcription entries
         data = list(set(data1))
         for d in data:
+            codon, prot, protein, coding, txpt = ' ', ' ', ' ', ' ', None
             # Split the actual transcript info which is colon separated
             x = d.split(':')
             #5: ['PRSS1', 'NM_002769', 'exon4', 'c.567T>C', 'p.L189L']
@@ -154,10 +154,9 @@ def munge_transcript(data, RefSeqs):
             if not pref_trans:
                 continue
             code = pref_trans + ':' + codon
-            coding = coding + ' ' + code
-            protein = protein + ' ' + prot
-    return coding.strip(), protein.strip()
-
+            CODING.append(code)
+            PROTEIN.append(prot)
+    return ' '.join(CODING), ' '.join(PROTEIN)
 
 def map_headers(fname, header_ids, variant_idx):
     """

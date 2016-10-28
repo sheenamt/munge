@@ -27,6 +27,7 @@ NM_dict = {
     'NM_007297': 'NM_007297.2',
     'NM_001015877':'NM_001015877',
     'NM_001123383':'NM_001123383',
+    'NM_139076':'NM_139076.2'
 }
 data1 = {'Gene': 'SCN1A',
          'Transcripts': 'SCN1A:NM_001202435:exon18:c.3199G>A:p.A1067T,',
@@ -51,6 +52,10 @@ data4 = {'Gene': 'PHF6(NM_001015877:exon10:c.969-9T>C,NM_032458:exon10:c.969-9T>
 data5 = {'Gene':'BCOR,BCOR(NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)',
          'Transcripts':'NM_001123383:exon8:c.3503-2A>T,NM_001123384:exon7:c.3449-2A>T,NM_017745:exon8:c.3503-2A>T)',
          'Variant_Type':'exonic'}
+data6 = {'Gene':'MRPS18C,FAM175A',
+         'Transcripts':'MRPS18C:NM_001297767:exon4:c.232G>T:p.E78X,MRPS18C:NM_016067:exon5:c.316G>T:p.E106X,,MRPS18C:NM_001297770:exon3:c.174G>T:p.K58N,MRPS18C:NM_001297769:exon4:c.258G>T:p.K86N,,NM_139076:c.*1473C>A',
+         'Variant_Type':'stopgain,nonsynonymous SNV,exonic,UTR3'}
+
 class TestSummary(TestBase):
     """
     Test the summary script with creates the Analysis.txt file from
@@ -107,8 +112,9 @@ class TestSummary(TestBase):
         data1['c.'], data1['p.'] = annovar_summary.munge_transcript(data1, NM_dict)
         data2['c.'], data2['p.'] = annovar_summary.munge_transcript(data2, NM_dict)
         data3['c.'], data3['p.']  = annovar_summary.munge_transcript(data3, NM_dict)
-        data4['c.'], data4['p.']  = annovar_summary.munge_transcript(data4, NM_dict)
         data5['c.'], data5['p.']  = annovar_summary.munge_transcript(data5, NM_dict)
+        data6['c.'], data6['p.']  = annovar_summary.munge_transcript(data6, NM_dict)
+
         # #Data 1 gene should be SCN1A
         self.assertEqual(data1['p.'], 'p.A1067T')
         # #Data 2 gene should be empyt as the Variant_Type is upstream, which we filter
@@ -119,12 +125,11 @@ class TestSummary(TestBase):
         self.assertIn('NM_007297.2:c.2972A>G',data3['c.'])
         self.assertIn('NM_007300.1:c.3113A>G',data3['c.'])
 
-        #4 & 5 should not have a p. but should have a c.
-        self.assertIn('NM_001015877:c.969-9T>C',data4['c.'])
+        #5 should not have a p. but should have a c.
         self.assertIn('NM_001123383:c.3503-2A>T',data5['c.'])
-        self.assertEqual('',data4['p.'])
-        self.assertEqual('',data5['p.'])
-
+        self.assertEqual(' ',data5['p.'])
+        self.assertIn('NM_139076.2:c.*1473C>A',data6['c.'])
+        self.assertEqual(' ',data6['p.'])
 
     def testGetAlleleFreq(self):
         """
