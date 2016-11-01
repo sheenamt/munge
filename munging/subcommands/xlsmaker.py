@@ -122,7 +122,7 @@ def write_workbook(sheet_name, fname):
     """
     sheet = book.add_sheet(sheet_name)
     Reader = csv.reader(open(fname, 'rU'), delimiter='\t')
-    if sheet_name == '10_SNP_Indel':
+    if sheet_name == '10_SNP':
         Reader = variant_id_link(Reader, sheet)
     else:
         for rowx, row in enumerate(Reader):
