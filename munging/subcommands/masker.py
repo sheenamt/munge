@@ -11,7 +11,7 @@ import sys
 import logging
 import os
 import csv
-from munging.utils import walker
+from munging.utils import walker, validate_gene_list
 from itertools import ifilter
 from shutil import copyfile
 from munging.filters import any_analysis, maskable
@@ -42,18 +42,18 @@ MASK_CODES={
               'PTCH1', 'PTEN', 'RAB39B', 'RIN2', 'RNF135', 
               'SETD2', 'STRADA', 'TBC1D7', 'TSC1', 'TSC2'),
     'IMDFB1':('ADA','AK2','AP3B1','ATM','BLM','BLNK',
-              'BTK','CARD11','CD3D','CD3E','CD3G',' CD8A',
+              'BTK','CARD11','CD3D','CD3E','CD3G','CD8A',
               'CD27','CD79A','CD79B','CD247','CHD7','CIITA',
               'CORO1A','CTLA4','DCLRE1C','DOCK8','EBF1',
-              'FOXN1','FOXP3','GATA2','IGHM','IGLL1','IKBKB',
+              'FOXN1','FOXP3','GATA2','IGLL1','IKBKB',
               'IKBKG','IKZF1','IL2RA','IL2RG','IL7R','ITK',
               'JAK3','LCK','LIG4','LRRC8A','LYST','MAGT1',
               'MALT1','MRE11A','NBN','NFKBIA','NHEJ1','ORAI1',
               'PIK3R1','PNP','PRF1','PRKDC','PTPRC','RAB27A',
-              'RAG1','RAG2','RFX5','RFXANK','RFXAP,RMRP',
+              'RAG1','RAG2','RFX5','RFXANK','RFXAP','RMRP',
               'SH2D1A','SP110','STAT1','STAT5B','STIM1','STK4',
               'STX11','STXBP2','TAP1','TAP2','TAPBP','TBX1',
-              'TRAC','TTC7A','UNC13D','XIAP','ZAP70'),
+              'TTC7A','UNC13D','XIAP','ZAP70'),
     'IMDSB1':('ADA','AK2','ATM','BLM','CD3D','CD3E','CD3G',
               'CD8A','CD27','CD247','CHD7','CIITA','CORO1A','CTLA4',
               'DCLRE1C','DOCK8','FOXN1','FOXP3','GATA2','IKBKB',
@@ -62,9 +62,9 @@ MASK_CODES={
               'NHEJ1','ORAI1','PNP','PRKDC','PTPRC','RAG1',
               'RAG2','RFX5','RFXANK','RFXAP','RMRP','SP110',
               'STAT1','STAT5B','STIM1','STK4','TAP1','TAP2',
-              'TAPBP','TBX1','TRAC','TTC7A','ZAP70'),
+              'TAPBP','TBX1','TTC7A','ZAP70'),
     'IMDBB1':('BLNK','BTK','CARD11','EBF1','CD79A','CD79B',
-              'GATA2','IGHM','IGLL1','IKZF1','LIG4','LRRC8A',
+              'GATA2','IGLL1','IKZF1','LIG4','LRRC8A',
               'MALT1','NHEJ1','PIK3R1','PRKDC','RAG1','RAG2','SH2D1A'),
     'IMDHB1':('AP3B1','ITK','LYST','MAGT1','PRF1','RAB27A','SH2D1A',
               'STX11','STXBP2','UNC13D','XIAP')
@@ -123,15 +123,17 @@ def mask_file_by_gene(data, genes):
     return output
 
 def action(args):
+    #If just checking mask code and lists
     if args.mask_codes == '1':
         print 'Codes are: ', MASK_CODES.keys() 
+        sys.exit()
     if args.mask_codes == '2':
         for key, value in MASK_CODES.items():
             print 'Code: %s is gene list: \n %s' % (key, value)
+        sys.exit()
 
     infile = args.infile
 
-    print 'files:', infile
     if len(infile)<1:
         print "No files where found. Are there subfolders for each sample?"
         sys.exit(1)
@@ -141,17 +143,8 @@ def action(args):
         mask=MASK_CODES[args.mask_list[0]]
     except KeyError:
         mask=args.mask_list 
-
     #Check that mask code is valide 
-    for m in mask:
-        if any(m in s for s in MASK_CODES.values()):
-            continue
-        else:
-            response = raw_input("%s may not be valid. Use anyways?  (y/n) " % m )
-            if response in ['y', 'Y']:
-                continue
-            else:
-                sys.exit()
+    validate_gene_list(mask)
 
     #test that the mask is good:
     print 'Genes in output: %s ' % ([i for i in mask])
