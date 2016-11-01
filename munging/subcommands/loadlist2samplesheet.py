@@ -12,6 +12,9 @@ import os
 import csv
 import re
 
+from munging.subcommands.masker import MASK_CODES
+from munging.utils import validate_gene_list
+
 # parser = argparse.ArgumentParser()
 def build_parser(parser):
     parser.add_argument('loadlist',
@@ -121,6 +124,8 @@ ASSAYS={'OPX':'OncoPlex',
         'IMD':'ImmunoPlex',
         'CFF':'CellFreeFetal'}
 
+VALID_CODES = MASK_CODES.keys()
+
 def create_sample_project(ldetail):
     """Create sample project from Recipe and PlateNumber"""
     #Grab the assay based on the recipe, don't care about verion of assay for this part
@@ -135,6 +140,17 @@ def create_sample_project(ldetail):
     sample_project +='-'+ldetail['Recipe']
     return sample_project
 
+def cpt_and_gene_to_list(ldetail):
+    """Convert info in cpt and/or gene column into gene list
+    """
+    genes = []
+    if ldetail['CPT'] in VALID_CODES:
+        genes.append(ldetail['CPT'])
+    elif ldetail['Genes']:
+        validate_gene_list(ldetail['Genes'])
+        genes.extend(ldetail['Genes'])
+    return genes
+
 def _lane_detail_to_ss(fcid, ldetail, r):
     """Convert information about a lane into Illumina samplesheet output.
     FCID|PlateNumber|Well|Description|Control|Well|Recipe|Index
@@ -147,11 +163,13 @@ def _lane_detail_to_ss(fcid, ldetail, r):
         ldetail['SampleID']=('-').join([prefix,ldetail['Well'],ldetail['Recipe']])
 
     ldetail["SampleProject"]=create_sample_project(ldetail)
+    
+    ldetail['Genes']=cpt_and_gene_to_list(ldetail)
 
-    return [ldetail['FCID'], r, ldetail["SampleID"], 'hg19',
-            ldetail["Index"], ldetail["Description"], "N", 
-            ldetail["Recipe"],  ldetail["Operator"],
-            ldetail["SampleProject"]]
+    return [ldetail["SampleID"], 
+            ldetail["Index"],
+            ldetail["SampleProject"], 
+            ldetail['Genes']]
 
 def _lane_detail_to_signout(ldetail):
     """Convert information about a lane into Signout sheet
@@ -174,16 +192,17 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     fcid = fcid
     out_file = open(os.path.join(out_dir, "%s.csv" % fcid), "w")
     signout=open(os.path.join(out_dir, "%s.signout.csv" % fcid),"w")
-    writer = csv.writer(out_file)
-    writer.writerow(["[Data]",])
-    writer.writerow(["Sample_ID","Sample_Project","index"])
+    ss_writer = csv.writer(out_file)
+    ss_writer.writerow(["[Data]",])
+    ss_writer.writerow(["Sample_ID","Sample_Project","index", "Description"])
+
     so_writer = csv.writer(signout)
     so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
 
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
         info=_lane_detail_to_ss(fcid, ldetail, 1)
-        writer.writerow([info[2],info[9],info[4]])
+        ss_writer.writerow([info])
     return out_file
 
 
