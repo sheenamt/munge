@@ -143,12 +143,12 @@ def create_sample_project(ldetail):
 def cpt_and_gene_to_list(ldetail):
     """Convert info in cpt and/or gene column into gene list
     """
-    genes = []
+    genes = ''
     if ldetail['CPT'] in VALID_CODES:
-        genes.append(ldetail['CPT'])
+        genes =ldetail['CPT']
     elif ldetail['Genes']:
         validate_gene_list(ldetail['Genes'])
-        genes.extend(ldetail['Genes'])
+        genes = ldetail['Genes']
     return genes
 
 def _lane_detail_to_ss(fcid, ldetail, r):
@@ -202,7 +202,7 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
         info=_lane_detail_to_ss(fcid, ldetail, 1)
-        ss_writer.writerow([info])
+        ss_writer.writerow(info)
     return out_file
 
 
