@@ -167,8 +167,8 @@ def _lane_detail_to_ss(fcid, ldetail, r):
     ldetail['Genes']=cpt_and_gene_to_list(ldetail)
 
     return [ldetail["SampleID"], 
-            ldetail["Index"],
             ldetail["SampleProject"], 
+            ldetail["Index"],
             ldetail['Genes']]
 
 def _lane_detail_to_signout(ldetail):
