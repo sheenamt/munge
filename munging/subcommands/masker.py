@@ -82,6 +82,9 @@ def build_parser(parser):
         '-m', '--mask_list', nargs='+',
         help="Order code or list of genes that were tested, must have spece between names")
     parser.add_argument(
+        '-g', '--gene_list', 
+        help="Tab delimited file of valid genes for this assay, with 'Gene' as header.")
+    parser.add_argument(
         '--mask_codes', choices=['1','2'],
         help='Print the built in masking codes (1) and their gene lists (2)')
 
@@ -143,11 +146,13 @@ def action(args):
         mask=MASK_CODES[args.mask_list[0]]
     except KeyError:
         mask=args.mask_list 
-    #Check that mask code is valide 
-    validate_gene_list(mask)
 
-    #test that the mask is good:
-    print 'Genes in output: %s ' % ([i for i in mask])
+    genes = csv.DictReader(open(args.gene_list,'rU'), delimiter = '\t')
+    valid_genes= [i['Gene'] for i in genes]
+
+    #Check that mask code is valide 
+    print 'Validating gene list: {}'.format(mask)
+    validate_gene_list(mask, valid_genes)
 
     analysis_type=infile.split('.')[1]
     #Create file names for new output

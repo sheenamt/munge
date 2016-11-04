@@ -4,6 +4,7 @@ Test the utils functions
 
 import os
 from os import path
+import csv
 import unittest
 import logging
 import pprint
@@ -124,8 +125,9 @@ class TestUtils(TestBase):
     def testValidateMaskCodes(self):
         """Test that any gene in the order codes are valid
         """
-        REFSEQ_GENES = 'doc/refseq_gene_list'
+        REFSEQ_GENES = csv.DictReader(open('doc/refseq_gene_list','rU'), delimiter='\t')
+        valid_genes = [i['Gene'] for i in REFSEQ_GENES]
         mask_codes1 = ['BRCA1', "GATA2"]
         mask_codes2=['AP3B1','ITK','LYST','MAGT1','PRF1','RAB27A','SH2D1A',]
-        validate_gene_list(mask_codes1)
-        validate_gene_list(mask_codes2)
+        validate_gene_list(mask_codes1, valid_genes)
+        validate_gene_list(mask_codes2, valid_genes)
