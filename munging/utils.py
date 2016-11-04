@@ -1,13 +1,13 @@
 from collections import Iterable
 from datetime import datetime
 import sys
+import csv
 import re
 import os
 import shutil
 import logging
 from collections import namedtuple
 from munging.annotation import multi_split
-
 from __init__ import __version__
 
 log = logging.getLogger(__name__)
@@ -36,8 +36,6 @@ ASSAY_CODES={'colo':'coloseq',
              'hh':'hotspot-heme',
              'glt':'hotspot-hereditary',
              'sth':'hotspot-heme'}
-
-REFSEQ_GENES = 'doc/refseq_gene_list'
 
 def dict_factory(cursor, row):
     """
@@ -298,13 +296,11 @@ def timestamp_now():
     """
     return datetime.now().strftime("%A, %B %d, %Y, %I:%M %p")
 
-def validate_gene_list(masking_list):
+def validate_gene_list(masking_list, genes):
     """Check genes given against valid RefSeq gene in munge/doc/
     """
     #Get the list of valid refseq genes
-    refseq_genes = open(REFSEQ_GENES, 'rU')
-    valid_genes = [l.strip() for l in refseq_genes]
-
+    valid_genes = genes
     #Check each entry in the masking list
     mask_codes=masking_list
     for gene in mask_codes:

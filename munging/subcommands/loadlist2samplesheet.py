@@ -19,6 +19,9 @@ from munging.utils import validate_gene_list
 def build_parser(parser):
     parser.add_argument('loadlist',
                     help="Absolute path to load list")
+    parser.add_argument('--gene_list',
+                        default = '../doc/refseq_genes',
+                        help="Absolute path to load list")
 
 WELL_MAPPING={'A01':'01',
               'B01':'02',
@@ -140,18 +143,20 @@ def create_sample_project(ldetail):
     sample_project +='-'+ldetail['Recipe']
     return sample_project
 
-def cpt_and_gene_to_list(ldetail):
+def cpt_and_gene_to_list(ldetail, valid_genes):
     """Convert info in cpt and/or gene column into gene list
     """
     genes = ''
-    if ldetail['CPT'] in VALID_CODES:
-        genes =ldetail['CPT']
-    elif ldetail['Genes']:
-        validate_gene_list(ldetail['Genes'])
-        genes = ldetail['Genes']
+    #only allow masking for EPI and IMD
+    if re.search('IMD',ldetail['Recipe']) or re.search('EPI', ldetail['Recipe']):
+        if ldetail['CPT'] in VALID_CODES:
+            genes =ldetail['CPT']
+        elif ldetail['Genes']:
+            validate_gene_list(ldetail['Genes'], valid_genes)
+            genes = ldetail['Genes']
     return genes
 
-def _lane_detail_to_ss(fcid, ldetail, r):
+def _lane_detail_to_ss(fcid, ldetail, r, valid_genes):
     """Convert information about a lane into Illumina samplesheet output.
     FCID|PlateNumber|Well|Description|Control|Well|Recipe|Index
     """
@@ -164,7 +169,7 @@ def _lane_detail_to_ss(fcid, ldetail, r):
 
     ldetail["SampleProject"]=create_sample_project(ldetail)
     
-    ldetail['Genes']=cpt_and_gene_to_list(ldetail)
+    ldetail['Genes']=cpt_and_gene_to_list(ldetail, valid_genes)
 
     return [ldetail["SampleID"], 
             ldetail["SampleProject"], 
@@ -186,7 +191,7 @@ def _lane_detail_to_signout(ldetail):
 
     return ldetail["SampleID"], ldetail["Accession"],ldetail["Patient Name"],ldetail["MRN"]
     
-def write_sample_sheet(fcid, lane_details, out_dir=None):
+def write_sample_sheet(fcid, lane_details, valid_genes, out_dir=None):
     """Convert a flowcell into a samplesheet for demultiplexing.
     """
     fcid = fcid
@@ -197,11 +202,11 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
     ss_writer.writerow(["Sample_ID","Sample_Project","index", "Description"])
 
     so_writer = csv.writer(signout)
-    so_writer.writerow(["SampleID", "Accession","Patient Name","MRN"])
+    so_writer.writerow(["SampleID", "Accession","Patient Name","MRN",])
 
     for ldetail in lane_details:
         so_writer.writerow(_lane_detail_to_signout(ldetail))
-        info=_lane_detail_to_ss(fcid, ldetail, 1)
+        info=_lane_detail_to_ss(fcid, ldetail, 1, valid_genes)
         ss_writer.writerow(info)
     return out_file
 
@@ -217,9 +222,10 @@ def _get_flowcell_id(reader, require_single=True):
 
 def action(args):
     out_dir='./'
+    valid_genes = csv.DictReader(open(args.gene_list,'rU'))
     reader=csv.DictReader(open(args.loadlist,'rU'))
     #strip whitespace from header names in case tech used wrong template
     reader.fieldnames=[i.strip() for i in reader.fieldnames]
     lane_details = [row for row in reader]
     #SampleSheet.csv needs to be grouped by FCID
-    write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
+    write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir, valid_genes.fieldnames)
