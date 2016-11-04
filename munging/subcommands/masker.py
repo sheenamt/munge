@@ -154,7 +154,6 @@ def action(args):
     print 'Validating gene list: {}'.format(mask)
     validate_gene_list(mask, valid_genes)
 
-    analysis_type=infile.split('.')[1]
     #Create file names for new output
     full_output=infile
     masked_output=args.outfile
@@ -169,5 +168,4 @@ def action(args):
     writer.writeheader()
     
     # #Mask data
-    print "filtering %s" % analysis_type
     writer.writerows(mask_file_by_gene(data, mask))
