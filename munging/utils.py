@@ -296,14 +296,3 @@ def timestamp_now():
     """
     return datetime.now().strftime("%A, %B %d, %Y, %I:%M %p")
 
-def validate_gene_list(masking_list, genes):
-    """Check genes given against valid RefSeq gene in munge/doc/
-    """
-    #Get the list of valid refseq genes
-    valid_genes = genes
-    #Check each entry in the masking list
-    mask_codes=masking_list
-    for gene in mask_codes:
-        if gene not in valid_genes:
-            sys.exit('invalid gene: {}'. format(gene))
-        
