@@ -11,7 +11,7 @@ import pprint
 import sys
 import json
 
-from munging.utils import munge_path, munge_pfx, munge_date, validate_gene_list
+from munging.utils import munge_path, munge_pfx, munge_date
 
 from __init__ import TestBase
 import __init__ as config
@@ -121,13 +121,3 @@ class TestUtils(TestBase):
 
         self.assertEqual(test_id1,'2014-09-15')
         self.assertEqual(test_id2,'2014-09-09')
-
-    def testValidateMaskCodes(self):
-        """Test that any gene in the order codes are valid
-        """
-        REFSEQ_GENES = csv.DictReader(open('doc/refseq_gene_list','rU'), delimiter='\t')
-        valid_genes = [i['Gene'] for i in REFSEQ_GENES]
-        mask_codes1 = ['BRCA1', "GATA2"]
-        mask_codes2=['AP3B1','ITK','LYST','MAGT1','PRF1','RAB27A','SH2D1A',]
-        validate_gene_list(mask_codes1, valid_genes)
-        validate_gene_list(mask_codes2, valid_genes)
