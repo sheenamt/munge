@@ -38,11 +38,12 @@ class TestHGVSCheck(TestBase):
         hgvs_test_vars = ["NM_017668.2:c.*883_*884insA",
                           "NM_006019.3:c.2274_2275insGGCCTG",
                           "NM_006622.3:c.*551_*552insT",
-                          "NM_002451.3:c.*250delA"]
+                          "NM_002451.3:c.*250delA",
+                          "NM_001128425:c.1014G>C",]
         r = hgvs_check.query_mutalyzer(self.conn, hgvs_test_vars)
         r = r[1:-1]  # exclude header and additional last row
         fixed_hgvs = [l.split("\t")[6] for l in r]
-        known_output = ['c.*898dup', 'c.2285_2290dup', 'c.*551dup', 'c.*258del']
+        known_output = ['c.*898dup', 'c.2285_2290dup', 'c.*551dup', 'c.*258del','c.1014G>C']
         self.assertEqual(fixed_hgvs, known_output)
 
     def testCleanProteinField(self):
@@ -50,11 +51,11 @@ class TestHGVSCheck(TestBase):
                                   "p.(Ser1073Leufs*59", "p.(Ala85Glyfs*20)", "p.(Arg259Glyfs*2)",
                                   "p.(Lys153Serfs*35)", "p.(Gln79_Gln80del)", "p.(Gly470_Gly473de",
                                   "p.(Gly473dup)", "p.(Gln493Profs*9)", "p.(=)",
-                                  "p.Pro197_Pro198dup"]
+                                  "p.Pro197_Pro198dup", "p.Q338His"]
         cleaned_output = [hgvs_check.clean_protein_field(x) for x in hgvs_test_protein_vars]
         known_output = ['p.S145Rfs*27', 'p.W143Mfs*296', 'p.G140Afs*26', 'p.S1073Lfs*59',
                         'p.A85Gfs*20', 'p.R259Gfs*2', 'p.K153Sfs*35', 'p.Q79_Q80del',
-                        'p.G470_G473de', 'p.G473dup', 'p.Q493Pfs*9', '', 'p.P197_P198dup']
+                        'p.G470_G473de', 'p.G473dup', 'p.Q493Pfs*9', '', 'p.P197_P198dup', 'p.Q338H']
         self.assertEqual(cleaned_output, known_output)
 
     def testHGVSCheck(self):

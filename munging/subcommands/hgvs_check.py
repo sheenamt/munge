@@ -80,7 +80,7 @@ def clean_protein_field(string):
     outstring = "p."
     i = 0
     while i < len(string):
-        if (i+3 < len(string)) and (string[i:i+3].upper() in CODONS):
+        if (i+3 <= len(string)) and (string[i:i+3].upper() in CODONS):
             outstring += CODONS[string[i:i+3].upper()]
             i += 3
         else:
