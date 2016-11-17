@@ -91,7 +91,7 @@ def process_files(infiles, tab, filetype):
                 #48_A03_BROv7_HA0186_NA12878_PolyHunter_Analysis
                 elif sheet_name[-2] == 'PolyHunter':
                     sheet_name = '14_PolyHunter'
-                #48_A03_BROv7_HA0186_NA12878_SNP_Analysis
+                #48_A03_BROv7_HA0186_NA12878_SNP_Indel_Analysis
                 elif sheet_name[-2] == 'SNP':
                     sheet_name = '10_SNP'
                 #48_A03_BROv7_HA0186_NA12878_INDEL_Analysis
