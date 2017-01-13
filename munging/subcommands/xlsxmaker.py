@@ -11,7 +11,6 @@ import argparse
 import sys
 import re
 import os
-import ipdb
 
 from xlsxwriter import Workbook
 from munging.annotation import build_variant_id, multi_split
