@@ -18,6 +18,7 @@ from munging.annotation import build_variant_id, multi_split
 
 book = Workbook()
 
+
 def build_parser(parser):
     parser.add_argument(
         'type', choices=['Analysis', 'Combined'],
@@ -83,16 +84,19 @@ def process_files(infiles, tab, filetype):
                     sheet_name = '9_Clinically_Flagged'
                 #48_A03_BROv7_HA0186_NA12878_MSI_Analysis
                 elif sheet_name[-2] == 'MSI':
-                    sheet_name = '11_MSI'
+                    sheet_name = '12_MSI'
                 #48_A03_BROv7_HA0186_NA12878_Amplicon_Analysis
                 elif sheet_name[-2] == 'Amplicon':
-                    sheet_name = '12_Amplicons'
+                    sheet_name = '13_Amplicons'
                 #48_A03_BROv7_HA0186_NA12878_PolyHunter_Analysis
                 elif sheet_name[-2] == 'PolyHunter':
-                    sheet_name = '13_PolyHunter'
-                #48_A03_BROv7_HA0186_NA12878_Analysis
+                    sheet_name = '14_PolyHunter'
+                #48_A03_BROv7_HA0186_NA12878_SNP_Indel_Analysis
                 elif sheet_name[-2] == 'SNP':
-                    sheet_name = '10_SNP_Indel'
+                    sheet_name = '10_SNP'
+                #48_A03_BROv7_HA0186_NA12878_INDEL_Analysis
+                elif sheet_name[-2] == 'INDEL':
+                    sheet_name = '11_INDEL'
                 if sheet_name == tab:
                     return sheet_name, fname
 
@@ -117,27 +121,26 @@ def write_workbook(sheet_name, fname):
     """
     Write analysis file as sheet in workbook
     """
-    sheet = book.add_worksheet(sheet_name)
+    #sheet = book.add_sheet(sheet_name)
+    sheet = book.add_worksheet(sheet_name)    
     Reader = csv.reader(open(fname, 'rU'), delimiter='\t')
-    if sheet_name == '10_SNP_Indel':
+    if sheet_name == '10_SNP':
         Reader = variant_id_link(Reader, sheet)
     else:
         for rowx, row in enumerate(Reader):
             for colx, value in enumerate(row):
+                #sheet.write(rowx, colx, float_if_possible(value))
                 sheet.write(rowx, colx, float_if_possible(value))
-
 
 def action(args):
 
     filetype = args.type
     (infiles, ) = args.infiles
-    book.filename=args.outfile
-    #ipdb.set_trace()
     if filetype == 'Analysis':
         tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene', '3_QC_by_Exon',
                 '4_SV_Crest', '5_SV_Breakdancer', '6_SV_Pindel',
                 '7_CNV_Gene', '8_CNV_Exon', '9_Clinically_Flagged', 
-                '10_SNP_Indel', '11_MSI', '12_Amplicons', '13_PolyHunter']
+                '10_SNP','11_INDEL', '12_MSI', '13_Amplicons', '14_PolyHunter']
         #    for each tab, find its file and process.
         for tab in tabs:
             try:
@@ -156,4 +159,18 @@ def action(args):
                 sheet_name = '_'.join(sheet_name[1:30])
                 print sheet_name, fname
                 write_workbook(sheet_name, fname)
+    book.filename=args.outfile
+
+    ## The following exception is known to occur and completion of the script:
+    #
+    # "Exception caught in workbook destructor. Explicit close() may be required"
+    # The following exception, or similar, can occur if the :func:`close` method isn't used at the end of the program:
+    # Exception Exception: Exception('Exception caught in workbook destructor.
+    # Explicit close() may be required for workbook.',)
+    # in <bound method Workbook.__del__ of <xlsxwriter.workbook.Workbookobject at 0x103297d50>>
+    # Note, it is possible that this exception will also be raised as part of another exception that occurs during workbook destruction. In either case ensure that there is an explicit workbook.close() in the program.
+    #
+    ## Note that this is expected behavior for this script and does not impact the creation of the final xlsx document
+    ## nor should it be regarded as an error in this code.
+
     book.close()
