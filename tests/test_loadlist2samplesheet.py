@@ -23,7 +23,7 @@ class TestLoadListtoSampleSheet(TestBase):
     Test the script with produces the demux sample sheet
     """
     fcid='HBHW5ADXX'
-    ldetail={'FCID':'HBHW5ADXX',
+    ldetail1={'FCID':'HBHW5ADXX',
              "Index":'CCAGTTCA', 
              'PlateNumber':'60',
              'Operator':'SF',
@@ -35,7 +35,7 @@ class TestLoadListtoSampleSheet(TestBase):
 
     def testLaneDetailToSS01(self):
         """Test the lane details are parsed correctly"""
-        output=loadlist2samplesheet._lane_detail_to_ss(self.fcid, self.ldetail, 1)
+        output=loadlist2samplesheet._lane_detail_to_ss(self.fcid, self.ldetail1, 1)
         self.assertIn('6036-D05-EPIv2', output)
         #test correct creation of Project name
         self.assertIn('EpiPlex60-EPIv2', output)
@@ -48,3 +48,12 @@ class TestLoadListtoSampleSheet(TestBase):
         lane_details = [row for row in reader]
         #SampleSheet.csv needs to be grouped by FCID
         self.assertRaises(ValueError, loadlist2samplesheet._get_flowcell_id, lane_details)
+
+    def testControlCheck(self):
+        """Test that 1 control required for each assay"""
+        reader=csv.DictReader(open(path.join(load_list,'bad-loadlist.csv')))
+        #strip whitespace from header names in case tech used wrong template
+        reader.fieldnames=[i.strip() for i in reader.fieldnames]
+        lane_details = [row for row in reader]
+        #SampleSheet.csv needs 1 NA12878 per assay
+        self.assertRaises(ValueError, loadlist2samplesheet.check_control_vs_number_assays, lane_details)
