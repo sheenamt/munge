@@ -155,16 +155,4 @@ def action(args):
                 write_workbook(sheet_name, book, fname)
     book.filename=args.outfile
 
-    ## The following exception is known to occur and completion of the script:
-    #
-    # "Exception caught in workbook destructor. Explicit close() may be required"
-    # The following exception, or similar, can occur if the :func:`close` method isn't used at the end of the program:
-    # Exception Exception: Exception('Exception caught in workbook destructor.
-    # Explicit close() may be required for workbook.',)
-    # in <bound method Workbook.__del__ of <xlsxwriter.workbook.Workbookobject at 0x103297d50>>
-    # Note, it is possible that this exception will also be raised as part of another exception that occurs during workbook destruction. In either case ensure that there is an explicit workbook.close() in the program.
-    #
-    ## Note that this is expected behavior for this script and does not impact the creation of the final xlsx document
-    ## nor should it be regarded as an error in this code.
-
     book.close()
