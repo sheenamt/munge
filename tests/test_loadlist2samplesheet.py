@@ -42,7 +42,7 @@ class TestLoadListtoSampleSheet(TestBase):
 
     def testGetFlowCellID01(self):
         """Test that only 1 flowcell ID is allowed"""
-        reader=csv.DictReader(open(path.join(load_list,'loadlist.csv')))
+        reader=csv.DictReader(open(path.join(load_list,'bad-loadlist1.csv')))
         #strip whitespace from header names in case tech used wrong template
         reader.fieldnames=[i.strip() for i in reader.fieldnames]
         lane_details = [row for row in reader]
@@ -51,9 +51,25 @@ class TestLoadListtoSampleSheet(TestBase):
 
     def testControlCheck(self):
         """Test that 1 control required for each assay"""
-        reader=csv.DictReader(open(path.join(load_list,'bad-loadlist.csv')))
+        reader=csv.DictReader(open(path.join(load_list,'bad-loadlist2.csv')))
         #strip whitespace from header names in case tech used wrong template
         reader.fieldnames=[i.strip() for i in reader.fieldnames]
         lane_details = [row for row in reader]
         #SampleSheet.csv needs 1 NA12878 per assay
         self.assertRaises(ValueError, loadlist2samplesheet.check_control_vs_number_assays, lane_details)
+
+    def testSortByWell(self):
+        """Test that the input is sorted on Well, which drives the name created later"""
+        reader=csv.DictReader(open(path.join(load_list,'loadlist.csv')))
+        #strip whitespace from header names in case tech used wrong template
+        reader.fieldnames=[i.strip() for i in reader.fieldnames]
+        lane_details = [row for row in reader]
+        sorted_lane_details = sorted(lane_details, key=lambda d: d['Well'])
+        #SampleSheet.csv needs to be grouped by FCID
+        input_wells = ['A01', 'D01', 'B01', 'C01', 'E01']
+        not_sorted_wells = [f['Well'] for f in lane_details]
+        output_wells = [f['Well'] for f in sorted_lane_details]
+        expected_wells = ['A01', 'B01', 'C01', 'D01', 'E01']
+        self.assertListEqual(input_wells, not_sorted_wells)
+        self.assertListEqual(output_wells, expected_wells)
+        

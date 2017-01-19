@@ -212,7 +212,9 @@ def action(args):
     reader=csv.DictReader(open(args.loadlist,'rU'))
     #strip whitespace from header names in case tech used wrong template
     reader.fieldnames=[i.strip() for i in reader.fieldnames]
-    lane_details = [row for row in reader]
+    #TGC wants to be sorted alphanumerically 
+    lane_details = sorted(reader, key=lambda d: d['Well'])
+    print type(lane_details)
     check_control_vs_number_assays(lane_details)
     #SampleSheet.csv needs to be grouped by FCID
     write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)
