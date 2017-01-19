@@ -12,7 +12,7 @@ from itertools import count, groupby, chain, ifilter , izip_longest
 from operator import itemgetter
 
 from munging import filters
-from munging.utils import walker, munge_pfx
+from munging.utils import munge_pfx, walker
 
 """Each function parses a group of sample files for desired information,
 grouping based on the variant_keys list,
@@ -33,22 +33,21 @@ def parse_quality_metrics(fname):
         parts = lines[i].strip('\n').split('\t')
         if len(parts) > 0 and parts[0] == 'LIBRARY':
             keys = parts
-            values = lines[i+1].strip('\n').split('\t')                                                                                                                                                     
+            values = lines[i+1].strip('\n').split('\t')
     quality_metrics = OrderedDict(zip(keys, values))
     return quality_metrics
 
-def parse_quality(files, specimens, annotation, prefixes, variant_keys):
+def parse_quality(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """ Parse the sample quality analysis file, from hs_metrics"""
-    files = ifilter(filters.quality_analysis, files)
-    #sort the files so that the output in the workbook is sorted
-    files=sorted(files)    
+    files = filter(filters.quality_analysis, files)
     variant_keys = ['MEAN_TARGET_COVERAGE']
- 
-    for pth in files:      
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
         log_pfx=pfx['mini-pfx']
         prefixes.append(log_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 if re.search('version',row['MEAN_TARGET_COVERAGE']):
@@ -60,17 +59,18 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys 
 
-def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
+def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = ifilter(filters.genotype_analysis, files)
-    files=sorted(files)    
+    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
-    #sort the files so that the output in the workbook is sorted
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         reads_pfx=pfx['mini-pfx']+'_Variants'
         prefixes.append(reads_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -81,20 +81,20 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys):
+def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = ifilter(filters.genotype_analysis, files)
-    files=sorted(files)    
+    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
-    #sort the files so that the output in the workbook is sorted
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         reads_pfx=pfx['mini-pfx']+'_Variants|Total'
         status_pfx=pfx['mini-pfx']+'_Status'
         prefixes.append(reads_pfx)
         prefixes.append(status_pfx)
-
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -117,19 +117,20 @@ def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
+def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = ifilter(filters.genotype_analysis, files)
-    files=sorted(files)    
+    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
-    #sort the files so that the output in the workbook is sorted
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         reads_pfx=pfx['mini-pfx']+'_Variants|Total'
         status_pfx=pfx['mini-pfx']+'_Status'
         prefixes.append(reads_pfx)
         prefixes.append(status_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -157,19 +158,21 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys):
+def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = ifilter(filters.genotype_analysis, files)
-    files=sorted(files)    
+
+    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
-    #sort the files so that the output in the workbook is sorted
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         reads_pfx=pfx['mini-pfx']+'_Variants|Total'
         status_pfx=pfx['mini-pfx']+'_Status'
         prefixes.append(reads_pfx)
         prefixes.append(status_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -197,15 +200,10 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-
-
-def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
+def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the pindel analysis file, give total counts of samples with site"""
-    #Grab just the pindel files
-    files = ifilter(filters.pindel_analysis, files)
-    #sort the files so that the output in the workbook is sorted
-    files=sorted(files)    
-    #List of keys to group samples by
+
+    files = filter(filters.pindel_analysis, files)
     variant_keys = ['Position', 'Gene']
     #Other annotation to keep 
     annotation_headers = [
@@ -214,13 +212,13 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
         'Size',
         'Transcripts'
         ]
-
-    #Go through all the files
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
-        #Concatenate the pfx to human readable
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         prefixes.append(pfx['mini-pfx'])
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -240,11 +238,9 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys):
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
-def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specific   
+def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the snp output file, give ref|var read counts per sample"""
-    files = ifilter(filters.snp_analysis, files)
-    files = sorted(files)    
-
+    files = filter(filters.snp_analysis, files)
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
     annotation_headers = [
         'Gene',
@@ -272,11 +268,13 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'RF_Alter_Splice',
 ]
 
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
         reads_pfx=pfx['mini-pfx']+'_Ref|Var'
         prefixes.append(reads_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -293,17 +291,18 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
 
-def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
+def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the cnv_exon output, give ave_log_ratio"""
-    files = ifilter(filters.cnv_exon_analysis, files)
-    files = sorted(files)
+    files = filter(filters.cnv_exon_analysis, files)
     variant_keys = ['Position', 'Gene' ]
-    #sort the files so that the output in the workbook is sorted
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         log_pfx=pfx['mini-pfx']+'_Log'
         prefixes.append(log_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
@@ -317,17 +316,18 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys):
     #print prefixes, fieldnames, variant_keys
     return specimens, annotation, prefixes, fieldnames, variant_keys
 
-def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys):
+def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the cnv_genes output, give ave_log_ratio"""
-    files = ifilter(filters.cnv_gene_analysis, files)
-    files=sorted(files)
+    files = filter(filters.cnv_gene_analysis, files)
     variant_keys = ['Position', 'Gene' ]
-    #sort the files so that the output in the workbook is sorted
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname][0]
+        pfx = munge_pfx(pfx_file.fname)
+        #Create a smaller version of this really long string
         log_pfx=pfx['mini-pfx']+'_Log'
         prefixes.append(log_pfx)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
+        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)

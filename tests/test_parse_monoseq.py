@@ -21,10 +21,11 @@ class TestMonoSeqParser(TestBase):
     """
     Test the monoseq parser, which makes the ugly format human readable
     """
-    analysis_testfiles = path.join(config.datadir, 'analysis_files')    
+    sample_id = 'NA12785A-GEN1010-GLTv1'
+    analysis_testfiles = os.path.join(config.datadir, '101010_HA0000_OncoPlex1','output')
     monoseq_testfiles = path.join(config.datadir, 'monoseq')    
     monoseq_input = path.join(monoseq_testfiles, 'NA12785A-GLT005.CFDNA.monoseq')
-    monoseq_output = path.join(analysis_testfiles, 'NA12785A-GLT005.CFDNA.PolyHunter_Analysis.txt')
+    monoseq_output = path.join(analysis_testfiles, '{}','{}.CFDNA.PolyHunter_Analysis.txt').format(sample_id, sample_id)
 
     def testMonoSeq(self):
         outdir = self.mkoutdir()

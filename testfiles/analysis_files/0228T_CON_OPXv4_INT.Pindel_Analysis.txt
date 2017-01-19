@@ -1,2 +1,0 @@
-Gene	Gene_Region	Event_Type	Size	Position	bbmergedReads	bwamemReads	Entry_Index	Transcripts
-FLT3	Exonic	Insertion	27	chr13:28608257-28608258	0	811	0	FLT3:NM_004119(exon 15)

@@ -1,1 +1,0 @@
-Gene	Gene_Region	Event_Type	Size	Position	Reads	Entry_Index	Transcripts

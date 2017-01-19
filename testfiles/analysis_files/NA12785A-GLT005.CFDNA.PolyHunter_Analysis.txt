@@ -1,2 +1,0 @@
-SITE	COVERAGE	7T	5T
-estfiles/monoseq/CFTR-polyT	5841	0.985	0.015
