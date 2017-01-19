@@ -1,0 +1,4 @@
+Gene	Gene_Region	Event_Type	Size	Position	Reads	Entry_Index	Transcripts
+CFTR	Intronic	Deletion	42	chr7:117250761-117250804	6	272	CFTR:NM_000492(intron 19)
+CFTR	Exonic	Insertion	101	chr7:117235063-117235064	5	160	CFTR:NM_000492(exon 15)
+Intergenic	Intergenic	Deletion	42	chr20:25900125-25900168	3	316	
