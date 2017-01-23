@@ -40,6 +40,7 @@ class TestGenotyper(TestBase):
         self.assertEqual(output.loc[3]['readcount_variant'] ,'G')
         self.assertEqual(output.loc[4]['readcount_variant'] ,'-CAT')
         self.assertEqual(output.loc[5]['readcount_variant'] ,'-TCT')
+        self.assertEqual(output.loc[6]['readcount_variant'] ,'+G')
 
     def testParseReadCountLine(self):
         """
