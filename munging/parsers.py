@@ -43,18 +43,20 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys, sort_ord
     variant_keys = ['MEAN_TARGET_COVERAGE']
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        log_pfx=pfx['mini-pfx']
-        prefixes.append(log_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                if re.search('version',row['MEAN_TARGET_COVERAGE']):
-                    continue
-                variant = tuple(k for k in variant_keys)
-                specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
-                annotation[variant] = specimens[variant]
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            log_pfx=pfx['mini-pfx']
+            prefixes.append(log_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    if re.search('version',row['MEAN_TARGET_COVERAGE']):
+                        continue
+                    variant = tuple(k for k in variant_keys)
+                    specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
+                    annotation[variant] = specimens[variant]
 
     fieldnames = variant_keys + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys 
@@ -65,17 +67,19 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sor
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        reads_pfx=pfx['mini-pfx']+'_Variants'
-        prefixes.append(reads_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                specimens[variant][reads_pfx]=row['Variant_Reads']
-                annotation[variant] = row
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            reads_pfx=pfx['mini-pfx']+'_Variants'
+            prefixes.append(reads_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][reads_pfx]=row['Variant_Reads']
+                    annotation[variant] = row
 
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
@@ -87,32 +91,34 @@ def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys, sort
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        reads_pfx=pfx['mini-pfx']+'_Variants|Total'
-        status_pfx=pfx['mini-pfx']+'_Status'
-        prefixes.append(reads_pfx)
-        prefixes.append(status_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                try:
-                    frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
-                except ZeroDivisionError:
-                    frac = '0'
-                specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
-                if int(row['Valid_Reads']) >= 100:
-                    if float(frac) >= 0.02:
-                        specimens[variant][status_pfx]='POS'
-                    elif float(frac) <= 0.01:
-                        specimens[variant][status_pfx]='NEG'
-                    elif 0.01 < float(frac) < 0.02 :
-                        specimens[variant][status_pfx]='IND'
-                else:
-                    specimens[variant][status_pfx]='REVIEW'
-                annotation[variant] = row
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            reads_pfx=pfx['mini-pfx']+'_Variants|Total'
+            status_pfx=pfx['mini-pfx']+'_Status'
+            prefixes.append(reads_pfx)
+            prefixes.append(status_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    try:
+                        frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
+                    except ZeroDivisionError:
+                        frac = '0'
+                    specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                    if int(row['Valid_Reads']) >= 100:
+                        if float(frac) >= 0.02:
+                            specimens[variant][status_pfx]='POS'
+                        elif float(frac) <= 0.01:
+                            specimens[variant][status_pfx]='NEG'
+                        elif 0.01 < float(frac) < 0.02 :
+                            specimens[variant][status_pfx]='IND'
+                    else:
+                        specimens[variant][status_pfx]='REVIEW'
+                    annotation[variant] = row
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
@@ -123,37 +129,39 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        reads_pfx=pfx['mini-pfx']+'_Variants|Total'
-        status_pfx=pfx['mini-pfx']+'_Status'
-        prefixes.append(reads_pfx)
-        prefixes.append(status_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                #Skip lines with no read info
-                if not row['Variant_Reads'] and not row['Valid_Reads']:
-                    continue
-                try:
-                    frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
-                except ZeroDivisionError:
-                    frac = '0'
-                specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
-                if int(row['Valid_Reads']) >= 100:
-                    if float(frac) > 0.70:
-                        specimens[variant][status_pfx]='HOMO'
-                    elif float(frac) <= 0.10:
-                        specimens[variant][status_pfx]='NEG'
-                    elif 0.20 <= float(frac) <= 0.70 :
-                        specimens[variant][status_pfx]='HET'
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            reads_pfx=pfx['mini-pfx']+'_Variants|Total'
+            status_pfx=pfx['mini-pfx']+'_Status'
+            prefixes.append(reads_pfx)
+            prefixes.append(status_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    #Skip lines with no read info
+                    if not row['Variant_Reads'] and not row['Valid_Reads']:
+                        continue
+                    try:
+                        frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
+                    except ZeroDivisionError:
+                        frac = '0'
+                    specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                    if int(row['Valid_Reads']) >= 100:
+                        if float(frac) > 0.70:
+                            specimens[variant][status_pfx]='HOMO'
+                        elif float(frac) <= 0.10:
+                            specimens[variant][status_pfx]='NEG'
+                        elif 0.20 <= float(frac) <= 0.70 :
+                            specimens[variant][status_pfx]='HET'
+                        else:
+                            specimens[variant][status_pfx]='REVIEW'                    
                     else:
-                        specimens[variant][status_pfx]='REVIEW'                    
-                else:
-                    specimens[variant][status_pfx]='REVIEW'
-                annotation[variant] = row
+                        specimens[variant][status_pfx]='REVIEW'
+                    annotation[variant] = row
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
@@ -165,37 +173,39 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        reads_pfx=pfx['mini-pfx']+'_Variants|Total'
-        status_pfx=pfx['mini-pfx']+'_Status'
-        prefixes.append(reads_pfx)
-        prefixes.append(status_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                #Skip lines with no read info
-                if not row['Variant_Reads'] and not row['Valid_Reads']:
-                    continue
-                try:
-                    frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
-                except ZeroDivisionError:
-                    frac = '0'
-                specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
-                if int(row['Valid_Reads']) >= 100:
-                    if float(frac) >= 0.98:
-                        specimens[variant][status_pfx]='HOMO'
-                    elif float(frac) <= 0.10:
-                        specimens[variant][status_pfx]='NEG'
-                    elif 0.40 <= float(frac) <= 0.65 :
-                        specimens[variant][status_pfx]='HET'
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            reads_pfx=pfx['mini-pfx']+'_Variants|Total'
+            status_pfx=pfx['mini-pfx']+'_Status'
+            prefixes.append(reads_pfx)
+            prefixes.append(status_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    #Skip lines with no read info
+                    if not row['Variant_Reads'] and not row['Valid_Reads']:
+                        continue
+                    try:
+                        frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
+                    except ZeroDivisionError:
+                        frac = '0'
+                    specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                    if int(row['Valid_Reads']) >= 100:
+                        if float(frac) >= 0.98:
+                            specimens[variant][status_pfx]='HOMO'
+                        elif float(frac) <= 0.10:
+                            specimens[variant][status_pfx]='NEG'
+                        elif 0.40 <= float(frac) <= 0.65 :
+                            specimens[variant][status_pfx]='HET'
+                        else:
+                            specimens[variant][status_pfx]='REVIEW'                    
                     else:
-                        specimens[variant][status_pfx]='REVIEW'                    
-                else:
-                    specimens[variant][status_pfx]='REVIEW'
-                annotation[variant] = row
+                        specimens[variant][status_pfx]='REVIEW'
+                    annotation[variant] = row
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
@@ -214,20 +224,22 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_orde
         ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        prefixes.append(pfx['mini-pfx'])
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                #Update the specimen dict for this variant, for this pfx, report the Reads found
-                try:
-                    specimens[variant][pfx['mini-pfx']] = max(row['bbmergedReads'], row['bwamemReads'])
-                except KeyError:
-                    specimens[variant][pfx['mini-pfx']] = row['Reads']
-                annotation[variant] = row
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            prefixes.append(pfx['mini-pfx'])
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    #Update the specimen dict for this variant, for this pfx, report the Reads found
+                    try:
+                        specimens[variant][pfx['mini-pfx']] = max(row['bbmergedReads'], row['bwamemReads'])
+                    except KeyError:
+                        specimens[variant][pfx['mini-pfx']] = row['Reads']
+                    annotation[variant] = row
 
     #Update the specimen dict for this variant, count samples present
     for key, value in specimens.iteritems():
@@ -270,16 +282,18 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
 
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        reads_pfx=pfx['mini-pfx']+'_Ref|Var'
-        prefixes.append(reads_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                specimens[variant][reads_pfx] = row['Ref_Reads']+'|'+row['Var_Reads']
-                annotation[variant] = row
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            reads_pfx=pfx['mini-pfx']+'_Ref|Var'
+            prefixes.append(reads_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][reads_pfx] = row['Ref_Reads']+'|'+row['Var_Reads']
+                    annotation[variant] = row
 
     #Update the specimen dict for this variant, count samples present
     for key, value in specimens.iteritems():
@@ -297,17 +311,19 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys, sort_or
     variant_keys = ['Position', 'Gene' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        log_pfx=pfx['mini-pfx']+'_Log'
-        prefixes.append(log_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                specimens[variant][log_pfx] = row['Ave_Adjusted_Log_Ratio']
-                annotation[variant] = row
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            log_pfx=pfx['mini-pfx']+'_Log'
+            prefixes.append(log_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][log_pfx] = row['Ave_Adjusted_Log_Ratio']
+                    annotation[variant] = row
 
     annotation_headers = [
         'Transcripts']
@@ -322,17 +338,19 @@ def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys, sort_or
     variant_keys = ['Position', 'Gene' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
-        pfx_file = [s for s in files if sample in s.fname][0]
-        pfx = munge_pfx(pfx_file.fname)
-        #Create a smaller version of this really long string
-        log_pfx=pfx['mini-pfx']+'_Log'
-        prefixes.append(log_pfx)
-        with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')
-            for row in reader:
-                variant = tuple(row[k] for k in variant_keys)
-                specimens[variant][log_pfx] = row['Ave_Adjusted_Log_Ratio']
-                annotation[variant] = row
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            log_pfx=pfx['mini-pfx']+'_Log'
+            prefixes.append(log_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][log_pfx] = row['Ave_Adjusted_Log_Ratio']
+                    annotation[variant] = row
 
     annotation_headers = [
         'Transcripts']
