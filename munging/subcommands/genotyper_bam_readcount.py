@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 pd.options.display.width = 180
 
 def build_parser(parser):
-    parser.add_argument('bam-readcounts',
+    parser.add_argument('bam_readcounts',
                         help='Output file from bam-readcounts')
     parser.add_argument('clin_flagged', 
                         help='A required input file')
@@ -105,7 +105,7 @@ def action(args):
     flagged_variants['chrom'] = flagged_variants['chrom'].astype('str')
 
     #bam that readcounts runs on 
-    bam_readcounts = args.bam-readcounts
+    bam_readcounts = args.bam_readcounts
 
     #Process the clinically flagged positions, format for varscan readcounts function    
     bamcount_format_variants = flagged_variants.apply(format_indels, axis = 1)
