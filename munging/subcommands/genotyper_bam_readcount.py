@@ -16,19 +16,13 @@ log = logging.getLogger(__name__)
 pd.options.display.width = 180
 
 def build_parser(parser):
-    parser.add_argument('bam',
-                        help='Sample bam file')
+    parser.add_argument('bam-readcounts',
+                        help='Output file from bam-readcounts')
     parser.add_argument('clin_flagged', 
                         help='A required input file')
-    parser.add_argument('ref_fasta', 
-                        help='reference sequence in the fasta format')
     parser.add_argument('output', type=argparse.FileType('w'),
                         help='path and name of output to write',
                         default=sys.stdout)
-    parser.add_argument('--min_mapping_qual', default=0, type=int,
-                        help='minimum mapping quality of reads used use the read for counting.')
-    parser.add_argument('--min_base_qual', default=0, type=int,
-                        help='minimum base quality at a position to use the read for counting.')
 
 def format_indels(series):
     """
@@ -79,13 +73,6 @@ def format_indels(series):
                           series['Clinically_Flagged']],
                          index=index_cols)
 
-def run_bam_readcounts(bam, clin_flagged, ref_fasta, readcounts_output , min_mapping_qual, min_base_qual):
-    """ 
-    Run the bam readcounts function
-    """
-    cmd = ['bam-readcount', '-f', ref_fasta, bam, '-l', clin_flagged, '-q', str(min_mapping_qual), '-b', str(min_base_qual), '--max-warnings', '0']
-    f = open(readcounts_output,"wb")
-    subprocess.check_call(cmd,stdout=f)
 
 def parse_readcount_line(line):
     """
@@ -118,11 +105,7 @@ def action(args):
     flagged_variants['chrom'] = flagged_variants['chrom'].astype('str')
 
     #bam that readcounts runs on 
-    bam = args.bam
-    bam_readcounts = args.bam+('.readcounts.txt')
-
-    # #Run varscan readcount, creates output file we process next
-    run_bam_readcounts(bam, args.clin_flagged, args.ref_fasta, bam_readcounts,  args.min_mapping_qual, args.min_base_qual)
+    bam_readcounts = args.bam-readcounts.txt
 
     #Process the clinically flagged positions, format for varscan readcounts function    
     bamcount_format_variants = flagged_variants.apply(format_indels, axis = 1)
