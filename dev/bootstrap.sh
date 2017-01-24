@@ -34,13 +34,4 @@ $venv/bin/pip install -U pip
 $venv/bin/pip install -U setuptools
 $venv/bin/pip install -r requirements.txt
 
-#Install bam readcount
-mkdir -p $venv/src
-git clone https://github.com/genome/bam-readcount.git $venv/src/bam-readcount
-cd $venv/src/bam-readcount
-mkdir build
-cmake $venv/src/bam-readcount
-make
-cp $venv/src/bam-readcount/bin/bam-readcount $venv/bin/
-
 python setup.py install
