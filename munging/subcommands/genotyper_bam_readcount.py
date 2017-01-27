@@ -2,14 +2,9 @@
 Parses varscan readcounts for specific positions 
 """
 import sys
-import subprocess
-import tempfile
 import logging
-import shutil
-import os
 import argparse
 import pandas as pd
-import csv 
 from collections import namedtuple
 
 log = logging.getLogger(__name__)

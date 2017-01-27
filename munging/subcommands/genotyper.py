@@ -3,13 +3,10 @@ Parses varscan readcounts for specific positions
 """
 import sys
 import subprocess
-import tempfile
 import logging
-import shutil
 import os
 import argparse
 import pandas as pd
-import csv 
 from collections import namedtuple
 
 log = logging.getLogger(__name__)
@@ -145,7 +142,7 @@ def action(args):
     varscan_format_variants.to_csv(genotype_positions, index=False, columns = var_cals, header=None,sep='\t')
 
     #Run varscan readcount, creates output file we process next
-    readcounts = run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
+    run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
 
     #parse the varscan output into preferred format 
     reader = open(genotype_calls, 'rU')

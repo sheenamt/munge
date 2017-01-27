@@ -2,13 +2,10 @@
 """
 import os
 import csv
-import re
 import sys
-import copy
 import argparse
 import collections
-from itertools import count, groupby, chain, ifilter , izip_longest
-from operator import itemgetter
+from itertools import ifilter
 
 from munging import filters
 from munging.utils import walker, munge_pfx

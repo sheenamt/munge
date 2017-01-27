@@ -12,8 +12,7 @@ import sys
 import argparse
 import collections
 from itertools import ifilter
-
-from munging import filters, parsers
+from munging import filters
 from munging.utils import walker
 
 log = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ def action(args):
     chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
     specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         
-
+    
     writer = csv.DictWriter(args.outfile, fieldnames = fieldnames,  extrasaction = 'ignore', delimiter = '\t')
     writer.writeheader()
     for variant in sorted(specimens.keys()):
