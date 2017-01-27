@@ -33,7 +33,7 @@ def parse_quality_metrics(fname):
         parts = lines[i].strip('\n').split('\t')
         if len(parts) > 0 and parts[0] == 'LIBRARY':
             keys = parts
-            values = lines[i+1].strip('\n').split('\t')                                                                                                                                                     
+            values = lines[i+1].strip('\n').split('\t')
     quality_metrics = OrderedDict(zip(keys, values))
     return quality_metrics
 
