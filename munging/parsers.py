@@ -133,9 +133,9 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
             reader = csv.DictReader(fname, delimiter='\t')
             for row in reader:
                 variant = tuple(row[k] for k in variant_keys)
-                #Skip lines with no read info
                 if not row['Variant_Reads'] and not row['Valid_Reads']:
-                    continue
+                    row['Variant_Reads'] = '0'
+                    row['Valid_Reads'] = '0'
                 try:
                     frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
                 except ZeroDivisionError:
@@ -175,7 +175,8 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys):
                 variant = tuple(row[k] for k in variant_keys)
                 #Skip lines with no read info
                 if not row['Variant_Reads'] and not row['Valid_Reads']:
-                    continue
+                    row['Variant_Reads'] = '0'
+                    row['Valid_Reads'] = '0'
                 try:
                     frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
                 except ZeroDivisionError:
