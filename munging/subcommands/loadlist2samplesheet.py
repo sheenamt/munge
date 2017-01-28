@@ -186,6 +186,17 @@ def write_sample_sheet(fcid, lane_details, out_dir=None):
         writer.writerow([info[2],info[9],info[4]])
     return out_file
 
+def check_control_vs_number_assays(lane_details):
+    """Make sure there is NA12878 for each assay listed
+    """
+    controls = 0
+    assays = set()
+    for ldetail in lane_details:
+        assays.add(ldetail['Recipe'])
+        if ldetail['ControlWell']=='NA12878':
+            controls = controls+1
+    if len(assays) != controls:
+        raise ValueError("There is not 1 NA12878 controls for each assay listed")
 
 def _get_flowcell_id(reader, require_single=True):
     """Retrieve the unique flowcell id represented in the SampleSheet.
@@ -202,5 +213,6 @@ def action(args):
     #strip whitespace from header names in case tech used wrong template
     reader.fieldnames=[i.strip() for i in reader.fieldnames]
     lane_details = [row for row in reader]
+    check_control_vs_number_assays(lane_details)
     #SampleSheet.csv needs to be grouped by FCID
     write_sample_sheet(list(_get_flowcell_id(lane_details))[0], lane_details, out_dir)

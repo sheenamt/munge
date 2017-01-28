@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 def build_parser(parser):
     parser.add_argument('type', 
-                        choices=['pindel','snp','cnv_exon','cnv_gene','quality','msi','clin_flagged','msi_flagged','hotspot_flagged'],
+                        choices=['pindel','snp','indel','cnv_exon','cnv_gene','quality','msi','clin_flagged','hotspot_flagged', 'glt_flagged'],
                         help='Type of output summary to create')
     parser.add_argument('path',
                         help='Path to analysis files')
@@ -35,8 +35,12 @@ def action(args):
     prefixes = []
     variant_keys = []
     #Grab all analysis files from the path 
-    files = ifilter(filters.any_analysis, walker(args.path))        
-    analysis_type='_'.join(['parsers.parse',args.type])
+    files = ifilter(filters.any_analysis, walker(args.path))
+    if args.type == 'indel':
+        parser_type = 'snp'
+    else:
+        parser_type = args.type
+    analysis_type='_'.join(['parsers.parse',parser_type])
     print "analysis type:",analysis_type
     chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys)'.format(analysis_type)
     specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)

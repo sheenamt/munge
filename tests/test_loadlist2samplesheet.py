@@ -22,24 +22,23 @@ class TestLoadListtoSampleSheet(TestBase):
     """
     Test the script with produces the demux sample sheet
     """
+    fcid='HBHW5ADXX'
+    ldetail1={'FCID':'HBHW5ADXX',
+             "Index":'CCAGTTCA', 
+             'PlateNumber':'60',
+             'Operator':'SF',
+             'Well':'D05',
+             'SampleProject':'EpiPlex60',
+             'Description':'Standard',
+             'ControlWell':'E05',
+             'Recipe':'EPIv2'}
 
     def testLaneDetailToSS01(self):
         """Test the lane details are parsed correctly"""
-        fcid='HBHW5ADXX'
-        ldetail={'FCID':'HBHW5ADXX',
-                "Index":'CCAGTTCA', 
-                'PlateNumber':'60',
-                'Operator':'SF',
-                'Well':'D05',
-                'SampleProject':'Oncoplex60',
-                'Description':'Standard',
-                'ControlWell':'E05',
-                'Recipe':'OPXv4'}
-        
-        output=loadlist2samplesheet._lane_detail_to_ss(fcid, ldetail, 1)
-        self.assertIn('6036-D05-OPXv4', output)
+        output=loadlist2samplesheet._lane_detail_to_ss(self.fcid, self.ldetail1, 1)
+        self.assertIn('6036-D05-EPIv2', output)
         #test correct creation of Project name
-        self.assertIn('OncoPlex60-OPXv4', output)
+        self.assertIn('EpiPlex60-EPIv2', output)
 
     def testGetFlowCellID01(self):
         """Test that only 1 flowcell ID is allowed"""
@@ -50,3 +49,11 @@ class TestLoadListtoSampleSheet(TestBase):
         #SampleSheet.csv needs to be grouped by FCID
         self.assertRaises(ValueError, loadlist2samplesheet._get_flowcell_id, lane_details)
 
+    def testControlCheck(self):
+        """Test that 1 control required for each assay"""
+        reader=csv.DictReader(open(path.join(load_list,'bad-loadlist.csv')))
+        #strip whitespace from header names in case tech used wrong template
+        reader.fieldnames=[i.strip() for i in reader.fieldnames]
+        lane_details = [row for row in reader]
+        #SampleSheet.csv needs 1 NA12878 per assay
+        self.assertRaises(ValueError, loadlist2samplesheet.check_control_vs_number_assays, lane_details)

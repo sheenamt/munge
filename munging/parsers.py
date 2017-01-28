@@ -149,15 +149,50 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys):
                     elif 0.20 <= float(frac) <= 0.70 :
                         specimens[variant][status_pfx]='HET'
                     else:
-                        specimens[variant][status_pfx]='REVIEW'
-                    
+                        specimens[variant][status_pfx]='REVIEW'                    
                 else:
                     specimens[variant][status_pfx]='REVIEW'
                 annotation[variant] = row
-# HET = 0.25 - 0.70 VAF
-# HOMO > 0.70 VAF
-# NEG = < 0.10 VAF
-# REVIEW = 0.10 - 0.25 VAF   
+    annotation_headers = ['Clinically_Flagged']
+    fieldnames = variant_keys + annotation_headers + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys):
+    """Parse the Genotype output, which is the reads of clin_flagged found"""
+    files = ifilter(filters.genotype_analysis, files)
+    files=sorted(files)    
+    variant_keys = ['Position','Ref_Base','Var_Base' ]
+    #sort the files so that the output in the workbook is sorted
+    for pth in files:
+        pfx = munge_pfx(pth.fname)
+        reads_pfx=pfx['mini-pfx']+'_Variants|Total'
+        status_pfx=pfx['mini-pfx']+'_Status'
+        prefixes.append(reads_pfx)
+        prefixes.append(status_pfx)
+        with open(os.path.join(pth.dir, pth.fname)) as fname:
+            reader = csv.DictReader(fname, delimiter='\t')
+            for row in reader:
+                variant = tuple(row[k] for k in variant_keys)
+                #Skip lines with no read info
+                if not row['Variant_Reads'] and not row['Valid_Reads']:
+                    continue
+                try:
+                    frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
+                except ZeroDivisionError:
+                    frac = '0'
+                specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                if int(row['Valid_Reads']) >= 100:
+                    if float(frac) >= 0.98:
+                        specimens[variant][status_pfx]='HOMO'
+                    elif float(frac) <= 0.10:
+                        specimens[variant][status_pfx]='NEG'
+                    elif 0.40 <= float(frac) <= 0.65 :
+                        specimens[variant][status_pfx]='HET'
+                    else:
+                        specimens[variant][status_pfx]='REVIEW'                    
+                else:
+                    specimens[variant][status_pfx]='REVIEW'
+                annotation[variant] = row
     annotation_headers = ['Clinically_Flagged']
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            

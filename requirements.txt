@@ -4,3 +4,4 @@ xlrd==0.9.3
 xlwt==0.7.5
 pandas==0.17.1
 suds==0.4
+XlsxWriter==0.9.6
