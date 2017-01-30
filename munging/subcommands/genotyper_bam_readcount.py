@@ -6,7 +6,7 @@ import logging
 import argparse
 import pandas as pd
 from collections import namedtuple
-
+import numpy as np
 log = logging.getLogger(__name__)
 pd.options.display.width = 180
 
@@ -99,11 +99,11 @@ def action(args):
     #set chr to be a string. 
     flagged_variants['chrom'] = flagged_variants['chrom'].astype('str')
 
-    #bam that readcounts runs on 
-    bam_readcounts = args.bam_readcounts
-
     #Process the clinically flagged positions, format for varscan readcounts function    
     bamcount_format_variants = flagged_variants.apply(format_indels, axis = 1)
+
+    #bam that readcounts runs on 
+    bam_readcounts = args.bam_readcounts
 
     #parse the bam readcount output into preferred format 
     reader = open(bam_readcounts, 'rU')
@@ -123,7 +123,7 @@ def action(args):
             bamcount_format_variants.loc[(bamcount_format_variants['chrom'] == chrom) & (bamcount_format_variants['bam_start'] == pos_start) & (bamcount_format_variants['readcount_variant'] == variant[0]), 'Variant_Reads']=variant[1]
 
     header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
-    bamcount_format_variants.to_csv(args.output, index=False,columns=header,sep='\t')
+    bamcount_format_variants.to_csv(args.output, na_rep= '0', index=False,columns=header,sep='\t')
 
 
     
