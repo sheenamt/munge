@@ -164,7 +164,7 @@ def action(args):
 
     header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
     
-    varscan_format_variants.to_csv(genotype_analysis, index=False,columns=header,sep='\t')
+    varscan_format_variants.to_csv(genotype_analysis, na_rep= '0', index=False,columns=header,sep='\t')
 
 
     
