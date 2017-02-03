@@ -24,6 +24,7 @@ params = {'author': 'Sheena Todhunter',
           'scripts': ['munge'],
           'version': __version__,
           'install_requires': [
+              'natsort>=5.0.2',
               'numpy>=1.10.1',
               'pandas>=0.17.1',
               'wsgiref==0.1.2',
