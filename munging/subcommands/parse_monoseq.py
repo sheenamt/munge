@@ -20,8 +20,8 @@ def build_parser(parser):
         help='A required xml file that describes homopolyer site')
     parser.add_argument('outfile', 
         help='A required outputfile')
-def action(args):
 
+def action(args):
     tree = ET.parse(args.xmlfile)
     root = tree.getroot()
     homopoly = root[0][1].text[0]
@@ -40,11 +40,12 @@ def action(args):
 
     call_info = dict(zip(call_freqs, polyt_info[-num_polys:]))
     output['COVERAGE']=polyt_info[0]
-    output['SITE']=args.xmlfile.strip('data/ .xml')
+    site=os.path.splitext(os.path.basename(args.xmlfile))[0]
 
     for key in sorted(call_info.iterkeys(), reverse=True):
         if float(call_info[key])>0.0:
-            output[key]=call_info[key]
+            output_key=key+'-'+site
+            output[output_key]=call_info[key]
 
     header = sorted(output.keys(), reverse=True)
     writer = csv.DictWriter(open(args.outfile, 'w'),
