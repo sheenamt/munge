@@ -92,13 +92,13 @@ def parse_varscan_line(line):
     Variant 
     """
     Variant = namedtuple('Variant', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads'])
-    Position = namedtuple('Position', ['chrom','position','ref_base'])
+    Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
     Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'])
 
     #Split the line by tabs
     sp = line.strip('\n').split('\t')
     # the first three entries are position info
-    position = Position(*sp[:3])
+    position = Position(sp[0], sp[1], sp[2], sp[4])
     # column 5 is the reference info, has an extra useless column
     ref_call = Reference(*sp[5].split(':'))
     # the rest of the columns have more variants, in the same format as the ref info without the extra useless column 
@@ -156,6 +156,7 @@ def action(args):
         varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Reference_Reads']=info[1]['reference'][1]
         varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Variant_Reads']=0
         for variant in info[1]['variants']:
+            print 'variant:', variant
             varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'Variant_Reads']=variant[1]
 
     header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
