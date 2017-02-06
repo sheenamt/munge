@@ -44,7 +44,6 @@ class TestGenotyper(TestBase):
 
     def testParseReadCountLine(self):
         """
-        Parse each varscan line into 3 namedtupeles:
         Position
         Reference
         Variant 

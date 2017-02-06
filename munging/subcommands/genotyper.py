@@ -3,13 +3,10 @@ Parses varscan readcounts for specific positions
 """
 import sys
 import subprocess
-import tempfile
 import logging
-import shutil
 import os
 import argparse
 import pandas as pd
-import csv 
 from collections import namedtuple
 
 log = logging.getLogger(__name__)
@@ -95,24 +92,20 @@ def parse_varscan_line(line):
     Variant 
     """
     Variant = namedtuple('Variant', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads'])
-    Position = namedtuple('Position', ['chrom','position','ref_base'])
+    Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
     Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'])
 
     #Split the line by tabs
     sp = line.strip('\n').split('\t')
     # the first three entries are position info
-    position = Position(*sp[:3])
-    # grab depth info
-    depth, min_qual_depth = sp[3:5]
+    position = Position(sp[0], sp[1], sp[2], sp[4])
     # column 5 is the reference info, has an extra useless column
     ref_call = Reference(*sp[5].split(':'))
-    # the variant we specifically asked info for is in columns 6-12
-    query_variant = Variant(*sp[6:13])
     # the rest of the columns have more variants, in the same format as the ref info without the extra useless column 
-    candidates = [s.split(':') for s in sp[13:]]
+    candidates = [s.split(':') for s in sp[6:]]
     variants =[Variant(*var) for var in candidates if len(var) > 6]
 
-    return (position, {'depth': depth, 'min_qual_depth': min_qual_depth, 'variants': variants, 'reference': ref_call, 'query_variant':query_variant})
+    return (position, {'variants': variants, 'reference': ref_call})
 
 def action(args):
     
@@ -145,7 +138,7 @@ def action(args):
     varscan_format_variants.to_csv(genotype_positions, index=False, columns = var_cals, header=None,sep='\t')
 
     #Run varscan readcount, creates output file we process next
-    readcounts = run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
+    run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
 
     #parse the varscan output into preferred format 
     reader = open(genotype_calls, 'rU')
@@ -155,13 +148,15 @@ def action(args):
     # and match to the clinically flagged comment 
     for line in reader:
         info = parse_varscan_line(line)
+        #info[0] is Position, info[1] is 
         chrom = info[0][0]
         pos_start = int(info[0][1])
-        query_variant = info[1]['query_variant'][0]
-        varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == query_variant), 'Valid_Reads'] = info[1]['depth']
-        varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == query_variant), 'Reference_Reads']=info[1]['reference'][1]
-        varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == query_variant), 'Variant_Reads']=info[1]['query_variant'][1]
-
+        depth = info[0][3]
+        varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Valid_Reads'] = depth
+        varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Reference_Reads'] = info[1]['reference'][1]
+        for variant in info[1]['variants']:
+            varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'Variant_Reads']=variant[1]
+            
     header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
     
     varscan_format_variants.to_csv(genotype_analysis, na_rep= '0', index=False,columns=header,sep='\t')

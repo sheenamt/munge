@@ -3,11 +3,7 @@ Run MonoSeq and parse output into readable format
 
 """
 
-import subprocess
-import tempfile
 import logging
-import shutil
-import os
 import xml.etree.ElementTree as ET
 import csv
 

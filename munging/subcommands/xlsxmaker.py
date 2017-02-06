@@ -7,8 +7,6 @@ usage:
 
 """
 import csv
-import argparse
-import sys
 import re
 import os
 

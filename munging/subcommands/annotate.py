@@ -2,14 +2,10 @@
 Run annovar to generate standard set of annotations to bring into the DB using annotation_importer
 """
 import logging
-import sys
 from collections import namedtuple
 import os
 import subprocess
-import argparse
-import csv
-import re
-from munging.utils import munge_path, munge_pfx
+from munging.utils import munge_path
 
 def build_parser(parser):
     parser.add_argument('run_dir',
