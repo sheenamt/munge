@@ -6,7 +6,7 @@ import sys
 import argparse
 import collections
 from itertools import ifilter
-
+import pandas as pd
 from munging import filters
 from munging.utils import walker, munge_pfx
 from natsort import natsorted

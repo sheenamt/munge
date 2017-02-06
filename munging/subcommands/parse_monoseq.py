@@ -2,7 +2,7 @@
 Run MonoSeq and parse output into readable format
 
 """
-
+import os
 import logging
 import xml.etree.ElementTree as ET
 import csv
