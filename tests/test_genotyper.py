@@ -50,11 +50,14 @@ class TestMasker(TestBase):
         Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
         Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'
         """
-        line1='7\t117199640\tT\t16351\t16301\tT:16304:2:26:1:5459:10845:21\tDEL-3-ATC\t\20\t2\t24\t1\t10\t10\tA:3:1:18:1:0:3\tC:10:2:25:1:2:8\tG:5:1:14:1:0:5\tINS-1-A:1:1:26:1:0:1\n'
+        line1='7\t117199640\tT\t16351\t16301\tT:16280:2:26:1:5459:10845:21\tDEL-3-ATC\t\20\t2\t24\t1\t10\t10\tA:3:1:18:1:0:3\tC:10:2:25:1:2:8\tG:5:1:14:1:0:5\tINS-1-A:1:1:26:1:0:1\n'
         
         info1=genotyper.parse_varscan_line(line1)
         variant1='DEL-3-ATC'
         variant2='INS-1-A'
+        variant3='G'
+        variant4='A'
+        variant5='C'
         #Chrom
         self.assertEqual(info1[0][0], '7')
         #position
@@ -71,4 +74,13 @@ class TestMasker(TestBase):
             if variant[0]==variant2:
                 self.assertEqual(variant[0],'INS-1-A')
                 self.assertEqual(variant[1],'1')
+            if variant[0]==variant3:
+                self.assertEqual(variant[0],'G')
+                self.assertEqual(variant[1],'5')
+            if variant[0]==variant4:
+                self.assertEqual(variant[0],'A')
+                self.assertEqual(variant[1],'3')
+            if variant[0]==variant5:
+                self.assertEqual(variant[0],'C')
+                self.assertEqual(variant[1],'10')
 
