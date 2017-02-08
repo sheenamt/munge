@@ -16,7 +16,7 @@ def build_parser(parser):
                         help='Path to analysis files')
     parser.add_argument('pipeline_manifest', type=argparse.FileType('rU'),
                         help='Path to pipeline manifest, used for ordering output')    
-    parser.add_argument('outfile', type = argparse.FileType('w'),
+    parser.add_argument('-o', '--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
     
