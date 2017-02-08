@@ -1,5 +1,22 @@
 Changes for Munge
 ================
+v3.4
+====
+ * specify polyhunter outfile with -o
+ * specify CADD file from pipeline repo rather than parsing from annovar files
+ * test for all variant types in varscan parser
+ * update tests for monoseq/polyt
+ * change polyt top-level to use samplesheet order for output order
+ * change headers in polyt output
+ * remove exception from xlsxmaker
+ * update tests to ensure sorting of loadlist by well works
+ * update code and tests to use manifest for sort order, get rid of exception in xlsxmaker
+ * update for parsing correct number of controls in samplesheet creation 
+
+v3.3
+====
+ * test for all variant types in varscan parser
+ * parse multiple calls at same position in genotyper, use qX depth
 
 v2.0.1
 ====
