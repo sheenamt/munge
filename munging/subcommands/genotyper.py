@@ -99,14 +99,18 @@ def parse_varscan_line(line):
     sp = line.strip('\n').split('\t')
     # the first three entries are position info
     position = Position(sp[0], sp[1], sp[2], sp[4])
-    # column 5 is the reference info, has an extra useless column
+    # column 5 is the reference info, has an extra useless column, is colon delimited
     ref_call = Reference(*sp[5].split(':'))
-    # the rest of the columns have more variants, in the same format as the ref info without the extra useless column 
-    candidates = [s.split(':') for s in sp[6:]]
+    # the variant we specifically asked info for is in columns 6-12, space delmited
+    query_variant = Variant(*sp[6:13])
+    # the rest of the columns have more variants, in the same format as the ref info without the extra useless column , each colon delimited
+    candidates = [s.split(':') for s in sp[13:]]
     variants =[Variant(*var) for var in candidates if len(var) > 6]
-
+    # add query variant to list of variants
+    variants.append(query_variant)
     return (position, {'variants': variants, 'reference': ref_call})
 
+    
 def action(args):
     
     #Make dataframe of clinically flagged positions 
@@ -156,10 +160,10 @@ def action(args):
         varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Reference_Reads'] = info[1]['reference'][1]
         for variant in info[1]['variants']:
             varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'Variant_Reads']=variant[1]
-            
+        
     header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
     
-    varscan_format_variants.to_csv(genotype_analysis, na_rep= '0', index=False,columns=header,sep='\t')
+    varscan_format_variants.to_csv(genotype_analysis, na_rep='0',index=False,columns=header,sep='\t')
 
 
     
