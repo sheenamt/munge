@@ -11,6 +11,7 @@ import sys
 import json
 import pandas as pd
 from munging.subcommands import genotyper
+from munging.subcommands import genotyper_formatter
 
 from __init__ import TestBase
 import __init__ as config
@@ -22,6 +23,24 @@ class TestGenotyper(TestBase):
     """
     Test the varscan_formatter script
     """
+    def testFormatVariants(self):
+        """Parse deletions/insertions correctly
+         Deletions are 'start-position'-1, DEL-len(reference)-reference
+         Insertions are 'start-position', INS-len(variant)-variant
+         SNPs are 'start-position', variant
+        """
+        cols=['chrom','start','stop','Ref_Base','Var_Base','Clinically_Flagged']
+        variants=pd.read_csv(open(path.join(genotyper_testfiles,'Clin_Flagged.txt')), delimiter='\t', header=None, index_col=False, names = cols)
+        variants['chrom'] = variants['chrom'].astype('str')
+        output=variants.apply(genotyper_formatter.format_variants, axis = 1)
+        self.assertEqual(output.loc[0]['start'] ,11854476)
+        self.assertEqual(output.loc[1]['start'] ,234668879)
+        self.assertEqual(output.loc[2]['start'] ,234668879)
+        self.assertEqual(output.loc[3]['start'] ,117199644)
+        self.assertEqual(output.loc[4]['start'] ,117232266)
+        self.assertEqual(output.loc[5]['start'] ,117267765)
+        self.assertEqual(output.loc[6]['start'] ,31022441)
+
     def testFormatIndels(self):
         """Parse deletions/insertions correctly
          Deletions are 'start-position'-1, DEL-len(reference)-reference
