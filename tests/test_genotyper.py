@@ -163,7 +163,7 @@ class TestGenotyper(TestBase):
         Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'
         """
 
-        line1='1\t11174395\tA\t946\t932\tA:929:2:51:1:915:14:0\n'
+        line1='1\t11174395\tA\t946\t932\tA:929:2:51:1:915:14:0\t\n'
         
         info1=genotyper_analyzer.parse_varscan_line(line1)
         #Chrom
