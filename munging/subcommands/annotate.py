@@ -18,8 +18,6 @@ def build_parser(parser):
                         help='Run only the ref_gene annotation')
     parser.add_argument('--clinically_flagged', default='/mnt/disk2/com/Genomes/Annovar_files/hg19_clinical_variants',
                         help='Clinically flagged variants file')
-    parser.add_argument('--cadd_file', 
-                        help='CADD file for this assay')
     parser.add_argument('--library_dir', default='/mnt/disk2/com/Genomes/Annovar_files',
                         help='Directory holding Annovar library files')
     parser.add_argument('--annovar_bin', default='',
@@ -57,7 +55,8 @@ def action(args):
     
     pathinfo = munge_path(args.run_dir)
     internal_freq_file = '_'.join(['hg19',pathinfo['machine'],pathinfo['assay']])
-    
+    internal_cadd_file = '_'.join(['hg19','CADD',pathinfo['assay']])    
+
     variants_file = args.input_file
     file_pfx = os.path.basename(args.input_file).replace('.ann','')
 
@@ -67,14 +66,12 @@ def action(args):
 
         #Add the generics dbs to the annotation info
         GENERIC_DB = os.path.basename(args.clinically_flagged)
-        CADD_DB = os.path.basename(args.cadd_file)
-
         #There is not always an internal frequency file
         if os.path.isfile(os.path.join(args.library_dir, internal_freq_file)):
             annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
         #There is not always an internal cadd file
-        if args.cadd_file:
-            annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[CADD_DB, '-filter']))
+        if os.path.isfile(os.path.join(args.library_dir, internal_cadd_file)):
+            annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
         #There is always a clin flagged
         annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[GENERIC_DB, '-filter']))
 

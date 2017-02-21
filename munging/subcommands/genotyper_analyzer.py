@@ -86,7 +86,14 @@ def parse_varscan_line(line):
     # column 5 is the reference info, has an extra useless column, is colon delimited
     ref_call = Reference(*sp[5].split(':'))
     # the rest of the columns have more variants, in the same format as the ref info without the extra useless column , each colon delimited
-    candidates = [s.split(':') for s in sp[6:]]
+    #If no specific variant was asked for, all variants have colon delimited info, split with tabs
+    if ':' in sp[6]:
+        candidates = [s.split(':') for s in sp[6:]]
+    #If a specific variant was asked for, it will be columns 6:13, tab delimited
+    else:
+        query_variant = Variant(*sp[6:13])
+        candidates = [s.split(':') for s in sp[13:]]
+        candidates.append(query_variant)
     variants =[Variant(*var) for var in candidates if len(var) > 6]
     return (position, {'variants': variants, 'reference': ref_call})
 

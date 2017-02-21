@@ -62,14 +62,14 @@ class TestGenotyper(TestBase):
         self.assertEqual(output.loc[5]['varscan_variant'] ,'DEL-1-C')
         self.assertEqual(output.loc[6]['varscan_variant'] ,'INS-1-G')
 
-    def testParseVarscanLine(self):
+    def testParseVarscanLine1(self):
         """
         Parse each varscan line into 3 namedtupeles:
         Variant = namedtuple('Variant', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads'])
         Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
         Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'
         """
-        line1='7\t117199640\tT\t16351\t16301\tT:16304:2:26:1:5459:10845:21\tDEL-3-ATC\t20\t2\t24\t1\t10\t10\tA:3:1:18:1:0:3\tC:10:2:25:1:2:8\tG:5:1:14:1:0:5\tINS-1-A:1:1:26:1:0:1\n'
+        line1='7\t117199640\tT\t16351\t16301\tT:16304:2:26:1:5459:10845:21\tDEL-3-ATC\t20\t2\t24\t1\t10\t10\tA:3:1:18:1:0:3\tC:10:2:25:1:2:8\tG:5:1:14:1:0:5\tINS-1-A:1:1:26:1:0:1\tINS-2-AA:1:1:26:1:0:1\tINS-3-AAA:1:1:26:1:0:1\n'
         
         info1=genotyper_analyzer.parse_varscan_line(line1)
         variant1='DEL-3-ATC'
@@ -90,6 +90,14 @@ class TestGenotyper(TestBase):
             if variant[0]==variant2:
                 self.assertEqual(variant[0],'INS-1-A')
                 self.assertEqual(variant[1],'1')
+
+    def testParseVarscanLine2(self):
+        """
+        Parse each varscan line into 3 namedtupeles:
+        Variant = namedtuple('Variant', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads'])
+        Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
+        Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'
+        """
 
         line1='1\t11174395\tA\t946\t932\tA:929:2:51:1:915:14:0T\t1\t1\t54\t1\t1\t0\tG:2:1:44:1:2:0'
         
@@ -112,6 +120,40 @@ class TestGenotyper(TestBase):
             if variant[0]==variant2:
                 self.assertEqual(variant[0],'G')
                 self.assertEqual(variant[1],'2')
+
+    def testParseVarscanLine3(self):
+        """
+        Parse each varscan line into 3 namedtupeles:
+        Variant = namedtuple('Variant', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads'])
+        Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
+        Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'
+        """
+
+        line1='1\t11174395\tA\t946\t932\tA:929:2:51:1:915:14:0\tT:1:1:54:1:1:0\tG:2:1:44:1:2:0\tC:10:2:25:1:2:8\tINS-1-A:1:1:26:1:0:1\tINS-2-AA:1:1:26:1:0:1\tINS-3-AAA:1:1:26:1:0:1\n'
+        
+        info1=genotyper_analyzer.parse_varscan_line(line1)
+        variant1='T'
+        variant2='G'
+        variant3='INS-2-AA'
+        #Chrom
+        self.assertEqual(info1[0][0], '1')
+        #position
+        self.assertEqual(info1[0][1],'11174395')
+        #refbase
+        self.assertEqual(info1[0][2],'A')
+        #depth with qfilter (set in readcounts call)
+        self.assertEqual(info1[0][3],'932')
+        #check that multiple variants from one position are found
+        for variant in info1[1]['variants']:
+            if variant[0]==variant1:
+                self.assertEqual(variant[0],'T')
+                self.assertEqual(variant[1],'1')
+            if variant[0]==variant2:
+                self.assertEqual(variant[0],'G')
+                self.assertEqual(variant[1],'2')
+            if variant[0]==variant3:
+                self.assertEqual(variant[0],'INS-2-AA')
+                self.assertEqual(variant[1],'1')
 
     def testGenotyperAnalyzer(self):
         clin_flagged = os.path.join(genotyper_testfiles, 'Clin_Flagged.txt')
