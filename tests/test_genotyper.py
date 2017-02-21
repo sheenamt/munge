@@ -155,6 +155,26 @@ class TestGenotyper(TestBase):
                 self.assertEqual(variant[0],'INS-2-AA')
                 self.assertEqual(variant[1],'1')
 
+    def testParseVarscanLine4(self):
+        """
+        Parse each varscan line into 3 namedtupeles:
+        Variant = namedtuple('Variant', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads'])
+        Position = namedtuple('Position', ['chrom','position','ref_base', 'depth'])
+        Reference = namedtuple('Reference', ['base','reads','strands','avg_qual','map_qual','plus_reads','minus_reads', 'misc'
+        """
+
+        line1='1\t11174395\tA\t946\t932\tA:929:2:51:1:915:14:0\n'
+        
+        info1=genotyper_analyzer.parse_varscan_line(line1)
+        #Chrom
+        self.assertEqual(info1[0][0], '1')
+        #position
+        self.assertEqual(info1[0][1],'11174395')
+        #refbase
+        self.assertEqual(info1[0][2],'A')
+        #depth with qfilter (set in readcounts call)
+        self.assertEqual(info1[0][3],'932')
+
     def testGenotyperAnalyzer(self):
         clin_flagged = os.path.join(genotyper_testfiles, 'Clin_Flagged.txt')
         readcount_output = os.path.join(genotyper_testfiles, 'test.genotype_output')
