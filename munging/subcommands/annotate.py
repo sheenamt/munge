@@ -3,6 +3,7 @@ Run annovar to generate standard set of annotations to bring into the DB using a
 """
 import logging
 from collections import namedtuple
+import sys
 import os
 import subprocess
 from munging.utils import munge_path
@@ -65,14 +66,12 @@ def action(args):
     variants_file = args.input_file
     file_pfx = os.path.basename(args.input_file).replace('.ann','')
 
-    ref_gene_annotation = [('refGene', '--geneanno', ['--splicing_threshold','10', '--hgvs']),]
     generic_db_fname = os.path.basename(args.clinically_flagged)
     generic_db_dirname = os.path.dirname(args.clinically_flagged)
 
     #Sometimes all we want is the variant_function output 
     if args.ref_gene_only:
-        annots = [AnnotInfo(*a) for a in ref_gene_annotation]
-
+        annots = [AnnotInfo(dbtype='refGene', anno_type='--geneanno', args=['--splicing_threshold', '10', '--hgvs'], library_dir=args.library_dir)]
     elif args.clin_flagged_only:
         annots = [AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[generic_db_fname, '-filter'], library_dir=generic_db_dirname)]
     else:
