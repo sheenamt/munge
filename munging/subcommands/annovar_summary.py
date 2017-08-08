@@ -69,23 +69,28 @@ log = logging.getLogger(__name__)
 
 def get_reads(headers, data):
     """Parse the reads from
-    GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
+    VARSCAN: GT:GQ:SDP:DP:RD:AD:FREQ:PVAL:RBQ:ABQ:RDF:RDR:ADF:ADR
     OR
-    GT:AD:DP:GQ:PL
+    GATK: GT:AD:DP:GQ:PL
     RD:Depth of reference-supporting bases (reads1)
     AD:Depth of variant-supporting bases (reads2) OR (reads1,reads2)
     ABQ:Average quality of variant-supporting bases (qual2)
     """
     info = dict(zip(headers.split(':'), data.split(':')))
-    #Do not return GATK reads. They are downsampled to 250 
+    if info.keys()==['GT', 'GQ', 'AD', 'DP', 'PL']:
+        #Do not return GATK reads. They are downsampled to 250         
+        return '-1','-1',''
 
-    if 'RD' in info.keys():
+    elif info.keys()==['ADF', 'GT', 'SDP', 'AD', 'GQ', 'ABQ', 'RDR', 'RBQ', 'RD', 'PVAL', 'RDF', 'ADR', 'FREQ', 'DP']:
+        #Return info from varscan data
         return info['RD'],info['AD'],info['ABQ']
-    elif ['GT', 'AD'] == info.keys():
+
+    elif info.keys() == ['GT', 'AD']:
+        #split data from pindel and return
         reads = info['AD'].split(',')
         return reads[0], reads[1], ''
-    else:
-        return '-1','-1',''
+
+
 
 def munge_gene_and_Transcripts(data, RefSeqs):
     """
@@ -166,7 +171,6 @@ def map_headers(fname, header_ids, variant_idx):
     with open(fname, 'rU') as infile:
         reader = csv.reader(infile, delimiter='\t')
         for row in reader:
-
             #adds the value from each position (2,3,4,5,6) to the variant_id
             variant_id = tuple(row[i] for i in variant_idx)
 
