@@ -20,6 +20,7 @@ ASSAYS={'OPX':'OncoPlex',
         'HH':'HotSpot-Heme',
         'STH':'HotSpot-Heme',
         'GLT':'HotSpot-Hereditary',
+        'IDT':'PanCancer',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus'}
 
@@ -35,7 +36,8 @@ ASSAY_CODES={'colo':'coloseq',
              'broca-hr':'broca-hr',
              'hh':'hotspot-heme',
              'glt':'hotspot-hereditary',
-             'sth':'hotspot-heme'}
+             'sth':'hotspot-heme',
+             'idt':'pancancer'}
 
 def dict_factory(cursor, row):
     """
@@ -173,6 +175,7 @@ def munge_path(pth):
     """
     Get date, run, project, machine, assay, prep-type from path
     """
+    print 'pth:', pth
     output=multi_split(pth, '/_')
     #Assuming we want YYMMDD_RUN_PROJECT
     if output[-1]=='output':
