@@ -47,6 +47,7 @@ class TestParsers(TestBase):
         sort_order=['5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201','0228T_CON_OPXv4_INT']
         analysis_type='parsers.parse_snp'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.snp_analysis, files)
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
@@ -65,7 +66,9 @@ class TestParsers(TestBase):
         variant_keys = []
         sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.cnv_gene_analysis, files)
         analysis_type='parsers.parse_cnv_gene'
+        
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log'])
@@ -80,6 +83,7 @@ class TestParsers(TestBase):
         sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
         analysis_type='parsers.parse_cnv_exon'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.cnv_exon_analysis, files)
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T_Log', '5437_NA12878_Log', '6037_NA12878_Log'])
@@ -94,6 +98,8 @@ class TestParsers(TestBase):
         sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
         analysis_type='parsers.parse_quality'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.quality_analysis, walker(testfiles))  
+
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(fieldnames, ['MEAN_TARGET_COVERAGE', '0228T','5437_NA12878','6037_NA12878'])
@@ -108,6 +114,7 @@ class TestParsers(TestBase):
         sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
         analysis_type='parsers.parse_pindel'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.pindel_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T', '5437_NA12878', '6037_NA12878','Count'])
@@ -122,6 +129,7 @@ class TestParsers(TestBase):
         sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
         analysis_type='parsers.parse_clin_flagged'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.genotype_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants'])
@@ -171,6 +179,7 @@ class TestParsers(TestBase):
         sort_order=['6037_E05_OPXv4_NA12878_HA0201','0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013']
         analysis_type='parsers.parse_msi_flagged'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.genotype_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['6037_NA12878_Variants|Total', '6037_NA12878_Status', '0228T_Variants|Total', '0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_Status'])
@@ -189,6 +198,7 @@ class TestParsers(TestBase):
         sort_order=['6037_E05_OPXv4_NA12878_HA0201','0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013']
         analysis_type='parsers.parse_glt_flagged'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.genotype_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys,sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['6037_NA12878_Variants|Total', '6037_NA12878_Status', '0228T_Variants|Total', '0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_Status'])
@@ -207,6 +217,7 @@ class TestParsers(TestBase):
         sort_order=['6037_E05_OPXv4_NA12878_HA0201','0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013']
         analysis_type='parsers.parse_hotspot_flagged'
         files = ifilter(filters.any_analysis, walker(testfiles))  
+        files = filter(filters.genotype_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys,sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['6037_NA12878_Variants|Total', '6037_NA12878_Status', '0228T_Variants|Total', '0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_Status'])
