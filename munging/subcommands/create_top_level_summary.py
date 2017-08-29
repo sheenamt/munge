@@ -39,10 +39,18 @@ def action(args):
     sort_order = [x['barcode_id'] for x in csv.DictReader(args.pipeline_manifest)]
     files = ifilter(filters.any_analysis, walker(args.path))
     if args.type == 'indel':
+        files = filter(filters.indel_analysis, files)
         parser_type = 'snp'
+        analysis_type='_'.join(['parsers.parse',parser_type])
+    elif args.type in [ 'msi_flagged', 'clin_flagged','hotspot_flagged', 'glt_flagged']:
+        files = filter(filters.genotype_analysis, files)
+        parser_type = args.type
+        analysis_type='_'.join(['parsers.parse',parser_type])        
     else:
         parser_type = args.type
-    analysis_type='_'.join(['parsers.parse',parser_type])
+        analysis_type='_'.join(['parsers.parse',parser_type])
+        files = filter(filters.parser_type, files)
+
     print "analysis type:",analysis_type
     chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
     specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
