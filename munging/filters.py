@@ -18,12 +18,18 @@ def snp_analysis(pth):
     """
     return pth.fname.split('.')[-2] in set(['SNP_Analysis'])
 
+def indel_analysis(pth):
+    """
+    True only for pfx.Analysis.{txt,csv}
+    """
+    return pth.fname.split('.')[-2] in set(['INDEL_Analysis'])
+
 def only_analysis(pth):
     """
     True only for pfx_Analysis.{txt,csv}
     """
 
-    return pth.fname.split('_')[-2] not in set(['CNV', 'Genotype', 'Pindel', 'SV', 'QC', 'Quality', 'Breakdancer', 'quality', 'genotype','Gene', 'Exon', 'MSI', 'Ethnicity'])
+    return pth.fname.split('_')[-2] not in set(['CNV', 'Genotype', 'Pindel', 'SV', 'QC', 'Quality', 'Breakdancer', 'quality', 'genotype','Gene', 'Exon', 'MSI', 'Ethnicity','INDEL'])
 
 def cnv_gene_analysis(pth):
     """
