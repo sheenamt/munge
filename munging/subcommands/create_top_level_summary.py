@@ -49,7 +49,8 @@ def action(args):
     else:
         parser_type = args.type
         analysis_type='_'.join(['parsers.parse',parser_type])
-        files = filter(filters.parser_type, files)
+        filter_type = parser_type+'_analysis'
+        files = filter(getattr(filters, filter_type), files)
 
     print "analysis type:",analysis_type
     chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
