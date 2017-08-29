@@ -39,7 +39,7 @@ def parse_quality_metrics(fname):
 
 def parse_quality(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """ Parse the sample quality analysis file, from hs_metrics"""
-    files = filter(filters.quality_analysis, files)
+
     variant_keys = ['MEAN_TARGET_COVERAGE']
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
@@ -63,7 +63,6 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys, sort_ord
 
 def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
@@ -87,7 +86,6 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sor
 
 def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
@@ -125,7 +123,6 @@ def parse_msi_flagged(files, specimens, annotation, prefixes, variant_keys, sort
 
 def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
@@ -168,8 +165,6 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
 
 def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the Genotype output, which is the reads of clin_flagged found"""
-
-    files = filter(filters.genotype_analysis, files)
     variant_keys = ['Position','Ref_Base','Var_Base' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
@@ -212,8 +207,6 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort
 
 def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the pindel analysis file, give total counts of samples with site"""
-
-    files = filter(filters.pindel_analysis, files)
     variant_keys = ['Position', 'Gene']
     #Other annotation to keep 
     annotation_headers = [
@@ -252,7 +245,6 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_orde
 
 def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the snp output file, give ref|var read counts per sample"""
-    files = filter(filters.snp_analysis, files)
     variant_keys = ['Position', 'Ref_Base', 'Var_Base']
     annotation_headers = [
         'Gene',
@@ -298,16 +290,15 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
     #Update the specimen dict for this variant, count samples present
     for key, value in specimens.iteritems():
         specimens[key]['Count']=len(value)
-
     #Add 'Count' to prefixes for correct dict zipping/printing    
     prefixes.append('Count')
     fieldnames = variant_keys + annotation_headers + prefixes
+
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
 
 def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the cnv_exon output, give ave_log_ratio"""
-    files = filter(filters.cnv_exon_analysis, files)
     variant_keys = ['Position', 'Gene' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
@@ -334,7 +325,6 @@ def parse_cnv_exon(files, specimens, annotation, prefixes, variant_keys, sort_or
 
 def parse_cnv_gene(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the cnv_genes output, give ave_log_ratio"""
-    files = filter(filters.cnv_gene_analysis, files)
     variant_keys = ['Position', 'Gene' ]
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
