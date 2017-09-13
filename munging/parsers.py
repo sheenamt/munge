@@ -207,12 +207,11 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort
 
 def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the pindel analysis file, give total counts of samples with site"""
-    variant_keys = ['Position', 'Gene']
+    variant_keys = ['Position', 'Gene', 'Size']
     #Other annotation to keep 
     annotation_headers = [
         'Gene_Region',
         'Event_Type',
-        'Size',
         'Transcripts'
         ]
     for sample in sort_order:
@@ -233,7 +232,6 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_orde
                     except KeyError:
                         specimens[variant][pfx['mini-pfx']] = row['Reads']
                     annotation[variant] = row
-
     #Update the specimen dict for this variant, count samples present
     for key, value in specimens.iteritems():
         specimens[key]['Count']=len(value)
