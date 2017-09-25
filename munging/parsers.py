@@ -224,6 +224,7 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys):#SNP Specifi
         'Gerp',
         'UW_Freq',
         'UW_Count',
+        'UW_DEC_p',
         '1000g_ALL',
         'EVS_esp6500_ALL',
         '1000g_AMR',

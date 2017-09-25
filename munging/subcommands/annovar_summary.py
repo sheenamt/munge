@@ -59,9 +59,9 @@ file_types = {
                                  17: 'Reads2'},
                                 [2, 3, 4, 5, 6]),
     'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'uw_dec_p_values.csv': ({1: 'UW_DEC_p'}, [2, 3, 4, 5, 6]),
 }
 log = logging.getLogger(__name__)
-
 
 def get_reads(headers, data):
     """Parse the reads from
@@ -291,6 +291,7 @@ def action(args):
         'Clinically_Flagged',
         'Variant_Type',
         'UW_Freq',
+        'UW_DEC_p',
         'Filter',
         '1000g_ALL',
         'EVS_esp6500_ALL',        
@@ -378,6 +379,7 @@ def action(args):
         data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
+        data['UW_DEC_p'] = data.get('UW_DEC_p') or -1
         data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
         data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
         data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
