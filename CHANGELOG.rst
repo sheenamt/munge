@@ -1,6 +1,11 @@
 Changes for Munge
 ================
 
+v3.8
+====
+ * munge annovar_summary updated
+  * UW_DEC_p value included in SNP tab and top level output
+ 
 v2.0.1
 ====
  * munge quality_metrics updated:
