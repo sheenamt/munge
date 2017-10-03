@@ -214,12 +214,11 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_orde
     """Parse the pindel analysis file, give total counts of samples with site"""
 
     files = filter(filters.pindel_analysis, files)
-    variant_keys = ['Position', 'Gene']
+    variant_keys = ['Position', 'Gene', 'Size']
     #Other annotation to keep 
     annotation_headers = [
         'Gene_Region',
         'Event_Type',
-        'Size',
         'Transcripts'
         ]
     for sample in sort_order:
