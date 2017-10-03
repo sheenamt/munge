@@ -23,13 +23,16 @@ params = {'author': 'Sheena Todhunter',
           'package_dir': {'munging': 'munging'},
           'scripts': ['munge'],
           'version': __version__,
+          'setup_requires': 'numpy>=1.10.1',
           'install_requires': [
-              'numpy==1.10.1',
-              'pandas==0.17.1',
-              'wsgiref==0.1.2',
+              'pandas>=0.17.1',              
+              'numpy>=1.10.1',
+              'natsort>=5.0.2',
+              'suds==0.4',
+              'XlsxWriter==0.9.6',
+              'xlwt==0.7.5',
               'xlrd==0.9.3',
-              'xlwt==0.7.5'        
-              ]
+          ]
       }
 
 setup(**params)

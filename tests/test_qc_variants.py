@@ -22,7 +22,6 @@ control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 analysis_testfiles = path.join(config.datadir, 'analysis_files')
-load_list = path.join(config.datadir, 'loadlist')
 
 control ='5437_E05_OPXv4_NA12878_MA0013'
 NM_dict = {

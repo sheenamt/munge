@@ -1,6 +1,6 @@
 Position	Ref_Base	Var_Base	Clinically_Flagged	Valid_Reads	Reference_Reads	Variant_Reads
 chr2:215657138	A	G	BARD1  c.247T>C  p.C83R Disrupts RING finger  breast/ovca risk	65	65	0
-chr2:215661788	C	T	BARD1 c.212G>A  p.C71Y Disrupts RING finger  breast/ovca risk	264	262	0
+chr2:215661788	C	T	BARD1 c.212G>A  p.C71Y Disrupts RING finger  breast/ovca risk	264	2	262
 chr1:115256528	T	G	NRAS p.Q61H Used to select MEK inhibitors in melanoma.  Probable resistance to EGFR inhibitors	250	249	1
 chr1:115256528	T	A	NRAS Q61H Used to select MEK inhibitors in melanoma.  Probable resistance to EGFR inhibitors	250	249	0
 chr1:115256529	T	A	NRAS Q61L  Used to select MEK inhibitors in melanoma.  Probable resistance to EGFR inhibitors	250	250	0
