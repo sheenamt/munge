@@ -22,7 +22,6 @@ control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
 analysis_testfiles = path.join(config.datadir, 'analysis_files')
-load_list = path.join(config.datadir, 'loadlist')
 
 control ='5437_E05_OPXv4_NA12878_MA0013'
 NM_dict = {
@@ -65,13 +64,13 @@ class TestXlsmaker(TestBase):
         """
         Rename the analysis files for workbook
         """
-        tab = '10_SNP_Indel'
+        tab = '10_SNP'
         filetype = 'Analysis'
         files = []
         files.append(path.join(summary_testfiles, '{}.SNP_Analysis.txt'.format(control)))
         files.append(path.join(summary_testfiles, '{}.Quality_Analysis.txt'.format(control)))
         data, fname = xlsmaker.process_files(files, tab, filetype)
-        self.assertEqual(data, '10_SNP_Indel')
+        self.assertEqual(data, '10_SNP')
         self.assertEqual(fname, 'testfiles/annovar_summary/{}.SNP_Analysis.txt'.format(control))
         self.assertNotEqual(fname, 'testfiles/annovar_summary/{}.Quality_Analysis.txt'.format(control))
 

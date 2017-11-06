@@ -15,17 +15,12 @@ pd.options.display.width = 180
 def build_parser(parser):
     parser.add_argument('clin_flagged', 
                         help='A required input file')
-    parser.add_argument('specimen_folder',
-                        help='A required specimen ID folder')
-    parser.add_argument('varscan',
-                        help='Absolute path to varscan jar file')
+    parser.add_argument('readcount_output',
+                        help='Output of varscan readcounts function')
     parser.add_argument('output', type=argparse.FileType('w'),
                         help='path and name of output to write',
                         default=sys.stdout)
-    parser.add_argument('--min_coverage', default=8, type=int,
-                        help='Minimum read depth at a position to make a call')
-    parser.add_argument('--min_base_qual', default=30, type=int,
-                        help='Minimum read depth at a position to make a call')
+
 def format_indels(series):
     """
     Varscan requires specially formated variant list where
@@ -72,18 +67,7 @@ def format_indels(series):
                           series['Var_Base'],
                           series['Clinically_Flagged']],
                          index=index_cols)
-
-
  
-def run_varscan_readcounts(mpileup, varscan, genotype_positions, genotype_calls, min_qual, min_coverage):
-    """ 
-    Run the varscan readcounts function
-    """
-
-    cmd = ['java', '-jar', varscan, 'readcounts', mpileup, '--variants-file', genotype_positions, '--min-base-qual', str(min_qual), '--min-coverage', str(min_coverage), '--output-file', genotype_calls]
-    varscan_readcounts = subprocess.Popen(cmd)
-    varscan_readcounts.wait()
-
 def parse_varscan_line(line):
     """
     Parse each varscan line into 3 namedtupeles:
@@ -97,17 +81,25 @@ def parse_varscan_line(line):
 
     #Split the line by tabs
     sp = line.strip('\n').split('\t')
-    # the first three entries are position info
+    # the first three entries are position info, 4th is the depth for minimum quality asked for at readcounts program call
     position = Position(sp[0], sp[1], sp[2], sp[4])
     # column 5 is the reference info, has an extra useless column, is colon delimited
     ref_call = Reference(*sp[5].split(':'))
-    # the variant we specifically asked info for is in columns 6-12, space delmited
-    query_variant = Variant(*sp[6:13])
     # the rest of the columns have more variants, in the same format as the ref info without the extra useless column , each colon delimited
-    candidates = [s.split(':') for s in sp[13:]]
-    variants =[Variant(*var) for var in candidates if len(var) > 6]
-    # add query variant to list of variants
-    variants.append(query_variant)
+    #If there is only a reference call, sp[6] will be empty string
+    if len(sp[6]) > 6:
+        #If no specific variant was asked for, all variants have colon delimited info, split with tabs
+        if ':' in sp[6]:
+            candidates = [s.split(':') for s in sp[6:]]
+        #If a specific variant was asked for, it will be columns 6:13, tab delimited
+        else:
+            query_variant = Variant(*sp[6:13])
+            candidates = [s.split(':') for s in sp[13:]]
+            candidates.append(query_variant)
+            #print candidates
+        variants =[Variant(*var) for var in candidates if len(var) > 6]
+    else:
+        variants = []
     return (position, {'variants': variants, 'reference': ref_call})
 
     
@@ -119,30 +111,14 @@ def action(args):
     #set chr to be a string. 
     flagged_variants['chrom'] = flagged_variants['chrom'].astype('str')
 
-    #setup the sample files. 
-    sample_path = args.specimen_folder
-    sample_id = os.path.basename(sample_path)
-
-    #mpileup that readcounts runs on 
-    mpileup = os.path.join(sample_path, sample_id+'.mpileup')
-
-    #input file for varscan, lists postions to call variants at
-    genotype_positions = os.path.join(sample_path,sample_id+'.genotype_input')
-
     #output file from varscan readcounts 
-    genotype_calls=os.path.join(sample_path,sample_id+'.genotype_output') 
+    genotype_calls=args.readcount_output
 
     #final analysis file
     genotype_analysis=args.output
 
     #Process the clinically flagged positions, format for varscan readcounts function    
     varscan_format_variants = flagged_variants.apply(format_indels, axis = 1)
-
-    var_cals = ['chrom','varscan_start','varscan_ref','varscan_variant']
-    varscan_format_variants.to_csv(genotype_positions, index=False, columns = var_cals, header=None,sep='\t')
-
-    #Run varscan readcount, creates output file we process next
-    run_varscan_readcounts(mpileup, args.varscan, genotype_positions, genotype_calls, args.min_base_qual, args.min_coverage)
 
     #parse the varscan output into preferred format 
     reader = open(genotype_calls, 'rU')

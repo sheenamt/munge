@@ -1,0 +1,4 @@
+run_number,barcode_id,project,assay,sample_type,forward_read,reverse_read
+MB0018,6037_E05_OPXv4_NA12878_HA0201,GEN0110-STHv1,STHv1,S,,
+MB0018,0228T_CON_OPXv4_INT,GEN0110-STHv1,STHv1,HC,,
+MB0018,5437_E05_OPXv4_NA12878_MA0013,GEN0110-STHv1,STHv1,S,,

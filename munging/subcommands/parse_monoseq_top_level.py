@@ -2,46 +2,43 @@
 """
 import os
 import csv
-import re
 import sys
-import copy
 import argparse
 import collections
-from itertools import count, groupby, chain, ifilter , izip_longest
-from operator import itemgetter
-
+from itertools import ifilter
+import pandas as pd
 from munging import filters
 from munging.utils import walker, munge_pfx
+from natsort import natsorted
 
 def build_parser(parser):
     parser.add_argument('path',
                         help='Path to analysis files')
-    parser.add_argument('-o','--outfile', type = argparse.FileType('w'),
+    parser.add_argument('pipeline_manifest', type=argparse.FileType('rU'),
+                        help='Path to pipeline manifest, used for ordering output')    
+    parser.add_argument('-o', '--outfile', type = argparse.FileType('w'),
                         default = sys.stdout,
                         help='Name of the output file')
     
 
 def action(args):
-    specimens = collections.defaultdict(dict)
     #Grab all analysis files from the path 
     files = ifilter(filters.any_analysis, walker(args.path))        
-    files = ifilter(filters.polyhunter_analysis, files)
-    #sort the files so that the output in the workbook is sorted 
-    files=sorted(files)
-    annotation_header = set(['Sample',])
-    for pth in files:
-        pfx = munge_pfx(pth.fname)
-        with open(os.path.join(pth.dir, pth.fname)) as fname:
-            reader = csv.DictReader(fname, delimiter='\t')            
-            for key in reader.fieldnames:
-                annotation_header.add(key)
-            for row in reader:
-                specimens[pfx['mini-pfx']]=row
+    files = filter(filters.polyhunter_analysis, files)
+    #    interesting_files = glob.glob("*.csv")
+    df_list = []
+    df = pd.DataFrame()
+    sort_order = [x['barcode_id'] for x in csv.DictReader(args.pipeline_manifest)]
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            data = pd.read_csv(os.path.join(pfx_file.dir, pfx_file.fname), sep='\t')
+            data.index = [pfx['mini-pfx']] * len(data)
+            df = df.append(data)
+    cols=natsorted(df.columns)
+    df.to_csv(args.outfile, sep='\t',na_rep='0',columns=cols)
 
-    fieldnames = sorted(annotation_header, reverse=True)
-    writer = csv.DictWriter(args.outfile, fieldnames = fieldnames,  extrasaction = 'ignore', delimiter = '\t')
-    writer.writeheader()
-    for key, value in specimens.items():
-        row = {'Sample':key}
-        row.update(value)
-        writer.writerow(row)

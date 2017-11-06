@@ -1,0 +1,6 @@
+Total microsatellite loci: 58 
+Total unstable loci: 9 
+Fraction of unstable loci for 0228T_CON_OPXv4_INT: 0.1552 
+Total microsatellite loci: 65 
+Total unstable loci: 1 
+Fraction of unstable loci for 6427_C04_OPXv4_NA12878_HA0214: 0.0154 

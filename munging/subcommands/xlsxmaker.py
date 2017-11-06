@@ -7,16 +7,11 @@ usage:
 
 """
 import csv
-import argparse
-import sys
 import re
 import os
 
-from xlwt import Workbook, Formula
+from xlsxwriter import Workbook
 from munging.annotation import build_variant_id, multi_split
-
-book = Workbook()
-
 
 def build_parser(parser):
     parser.add_argument(
@@ -27,8 +22,7 @@ def build_parser(parser):
         help='Input files')
     parser.add_argument(
         '-o', '--outfile',
-        help='Output file', default=sys.stdout,
-        type=argparse.FileType('w'))
+        help='Output file', required=True)
 
 
 def float_if_possible(strg):
@@ -102,25 +96,25 @@ def process_files(infiles, tab, filetype):
 
             except IndexError:
                 continue
+
 def variant_id_link(Reader, sheet):
     """
     Process analysis file to add link column
     """
-
     for rowx, row in enumerate(Reader):
         row.insert(0, build_variant_id(row))
         for colx, value in enumerate(row):
             if colx == 0 and not value == 'link':
                 if len(value) < 198:
-                    sheet.write(rowx, colx, Formula('HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","link")'.format(value)))
+                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","link")'.format(value))
             else:
                 sheet.write(rowx, colx, float_if_possible(value))
 
-def write_workbook(sheet_name, fname):
+def write_workbook(sheet_name, book, fname):
     """
     Write analysis file as sheet in workbook
     """
-    sheet = book.add_sheet(sheet_name)
+    sheet = book.add_worksheet(sheet_name)    
     Reader = csv.reader(open(fname, 'rU'), delimiter='\t')
     if sheet_name == '10_SNP':
         Reader = variant_id_link(Reader, sheet)
@@ -129,9 +123,9 @@ def write_workbook(sheet_name, fname):
             for colx, value in enumerate(row):
                 sheet.write(rowx, colx, float_if_possible(value))
 
-
 def action(args):
 
+    book = Workbook()
     filetype = args.type
     (infiles, ) = args.infiles
     if filetype == 'Analysis':
@@ -145,7 +139,7 @@ def action(args):
                 #Find file in infiles
                 sheet_name, fname = process_files(infiles, tab, filetype)
                 print sheet_name, fname
-                write_workbook(sheet_name, fname)
+                write_workbook(sheet_name, book, fname)
             except TypeError:
                 print "Tab %s not processed" % tab
     elif filetype == 'Combined':
@@ -156,5 +150,7 @@ def action(args):
                 sheet_name = f_short_name.split('Combined_')
                 sheet_name = '_'.join(sheet_name[1:30])
                 print sheet_name, fname
-                write_workbook(sheet_name, fname)
-    book.save(args.outfile)
+                write_workbook(sheet_name, book, fname)
+    book.filename=args.outfile
+
+    book.close()
