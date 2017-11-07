@@ -51,6 +51,8 @@ snp_file_types = {
     'merged.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'merged.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'merged.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'uw_dec_p_values.csv': ({1: 'UW_DEC_p'}, [2, 3, 4, 5, 6]),
+
 }
 
 indel_file_types = {
@@ -63,7 +65,6 @@ indel_file_types = {
                                  17: 'Reads2'},
                                 [2, 3, 4, 5, 6]),
     'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
-    'uw_dec_p_values.csv': ({1: 'UW_DEC_p'}, [2, 3, 4, 5, 6]),
 }
 log = logging.getLogger(__name__)
 
@@ -185,13 +186,15 @@ def get_allele_freq(data):
     """
     Return allele frequency of var_reads/ref_reads
     """
-
-    if int(data['Var_Reads']) <= 0 and int(data['Ref_Reads']) <= 0:
+    try:
+        if int(data['Var_Reads']) <= 0 and int(data['Ref_Reads']) <= 0:
+            freq = 'NA'
+        else:
+            total = int(data['Var_Reads']) + int(data['Ref_Reads'])
+            freq = int(data['Var_Reads']) / float(total)
+            freq = "{0:.2f}".format(freq)
+    except KeyError:
         freq = 'NA'
-    else:
-        total = int(data['Var_Reads']) + int(data['Ref_Reads'])
-        freq = int(data['Var_Reads']) / float(total)
-        freq = "{0:.2f}".format(freq)
     return freq
 
 def munge_ljb_scores(data):
