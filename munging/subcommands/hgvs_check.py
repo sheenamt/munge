@@ -39,10 +39,8 @@ def build_parser(parser):
                         help='Name of column with protein HGVS annotation')
     parser.add_argument('--server', type=str, default='redundant',
                         help='Specify internal, external, or redundant for server to use (redundant tries internal then external)')
-    parser.add_argument('--require_ssl', action='store_true',
-                        help='Requires internal server connections are done through SSL. Always true for external connections.')
 
-def get_mutalyzer_connection(url, require_ssl=True):
+def get_mutalyzer_connection(url):
     ''' Returns a service object if successful, otherwise returns a boolean value
         False.'''
     try:
@@ -53,29 +51,20 @@ def get_mutalyzer_connection(url, require_ssl=True):
         log.error(e)
         return False
 
-def setup_mutalyzer_connection(server, require_ssl=False):
+def setup_mutalyzer_connection(server):
     ''' Contains the logic for which server to connect to.
         Returns a connection object if successful, a boolean
         False value otherwise. May need to test object type in calling 
         code. 
-        Note: some clients do not recognize UW certs - thus the option for
-        ignoring SSL warnings when contacting internal UW servers.'''
+        Note: some clients do not recognize UW certs - thus
+        ignoring SSL warnings when contacting internal UW server'''
     if server=='internal':
         ''' Establish internal server connection '''
-        conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL, require_ssl)
+        # Do not require SSL for internal server - UW certs sometimes not recognized
+        ssl._create_default_https_context = ssl._create_unverified_context
+        conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
         if not isinstance(conn, bool):
             return conn
-        elif not require_ssl:
-            # Assume invalid connection and attempt to connect to internal ignoring SSL warning
-            # UW cert sometimes registers as bad...bypass warning (only for internal server)
-            ssl._create_default_https_context = ssl._create_unverified_context
-            conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
-            if not isinstance(conn, bool):
-                log.info("Successful connection to internal server established (Any SSL warnings ignored)")
-                return conn
-            else:
-                log.error("Failed to connect to internal server (ignored SSL warning), returning input file")
-                return False
         else:
             log.error("Failed to connect to internal server, returning input file")
             return False
@@ -92,29 +81,23 @@ def setup_mutalyzer_connection(server, require_ssl=False):
 
     else:
         ''' assume redundant - try internal, external, and internal ignore SSL if flagged.'''
-        # Trying internal
-        conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
-        if not isinstance(conn, bool):
-            log.info("Successful connection to internal server established.")
-            return conn
+        # Try to establish connections to both external and internal (ignoring internal SSL warning)
+        external_conn = get_mutalyzer_connection(EXTERNAL_MUTALYZER_URL)
+
+        # Create HTTPS context to ignore SSL warning when trying internal server
+        ssl._create_default_https_context = ssl._create_unverified_context
+        internal_conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
+
+        # If internal was successful use it, otherwise use external
+        if not isinstance(internal_conn, bool):
+            log.info("Successful connection to internal server established (Ignored SSL warning).")
+            return internal_conn
+        elif not isinstance(external_conn, bool):
+            log.info("Successful connection to external server established.")
+            return external_conn
         else:
-            # Try to establish connections to both external and internal (ignoring internal SSL warning)
-            external_conn = get_mutalyzer_connection(EXTERNAL_MUTALYZER_URL)
-
-            # Create HTTPS context to ignore SSL warning when trying internal server
-            ssl._create_default_https_context = ssl._create_unverified_context
-            internal_conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
-
-            # If internal was successful use it, otherwise use external
-            if not isinstance(internal_conn, bool):
-                log.info("Successful connection to internal server established (Ignored SSL warning).")
-                return internal_conn
-            elif not isinstance(external_conn, bool):
-                log.info("Successful connection to external server established.")
-                return external_conn
-            else:
-                log.error("Internal and External connections failed...returning input file.")
-                return False
+            log.error("Internal and External connections failed...returning input file.")
+            return False
 
 def query_mutalyzer(conn, batch_file_entries):
     ''' Query mutalyzer'''
@@ -173,8 +156,7 @@ def action(args):
     lookup_count = 0
 
     server = args.server
-    require_ssl = args.require_ssl
-    conn = setup_mutalyzer_connection(server, require_ssl)
+    conn = setup_mutalyzer_connection(server)
 
     # If we cannot establish a connection we simply return the original file
     if isinstance(conn, bool) and conn==False:
