@@ -19,13 +19,13 @@ hgvs_testfiles = os.path.join(config.datadir, 'hgvs_files')
 control_sample = '6037_E05_OPXv4_NA12878_HA0201'
 
 
-class TestHGVSCheck(TestBase):
+class TestHGVSCheckInternal(TestBase):
     """
     Test the hgvs_check script, which uploads HGVS annotations to mutalyzer.nl's
     batch web service.
     """
     def setUp(self):
-        url = hgvs_check.MUTALYZER_URL
+        url = hgvs_check.INTERNAL_MUTALYZER_URL
         self.conn = hgvs_check.get_mutalyzer_connection(url)
 
     def testGetMutalyzerConnection(self):
