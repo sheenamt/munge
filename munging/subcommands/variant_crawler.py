@@ -44,7 +44,7 @@ def get_info(fname):
 
 def action(args):
     writer = csv.DictWriter(args.outfile,
-                            fieldnames = ['chromosome', 'start', 'end', 'ref_base', 'var_base', 'Clinically_Flagged', 'Protein_Change'],
+                            fieldnames = ['chromosome', 'start', 'end', 'ref_base', 'var_base', 'Clinically_Flagged'],
                             delimiter='\t',
                             extrasaction = 'ignore')
     fname=args.infile

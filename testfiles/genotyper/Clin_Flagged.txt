@@ -1,6 +1,8 @@
-17	37881002	37881002	-	GGCTCCCCA	ERBB2 (HER2) exon 20 insertion probably senstizies to dual EGFR HER2 TKIs in NSCLC
-7	117267766	117267766	C	-	CFTR NM_000492.3 c.3659delC p.Thr1220Lysfs*8 (3659delC)	
-13	20763361	20763363	GAG	-	GJB2: Gap junction protein beta 2 NM_004004.4 c.358_360delGAG p.Glu120del	
-13	20763382	20763382	T	G	GJB2: Gap junction protein beta 2 NM_004004.4 c.339T>G p.Ser113Arg	
-7	117199643	117199645	CAT	-	CFTR NM_000492.3 c.1519_1521delATC p.Ile507del (delta F507)	
+1	11854476	11854476	T	G	MTHFR E429A germline.  Increased response but also increased risk of toxicity in CRC pts on oxaliplatin, capecitabine, 5-FU, leucovorin with GG and GT genotypes.
+2	234668879	234668879	-	AT	UGT1A1 (*28) microsatellite (TA)7 (wild type = 6 repeats). Review in IGV!  Increased risk of toxicity with irinotecan for (TA)7/(TA)7 genotype.  Increased risk of hyperbilirubinemia with nilotinib, also erlotinib should be used with caution
+2	234668879	234668879	-	ATAT	UGT1A1 microsatellite (TA)8 (wild type = 6 repeats). 
 7	117199645	117199647	TCT	-	CFTR NM_000492.3 c.1521_1523delCTT p.Phe508delPhe (delta F508)	
+7	117232267	117232267	A	-	CFTR NM_000492.3 c.2052delA p.Lys684Asnfs*38 (2184delA)
+7	117267766	117267766	C	-	CFTR NM_000492.3 c.3659delC p.Thr1220Lysfs*8 (3659delC)	
+20	31022441	31022441	-	G	ASXL1 Frameshift seen in OPX-0003T
+
