@@ -15,7 +15,6 @@ import time
 import csv
 import sys
 import re
-import pdb
 import ssl
 
 log = logging.getLogger(__name__)
