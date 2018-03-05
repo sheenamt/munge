@@ -17,6 +17,7 @@ import sys
 import re
 import ssl
 
+
 log = logging.getLogger(__name__)
 
 EXTERNAL_MUTALYZER_URL = 'https://mutalyzer.nl/services/?wsdl'
