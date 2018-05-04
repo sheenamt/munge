@@ -109,7 +109,7 @@ def action(args):
     #             refseqs[name]['exonTracker'].insert(int(line['chromStart']), int(line['chromEnd']))
 
     # 4) Print per-gene summary
-    per_refseq_header = ['name_of_refseq_gene','total_bases_targeted','length_of_gene',
+    per_refseq_header = ['gene','refseq','total_bases_targeted','length_of_gene',
                        'fraction_of_gene_covered',
                        'exons_with_any_coverage','total_exons_in_gene']
     per_refseq = open(path.join(out, "per_refseq_summary.csv"), 'w')
