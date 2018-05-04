@@ -8,7 +8,6 @@ import argparse
 
 import numpy as np
 import pysam
-import yaml
 import csv
 
 def build_parser(parser):
