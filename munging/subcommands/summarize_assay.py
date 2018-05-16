@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Description: Given probe reference file and refgene.bed, compute per-gene and summary statistics and output any genes not covered as expected
 """
@@ -11,7 +10,7 @@ from os import path
 def build_parser(parser):
     parser.add_argument('--assay', required=True, help="Assay Reference bed file")
     parser.add_argument('--pref_trans', required=True, help="Gene, RefSeq for assay")
-    parser.add_argument('--refgene', required=True, help="Refgene bed file")
+    parser.add_argument('--refgene', required=True, help="UCSC Refgene data in bed format ")
     parser.add_argument('--outdir', required=False, help="Output directory for summary scripts")
 
 class exonTracker:
@@ -34,9 +33,10 @@ def action(args):
     out = args.outdir if args.outdir else ''
     refseqs = {}
     trans = {}
+
     refgene_header = ['chrom','chromStart','chromEnd','name', 'refseq','score','strand','thickStart',
                       'thickEnd','itemRgb','exonCount','exonSizes','exonStarts'] 
-    probes_header = ['chrom', 'chromStart', 'chromEnd' ]#, 'score', 'strand']
+    probes_header = ['chrom', 'chromStart', 'chromEnd' ]
     pref_trans_header = ['Gene', 'RefSeq']
 
     # 1) Read refGene.bed into the refseqs dictionary
@@ -83,24 +83,20 @@ def action(args):
     
     intersect_args = ['bedtools', 'intersect', '-wo' ,'-a', merged_probes, '-b', args.refgene]
     intersect = subprocess.Popen(intersect_args, stdout=subprocess.PIPE)
-
     
     # Parse that output, collecting the number of covered bases per-gene, and annotate refseqs dictionary
     # Note: Communicate returns (stdoutdata, stderrdata), stdout is a giant string, not an iterable
     # Also, the last line is just a newline, which must be skipped
     for line in intersect.communicate()[0].split('\n')[:-1]:
         ls = line.split('\t')
-        print(ls)
         refseq = ls[7]          # We pick out the refseq of the gene from refGene that was matched
         overlap = int(ls[-1]) # The '-wo' switch from intersect_args put the amount of overlap here
-        print(overlap)
         refseqs[refseq]['bases_covered'] += overlap
-        print( refseqs[refseq]['refseq'])
         refseqs[refseq]['exonTracker'].insert(int(ls[1]), int(ls[2]))
 
         assert(refseqs[refseq]['bases_covered'] <= int(refseqs[refseq]['chromEnd']) - int(refseqs[refseq]['chromStart']))
 
-    # 4) Print per-gene summary
+    # 4) Print per-refseq summary
     per_refseq_header = ['gene','refseq','total_bases_targeted','length_of_gene',
                        'fraction_of_gene_covered',
                        'exons_with_any_coverage','total_exons_in_gene']
@@ -121,25 +117,32 @@ def action(args):
             #Only count this as a covered gene if it has coverage
             if gene['bases_covered'] > 0:
                 gene_count +=1
-        except KeyError:
-            gene['bases_covered']='RefSeq not found'
 
-        exons = [exon for exon in refseqs[transcript]['exonTracker'].exons.values()].count(True)
-        outfields = [gene['Gene'], 
-                     gene['RefSeq'],
-                     gene['bases_covered'],
-                     refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart'],
-                     round(float(gene['bases_covered']) /
+            exons = [exon for exon in refseqs[transcript]['exonTracker'].exons.values()].count(True)
+            outfields = [gene['Gene'], 
+                         gene['RefSeq'],
+                         gene['bases_covered'],
+                         refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart'],
+                         round(float(gene['bases_covered']) /
                            float(refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),3),
-                     exons,
-                     len(refseqs[transcript]['exonTracker'].exons)]
+                         exons,
+                         len(refseqs[transcript]['exonTracker'].exons)]
+            total_coding_bases += gene['bases_covered']
+            total_exons += exons
+
+        #If this refseq isn't found, we should state that, cleanly 
+        except KeyError:
+            outfields = [gene['Gene'], 
+                         gene['RefSeq'],
+                         'RefSeq not found',
+                         '','','','']
+
 
         per_refseq.write('\t'.join([str(field) for field in outfields]) + '\n')
 
-        total_coding_bases += gene['bases_covered']
-        total_exons += exons
 
-    # Calculate total regions covered 
+
+    #5)  Calculate total regions covered 
     def calulate_total_covered(probes):
         '''calculate the total regions covered by using the merged probes file'''
         total_cov=0
@@ -156,7 +159,7 @@ def action(args):
     non_intersect_args = ['bedtools', 'intersect', '-v' ,'-a', merged_probes, '-b', args.refgene]
     non_intersect = subprocess.Popen(non_intersect_args, stdout=subprocess.PIPE)
     
-    # 5) Print overall summary
+    # 6) Print overall summary
     overall = open(path.join(out, "overall_summary.txt"),'w')
 
     # Note: The total bases and exon counts are probably slightly overestimated, since refseqs can
