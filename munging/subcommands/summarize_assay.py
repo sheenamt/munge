@@ -1,5 +1,6 @@
 """
-Description: Given probe reference file and refgene.bed, compute per-gene and summary statistics and output any genes not covered as expected
+Given probe reference file, list of preferred transcripts and refgene.bed, 
+compute per-refseq and summary statistics and output any genes not covered as expected
 Requires refgene data in bed format, use refgene_to_bed script to create
 """
  
