@@ -1,5 +1,5 @@
 """
-Description: convert UCSC refgene.txt files to BED format 
+Description: convert UCSC refgene.txt files to BED format, for use in summarize_assay script
 """
  
 import os
