@@ -12,7 +12,15 @@ dependencies
 
 * Python 2.7.x
 * A UNIX-like operating system (Linux, OS X). Not tested on Windows.
-* BEDtools
+* BEDtools (for summarize_assay command only)
+* PySam (for count_umi only)
+* Numpy 
+* Natsort
+* Pandas
+* XlsxWriter
+* suds
+* xlwt
+
 
 installation
 ============
