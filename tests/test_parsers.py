@@ -52,7 +52,8 @@ class TestParsers(TestBase):
         self.assertListEqual(prefixes,['5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
         self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Gene', 'Variant_Type',
                                           'Transcripts', 'Clinically_Flagged', 'Cosmic', 'Segdup', 
-                                          'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 'UW_Freq', 'UW_Count',
+                                          'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 
+                                          'UW_Freq', 'UW_Count', 'UW_DEC_p',
                                           '1000g_ALL', 'EVS_esp6500_ALL', '1000g_AMR', 'EVS_esp6500_AA', '1000g_EUR',
                                           'EVS_esp6500_EU', '1000g_SAS','1000g_EAS', '1000g_AFR', 'ADA_Alter_Splice', 'RF_Alter_Splice', 
                                           '5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
@@ -111,8 +112,8 @@ class TestParsers(TestBase):
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T', '5437_NA12878', '6037_NA12878','Count'])
-        self.assertListEqual(fieldnames, ['Position', 'Gene', 'Gene_Region', 'Event_Type', 'Size', 'Transcripts', '0228T', '5437_NA12878', '6037_NA12878','Count'])
-        self.assertListEqual(variant_keys, ['Position', 'Gene'])
+        self.assertListEqual(fieldnames, ['Position', 'Gene', 'Size', 'Gene_Region', 'Event_Type','Transcripts', '0228T', '5437_NA12878', '6037_NA12878','Count'])
+        self.assertListEqual(variant_keys, ['Position', 'Gene', 'Size'])
         
     def testClinFlaggedParser(self):
         specimens = defaultdict(dict)
