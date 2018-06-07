@@ -6,7 +6,7 @@ Requires refgene data in bed format, use refgene_to_bed script to create
  
 import sys
 import subprocess
-from csv import DictReader
+from csv import DictReader, DictWriter
 from os import path
  
 def build_parser(parser):
@@ -34,7 +34,7 @@ class exonTracker:
 def action(args):
     out = args.outdir if args.outdir else ''
     refseqs = {}
-    trans = {}
+    pref_trans = {}
 
     refgene_header = ['chrom','chromStart','chromEnd','name', 'refseq','score','strand','thickStart',
                       'thickEnd','itemRgb','exonCount','exonSizes','exonStarts'] 
@@ -102,9 +102,8 @@ def action(args):
     per_refseq_header = ['gene','refseq','total_bases_targeted','length_of_gene',
                        'fraction_of_gene_covered',
                        'exons_with_any_coverage','total_exons_in_gene']
-    per_refseq = open(path.join(out, "per_refseq_summary.txt"), 'w')
-    per_refseq.write('\t'.join(per_refseq_header) + '\n')
-
+    per_refseq_writer = DictWriter(open(path.join(out, "per_refseq_summary.txt"), 'w'), fieldnames=per_refseq_header,  delimiter='\t')
+    per_refseq_writer.writeheader()
     # While we're looping through refseqs, count the total bases, exons, and refseqs covered
     total_coding_bases = 0
     total_exons = 0
@@ -121,26 +120,54 @@ def action(args):
                 gene_count +=1
 
             exons = [exon for exon in refseqs[transcript]['exonTracker'].exons.values()].count(True)
-            outfields = [gene['Gene'], 
-                         gene['RefSeq'],
-                         gene['bases_covered'],
-                         refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart'],
-                         round(float(gene['bases_covered']) /
-                           float(refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),3),
-                         exons,
-                         len(refseqs[transcript]['exonTracker'].exons)]
+            outfields = dict([('gene', gene['Gene']), 
+                              ('refseq', gene['RefSeq']),
+                              ('total_bases_targeted', gene['bases_covered']),
+                              ('length_of_gene',refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),
+                              ('fraction_of_gene_covered',round(float(gene['bases_covered']) /
+                                float(refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),3)),
+                              ('exons_with_any_coverage',exons),
+                              ('total_exons_in_gene',len(refseqs[transcript]['exonTracker'].exons))])
             total_coding_bases += gene['bases_covered']
             total_exons += exons
 
         #If this refseq isn't found, we should state that, cleanly 
         except KeyError:
-            outfields = [gene['Gene'], 
+            outfields = dict([gene['Gene'], 
                          gene['RefSeq'],
                          'RefSeq not found',
-                         '','','','']
+                         '','','',''])
+            outfields = dict([('gene', gene['Gene']), 
+                              ('refseq', gene['RefSeq']),
+                              ('total_bases_targeted', 'RefSeq not found'),
+                              ('length_of_gene','NA'),
+                              ('fraction_of_gene_covered','NA'),
+                              ('exons_with_any_coverage','NA'),
+                              ('total_exons_in_gene','NA')])
 
+        pref_trans[gene['Gene']] = outfields
 
-        per_refseq.write('\t'.join([str(field) for field in outfields]) + '\n')
+    for transcript,data in refseqs.iteritems():
+        if data['name'] in pref_trans.keys():
+            continue
+        else:
+            if data['bases_covered'] > 0:
+                gene_count +=1
+                exons = [exon for exon in data['exonTracker'].exons.values()].count(True)
+                outfields = dict([('gene', data['name']), 
+                                  ('refseq', transcript),
+                                  ('total_bases_targeted', data['bases_covered']),
+                                  ('length_of_gene',data['chromEnd'] - data['chromStart']),
+                                  ('fraction_of_gene_covered',round(float(data['bases_covered']) /
+                                                                    float(data['chromEnd'] - data['chromStart']),3)),
+                                  ('exons_with_any_coverage',exons),
+                                  ('total_exons_in_gene',len(data['exonTracker'].exons))])
+                total_coding_bases += data['bases_covered']
+                total_exons += exons
+                pref_trans[data['name']] = outfields
+
+    for gene,data in sorted(pref_trans.iteritems()):
+        per_refseq_writer.writerow(data)
 
 
 
