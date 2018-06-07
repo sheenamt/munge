@@ -133,10 +133,6 @@ def action(args):
 
         #If this refseq isn't found, we should state that, cleanly 
         except KeyError:
-            outfields = dict([gene['Gene'], 
-                         gene['RefSeq'],
-                         'RefSeq not found',
-                         '','','',''])
             outfields = dict([('gene', gene['Gene']), 
                               ('refseq', gene['RefSeq']),
                               ('total_bases_targeted', 'RefSeq not found'),
