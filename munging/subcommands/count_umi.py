@@ -9,6 +9,8 @@ from bokeh.models import ColumnDataSource,HoverTool
 def build_parser(parser):
     parser.add_argument('bam',
                         help='Path to bam')
+    parser.add_argument('outfile',
+                        help='Path to outfile')
 
 def _get_umi_tag(rec):
     """Handle UMI and duplex tag retrieval.
@@ -47,7 +49,7 @@ def action(args):
     p.add_tools(HoverTool(tooltips=[("#Reads", "@count")]))
 
     #where to generate output and what to call the plot
-    output_file('umi_metrics.html', title='UMI Metrics')
+    output_file(args.outfile, title='UMI Metrics')
 
     #save results
     save(p)
