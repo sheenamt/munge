@@ -14,18 +14,18 @@ import __init__ as config
 log = logging.getLogger(__name__)
 
 
-analysis_testfiles = os.path.join(config.datadir, 'analysis_files')
+analysis_testfiles = os.path.join(config.datadir, '101010_HA0000_OncoPlex1','output')
 hgvs_testfiles = os.path.join(config.datadir, 'hgvs_files')
 control_sample = '6037_E05_OPXv4_NA12878_HA0201'
 
 
-class TestHGVSCheck(TestBase):
+class TestHGVSCheckInternal(TestBase):
     """
     Test the hgvs_check script, which uploads HGVS annotations to mutalyzer.nl's
     batch web service.
     """
     def setUp(self):
-        url = hgvs_check.MUTALYZER_URL
+        url = hgvs_check.INTERNAL_MUTALYZER_URL
         self.conn = hgvs_check.get_mutalyzer_connection(url)
 
     def testGetMutalyzerConnection(self):
@@ -66,7 +66,7 @@ class TestHGVSCheck(TestBase):
             -i testfiles/analysis_files/6037_E05_OPXv4_NA12878_HA0201.SNP_Analysis.txt \
             -o testfiles/hgvs_files/6037_E05_OPXv4_NA12878_HA0201.SNP_Analysis.hgvs_fixed.txt
         """
-        infile = os.path.join(analysis_testfiles, '{}.SNP_Analysis.txt').format(control_sample)
+        infile = os.path.join(analysis_testfiles, '{}','{}.SNP_Analysis.txt').format(control_sample, control_sample)
         outfile = os.path.join(self.mkoutdir(), 'temp.txt')
 
         expected = os.path.join(hgvs_testfiles,

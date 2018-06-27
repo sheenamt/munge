@@ -1,9 +1,9 @@
 """
-Parse variant files from pipeline, 1000G, and Complete Genomics to create QC Variant file
+Parse variant files from pipeline and NIST to create QC Variant file
 
 Usage:
 
-munge qc_variant pipeline_file kg_file Complete_genomics_file -o output file 
+munge qc_variant pipeline_file NIST_file -o output file 
 """
 import argparse
 import csv
@@ -14,10 +14,7 @@ def build_parser(parser):
         'pipeline', type=argparse.FileType('rU'), 
         default=sys.stdin)
     parser.add_argument(
-        'kgfile', type=argparse.FileType('rU'),
-        default=sys.stdin)
-    parser.add_argument(
-        'CGfile', type=argparse.FileType('rU'),
+        'NISTfile', type=argparse.FileType('rU'),
         default=sys.stdin)
     parser.add_argument(
         '-o','--outfile',
@@ -32,32 +29,29 @@ def build_parser(parser):
        #print entire ann row to outfile 
 
 
-def match(pipe, kg, cg):
+def match(pipe, nist):
     """
-    Return list of variants found in all three input files (1000G, Complete Genomes, LMG/OPX-240 output
+    Return list of variants found in all three input files (NIST, LMG/OPX-240 output
     Matches if chrm, start, stop, ref_base, and var_base are the same.
     """
     matchedlist = []
-    for cg_line in cg:
-        for kg_line in kg:    
-            for pipe_line in pipe:    
-                try:
-                    if (cg_line[3:8]==kg_line[3:8]) and (kg_line[3:8]==pipe_line[3:8]):
-                        if cg_line[1:8] not in matchedlist:
-                            matchedlist.append(cg_line[1:8])
-                
-                except IndexError:
-                    print 'Index Error', cg_line, kg_line, pipe_line
-                    continue
+    for nist_line in nist:
+        for pipe_line in pipe:    
+            try:
+                if nist_line[3:8]==pipe_line[3:8]:
+                    if nist_line[1:8] not in matchedlist:
+                        matchedlist.append(nist_line[1:8])
+            except IndexError:
+                print 'Index Error', nist_line, pipe_line
+                continue
     return matchedlist
 
 def action(args):
 
     pipe = list(csv.reader(args.pipeline, delimiter="\t"))
-    kg = list(csv.reader(args.kgfile, delimiter="\t"))
-    cg = list(csv.reader(args.CGfile, delimiter="\t"))
+    nist = list(csv.reader(args.NISTfile, delimiter="\t"))
 
-    output = match(pipe, kg, cg)
+    output = match(pipe, nist)
     
     writer = csv.writer(args.outfile,
                         csv.QUOTE_NONE,

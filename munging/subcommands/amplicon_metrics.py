@@ -7,14 +7,11 @@ munge amplicon_metrics amplicon_bed fastq_dir outdir --top_output $PROJECT.Combi
 """
 import argparse
 import sys
-import csv
 import pandas as pd
-import glob
-import re
 from itertools import ifilter
 from os import path, makedirs
 
-from munging import parsers,filters
+from munging import filters
 from munging.utils import walker
 
 def build_parser(parser):

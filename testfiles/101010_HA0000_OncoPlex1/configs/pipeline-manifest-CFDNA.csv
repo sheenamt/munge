@@ -1,0 +1,4 @@
+run_number,barcode_id,project,assay,sample_type,forward_read,reverse_read
+MB0018,ZD-NA12878-LMG-240-GEN0110-GLTv1,GEN0110-GLTv1,GLTv1,CFDNA,,
+MB0018,A-NA12878-LMG-240-GEN0110-GLTv1,GEN0110-GLTv1,GLTv1,CFDNA,,
+

@@ -15,11 +15,13 @@ import time
 import csv
 import sys
 import re
+import ssl
+
 
 log = logging.getLogger(__name__)
 
-MUTALYZER_URL = 'https://mutalyzer.nl/services/?wsdl'
-
+EXTERNAL_MUTALYZER_URL = 'https://mutalyzer.nl/services/?wsdl'
+INTERNAL_MUTALYZER_URL = 'https://mutalyzer.labmed.uw.edu/services/?wsdl'
 
 def build_parser(parser):
     parser.add_argument('-i', '--infile', type=argparse.FileType('r'), nargs='?',
@@ -35,15 +37,71 @@ def build_parser(parser):
                         help='Name of column with DNA/nucleotide HGVS annotation')
     parser.add_argument('--protein-column-name', type=str, default='p.',
                         help='Name of column with protein HGVS annotation')
+    parser.add_argument('--server', type=str, default='redundant',
+                        help='Specify internal, external, or redundant for server to use (redundant tries internal then external)')
 
+def get_mutalyzer_connection(url):
+    ''' Returns a service object if successful, otherwise returns a boolean value
+        False.'''
+    try:
+        c = Client(url, cache=None)
+        o = c.service
+        return o
+    except Exception as e:
+        log.error(e)
+        return False
 
-def get_mutalyzer_connection(URL):
-    c = Client(URL, cache=None)
-    o = c.service
-    return o
+def setup_mutalyzer_connection(server):
+    ''' Contains the logic for which server to connect to.
+        Returns a connection object if successful, a boolean
+        False value otherwise. May need to test object type in calling 
+        code. 
+        Note: some clients do not recognize UW certs - thus
+        ignoring SSL warnings when contacting internal UW server'''
+    if server=='internal':
+        ''' Establish internal server connection '''
+        # Do not require SSL for internal server - UW certs sometimes not recognized
+        ssl._create_default_https_context = ssl._create_unverified_context
+        conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
+        if not isinstance(conn, bool):
+            return conn
+        else:
+            log.error("Failed to connect to internal server, returning input file")
+            return False
 
+    elif server=='external':
+        ''' Trying external server - only valid SSL connections are accepted.'''
+        conn = get_mutalyzer_connection(EXTERNAL_MUTALYZER_URL)
+        if not isinstance(conn, bool):
+            log.info("Successful connection to external server established.")
+            return conn
+        else:
+            log.error("Failed to connect to external server...returning input file.")
+            return False
+
+    else:
+        ''' assume redundant - try internal, external, and internal ignore SSL if flagged.'''
+        # Try to establish connections to both external and internal (ignoring internal SSL warning)
+        external_conn = get_mutalyzer_connection(EXTERNAL_MUTALYZER_URL)
+
+        # Create HTTPS context to ignore SSL warning when trying internal server
+        ssl._create_default_https_context = ssl._create_unverified_context
+        internal_conn = get_mutalyzer_connection(INTERNAL_MUTALYZER_URL)
+
+        # If internal was successful use it, otherwise use external
+        if not isinstance(internal_conn, bool):
+            log.info("Successful connection to internal server established (Ignored SSL warning).")
+            return internal_conn
+        elif not isinstance(external_conn, bool):
+            log.info("Successful connection to external server established.")
+            return external_conn
+        else:
+            log.error("Internal and External connections failed...returning input file.")
+            return False
 
 def query_mutalyzer(conn, batch_file_entries):
+    ''' Query mutalyzer'''
+    # may need to evaluate efficacy of time calls here
     encoded_data = base64.b64encode("\n".join(batch_file_entries) + "\n")
     log.info("Uploaded batch job data (%d rows)" % len(batch_file_entries))
     job_id = conn.submitBatchJob(data=encoded_data, process="NameChecker")
@@ -97,7 +155,18 @@ def action(args):
     lookup_dict = {}  # dict input file mapping line number =>  mutalyzer input
     lookup_count = 0
 
-    # read in data
+    server = args.server
+    conn = setup_mutalyzer_connection(server)
+
+    # If we cannot establish a connection we simply return the original file
+    if isinstance(conn, bool) and conn==False:
+        log.info("Connection failed...returning input file with no amended mutalyzer values...")
+        # Write input file back out
+        for line in args.infile:
+            args.outfile.write(line)
+        sys.exit()
+
+    # read in data 
     infile = csv.DictReader(args.infile, delimiter=delimiter)
     for line_num, line in enumerate(infile):
         # skip empty HGVS fields, but do some bookkeeping to associate
@@ -110,8 +179,6 @@ def action(args):
             batch_file_entries.extend(hgvs_entries)
         input_rows.append(line)
 
-    # connect to mutalyzer and query batch file
-    conn = get_mutalyzer_connection(MUTALYZER_URL)
     results = query_mutalyzer(conn, batch_file_entries)
 
     # split header from results; mutalyzer adds an extra blank row which we remove
@@ -166,3 +233,4 @@ def action(args):
         line["mutalyzer_errors"] = " ".join(errors)
         outrow = [line[field] for field in header]
         args.outfile.write(delimiter.join(outrow) + "\n")
+

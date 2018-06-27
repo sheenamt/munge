@@ -21,7 +21,7 @@ annovar_testfiles = path.join(config.datadir, 'annovar_bed_parser')
 control_testfiles = path.join(config.datadir, 'control_parser')
 qc_testfiles = path.join(config.datadir, 'qc_variants')
 quality_testfiles = path.join(config.datadir, 'quality_metrics')
-analysis_testfiles = path.join(config.datadir, 'analysis_files')
+analysis_testfiles = os.path.join(config.datadir, '101010_HA0000_OncoPlex1','output')
 
 control ='5437_E05_OPXv4_NA12878_MA0013'
 NM_dict = {
@@ -59,7 +59,7 @@ class TestControlParser(TestBase):
         """
         controlfname = open(path.join(control_testfiles, 'OncoPlex_qc_variants_v4.txt'))
         controlinfo = list(csv.reader(controlfname, delimiter='\t'))
-        runfname = open(path.join(analysis_testfiles,'{}.SNP_Analysis.txt').format(control))
+        runfname = open(path.join(analysis_testfiles,'{}','{}.SNP_Analysis.txt').format(control, control))
         runinfo = list(csv.reader(runfname, delimiter='\t'))
         output, count = control_parser.match(controlinfo, runinfo)
         #Count and output length should be qual

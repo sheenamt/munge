@@ -51,6 +51,8 @@ snp_file_types = {
     'merged.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
     'merged.hg19_clinical_variants_dropped': ({1: 'Clinically_Flagged'}, [2, 3, 4, 5, 6]),
     'merged.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+    'uw_dec_p_values.csv': ({1: 'UW_DEC_p'}, [2, 3, 4, 5, 6]),
+
 }
 
 indel_file_types = {
@@ -65,7 +67,6 @@ indel_file_types = {
     'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
 }
 log = logging.getLogger(__name__)
-
 
 def get_reads(headers, data):
     """Parse the reads from
@@ -185,13 +186,15 @@ def get_allele_freq(data):
     """
     Return allele frequency of var_reads/ref_reads
     """
-
-    if int(data['Var_Reads']) <= 0 and int(data['Ref_Reads']) <= 0:
+    try:
+        if int(data['Var_Reads']) <= 0 and int(data['Ref_Reads']) <= 0:
+            freq = 'NA'
+        else:
+            total = int(data['Var_Reads']) + int(data['Ref_Reads'])
+            freq = int(data['Var_Reads']) / float(total)
+            freq = "{0:.2f}".format(freq)
+    except KeyError:
         freq = 'NA'
-    else:
-        total = int(data['Var_Reads']) + int(data['Ref_Reads'])
-        freq = int(data['Var_Reads']) / float(total)
-        freq = "{0:.2f}".format(freq)
     return freq
 
 def munge_ljb_scores(data):
@@ -296,6 +299,7 @@ def action(args):
         'Clinically_Flagged',
         'Variant_Type',
         'UW_Freq',
+        'UW_DEC_p',
         'Filter',
         '1000g_ALL',
         'EVS_esp6500_ALL',        
@@ -388,6 +392,7 @@ def action(args):
         data['1000g_EAS'] = data.get('1000g_EAS') or -1
         data['1000g_AFR'] = data.get('1000g_AFR') or -1
         data['1000g_EUR'] = data.get('1000g_EUR') or -1
+        data['UW_DEC_p'] = data.get('UW_DEC_p') or -1
         data['EXAC'] = data.get('EXAC').split(',')[0] if data.get('EXAC') else -1      
         data['EVS_esp6500_ALL'] = data.get('EVS_esp6500_ALL').split(',')[0] if data.get('EVS_esp6500_ALL') else -1
         data['EVS_esp6500_AA'] = data.get('EVS_esp6500_AA').split(',')[0] if data.get('EVS_esp6500_AA') else -1
