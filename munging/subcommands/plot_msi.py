@@ -46,7 +46,10 @@ def action(args):
 
     #transpose data so it is grouped by sample
     df_t=df.transpose()
-    
+
+    #Replace the tumor burden version, so that the script can be used for all versions
+    df_t.columns = df_t.columns.str.replace('tumor_mutation_burden.*','tumor_mutation_burden')
+
     #grab all info besides site specific calls
     msi_df = df_t[df_t.columns[0:5]]
 
@@ -99,6 +102,7 @@ def action(args):
         'xaxis': {'title': 'Samples',
                   'range':[-.5,num_samples],
                   'domain':[0, 1], #go across entire screen
+                  'type':'category',
                   'anchor':'x1'},
         'yaxis': {'title': "msings score",
                   'range': [0,1],
