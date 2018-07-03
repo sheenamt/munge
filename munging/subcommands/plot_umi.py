@@ -1,6 +1,5 @@
 """Plot metrics for UMI tags and consensus generation.
 """
-import pysam
 import pandas as pd
 
 import plotly
