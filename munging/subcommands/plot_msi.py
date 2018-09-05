@@ -112,7 +112,6 @@ def action(args):
 
     #setup table
     table = go.Table(
-
         header = dict(values = ['Sample_ID', 
                                 'unstable_loci', 
                                 'covered_loci', 
