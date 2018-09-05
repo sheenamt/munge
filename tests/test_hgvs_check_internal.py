@@ -43,7 +43,7 @@ class TestHGVSCheckInternal(TestBase):
                           "NM_006019.3:c.2274_2275insGGCCTG",
                           "NM_006622.3:c.*551_*552insT",
                           "NM_002451.3:c.*250delA",
-                          "NM_001128425:c.1014G>C",]
+                          "NM_001128425:c.1014G>C"]
         r = hgvs_check.query_mutalyzer(self.conn, hgvs_test_vars)
         r = r[1:-1]  # exclude header and additional last row
         fixed_hgvs = [l.split("\t")[6] for l in r]
