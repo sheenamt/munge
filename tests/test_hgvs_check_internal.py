@@ -6,6 +6,7 @@ import subprocess
 import filecmp
 import logging
 import os
+import ssl
 
 from munging.subcommands import hgvs_check
 
@@ -26,12 +27,15 @@ class TestHGVSCheckInternal(TestBase):
     """
     def setUp(self):
         url = hgvs_check.INTERNAL_MUTALYZER_URL
+        # Do not require SSL for internal server - UW certs sometimes not recognized
+        ssl._create_default_https_context = ssl._create_unverified_context
         self.conn = hgvs_check.get_mutalyzer_connection(url)
 
     def testGetMutalyzerConnection(self):
         """Should be able to connect to mutalyzer.nl
         """
         r = self.conn.ping()
+
         self.assertEqual(r, "pong")
 
     def testQueryMutalyzer(self):

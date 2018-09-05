@@ -61,7 +61,7 @@ class TestAnnotation(TestBase):
         Tests spliting the chr_loc from chr1:1-100 to 1, 1, 100
         Returns strings, not integers
         """
-        result01=split_chr_loc('chr1:1-100')
+        result01=split_chr_loc('chr1:1-100 ')
         result02=split_chr_loc('1:1-100')
         self.assertEquals(result01, ('1','1','100'))
         self.assertEquals(result02, ('1','1','100'))

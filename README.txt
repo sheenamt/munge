@@ -12,6 +12,15 @@ dependencies
 
 * Python 2.7.x
 * A UNIX-like operating system (Linux, OS X). Not tested on Windows.
+* BEDtools (for summarize_assay command only)
+* PySam (for count_umi only)
+* Numpy 
+* Natsort
+* Pandas
+* XlsxWriter
+* suds
+* xlwt
+
 
 installation
 ============
@@ -19,7 +28,7 @@ installation
 Clone the project from the git repository::
 
     cd ~/src
-    git clone git@bitbucket.org:uwlabmed/munge.git
+    git clone git@github.com:sheenams/munge.git
     cd munge
 
 Now installation can be performed using the install script provided.

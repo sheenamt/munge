@@ -1,5 +1,5 @@
 """
-Create xls workbook from all output files
+Create xlsx workbook from all output files
 
 usage:
 
