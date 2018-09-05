@@ -47,11 +47,11 @@ def split_chr_loc(d):
     output = multi_split(d, 'chr:-')
     #if SNP, there is not end position so set end=start
     try:
-        end=output[2]
+        end=output[2].strip()
     except IndexError:
-        end=output[1]
-    chrm = output[0]
-    start = output[1]
+        end=output[1].strip()
+    chrm = output[0].strip()
+    start = output[1].strip()
     return chrm, start, end
 
 
