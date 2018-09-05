@@ -10,7 +10,7 @@ from csv import DictReader, DictWriter
 from os import path
  
 def build_parser(parser):
-    parser.add_argument('--assay', required=True, help="Assay Reference bed file")
+    parser.add_argument('--assay', required=True, help="Assay Reference bed file, sorted, with ^M removed from end of lines")
     parser.add_argument('--pref_trans', required=True, help="Gene, RefSeq for assay")
     parser.add_argument('--refgene', required=True, help="UCSC Refgene data in bed format ")
     parser.add_argument('--outdir', required=False, help="Output directory for summary scripts")
@@ -42,6 +42,7 @@ def action(args):
     pref_trans_header = ['Gene', 'RefSeq']
 
     # 1) Read refGene.bed into the refseqs dictionary
+    print('reading in refgene')
     for line in DictReader(open(args.refgene, 'r'), delimiter='\t', fieldnames=refgene_header):
         refseq = line['refseq']
         name = line['name']
@@ -77,12 +78,14 @@ def action(args):
     # Next, intersect it with refgene to see which bases belong to a gene
     # Finally, also output regions that are not in genes 
     
+    print('merging probes')
     merged_probes=path.join(out,'merged_probes.bed')
     write_probes=open(merged_probes, 'w')
     merge_probes_args = ['bedtools', 'merge', '-i', args.assay]
     merge_probes = subprocess.Popen(merge_probes_args, stdout=write_probes) 
     write_probes.close()
     
+    print('intersecting probes with refgene')
     intersect_args = ['bedtools', 'intersect', '-wo' ,'-a', merged_probes, '-b', args.refgene]
     intersect = subprocess.Popen(intersect_args, stdout=subprocess.PIPE)
     
