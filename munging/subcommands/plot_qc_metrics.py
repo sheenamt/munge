@@ -25,7 +25,7 @@ def build_parser(parser):
 def action(args):
 
     #read in the data, adding the name into the df and skipping the 'version'
-    filelist = ifilter(filters.hs_file_finder, walker(args.path
+    filelist = ifilter(filters.hs_file_finder, walker(args.path))
     df_list=[]
     pd.set_option('display.width', 100)
     for pfx_file in filelist:
