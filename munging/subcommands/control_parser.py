@@ -49,33 +49,35 @@ def match(control, run_info):
 
 def action(args):
     #Read in the data from the HapMap VCF file
-    cols=['variant_type','anno','chr','start','ref','var']
+    cols=['variant_type','anno','chr','start','Ref_Base','Var_Base']
     control_df = pd.read_csv(args.control, delimiter='\t', header=None, usecols=[0,1,2,3,5,6],names = cols, index_col=False)
     control_df['Position']='chr'+control_df['chr'].astype('str')+':'+control_df['start'].astype('str')
-    expected_count=len(control_df.index)
-
+    #Get the count of the number of control snps
+    expected_count=len(control_df)
+    
     #Read in the data from the pipeline data of this sample
     pipeline_df = pd.read_csv(args.run_output, delimiter='\t', header=0, usecols=[0,1,2,4],index_col=False)
 
     #Merge by finding all keys in the 'left/control' data, whether present in the pipeline data or not
-    matched=pd.merge(control_df, pipeline_df, how='left', on=['Position'], indicator=True)
-
+    matched=pd.merge(control_df, pipeline_df, how='left', on=['Position','Ref_Base','Var_Base'], indicator=True)
+    
     #Tally the total variants that were found in both outputs
     found=len(matched[matched['_merge']=='both'])
 
     #Missed data is defined by 'left_only' (ie wasn't found the the 'right/pipeline' data
     missed=matched.loc[(matched['_merge'] == 'left_only')]
+
     #drop the columns we no longer care about, which makes it easier to add the flavor text for output 
-    missed=missed.drop(columns=['chr','start','Ref_Base','Var_Base','Variant_Type'])
+    missed=missed.drop(columns=['chr','start','Variant_Type'])
 
     output=args.outfile
-    headers = ['Position', 'ref', 'var', 'variant_type', 'anno']
+    headers = ['Position', 'Ref_Base', 'Var_Base', 'variant_type', 'anno']
     #If the 'missed' dataframe is empty, we found all of the variants
     if missed.empty:
         new_line="Found {} of expected {} variants:".format(len(matched.index), len(control_df.index))
         output.write(new_line)
     else:
-        new_line={'Position':"Found {} of expected {} variants".format(found, expected_count),  'ref':'', 'var':'', 'variant_type':'', 'anno':'', '_merge':''}  #[]#+ [' ']*(len(missed.columns)-1)
+        new_line={'Position':"Found {} of expected {} variants".format(found, expected_count),  'Ref_Base':'', 'Var_Base':'', 'Variant_Type':'', 'anno':'', '_merge':''}  #[]#+ [' ']*(len(missed.columns)-1)
         missed.loc[-1]=new_line
         missed.index = missed.index +1
         missed=missed.sort_index()
