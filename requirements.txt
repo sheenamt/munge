@@ -4,6 +4,5 @@ pandas>=0.17.1
 XlsxWriter==0.9.6
 suds==0.4
 xlwt==0.7.5
-xlrd==0.9.3
-
+plotly>=2.7.0
 

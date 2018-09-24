@@ -1,5 +1,5 @@
 """
-Create xls workbook from all output files
+Create xlsx workbook from all output files
 
 usage:
 
@@ -97,10 +97,33 @@ def process_files(infiles, tab, filetype):
             except IndexError:
                 continue
 
+def add_links(Reader, sheet, fname):
+    """
+    Process analysis file to add link columns
+    """
+    #Need to get the pfx from the fname
+    (f_path, f_name) = os.path.split(fname)
+    f_short_name = f_name.replace('.SNP_Analysis.txt','')
+
+    #rowx is the row#, row is the data
+    for rowx, row in enumerate(Reader):
+        variant_id, ref_reads, var_reads=build_variant_id(row)
+        row.insert(0, variant_id)
+        for colx, value in enumerate(row):
+            if colx == 0 and not value == 'gendb_link':
+                if len(value) < 198:
+                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","gendb_link")'.format(value))
+            elif colx == 15 and not value == 'Faves_Y/N':
+                if len(value) < 198:
+                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://kaos.labmed.uw.edu/var_clin/fav/?variant_id={}&pfx={}&ref_reads={}&var_reads={}","mark_fav")'.format(variant_id, f_short_name, ref_reads, var_reads))
+
+            else:
+                sheet.write(rowx, colx, float_if_possible(value))
+
 def variant_id_link(Reader, sheet):
     """
     Process analysis file to add link column
-    """
+    """    
     for rowx, row in enumerate(Reader):
         row.insert(0, build_variant_id(row))
         for colx, value in enumerate(row):
@@ -117,7 +140,7 @@ def write_workbook(sheet_name, book, fname):
     sheet = book.add_worksheet(sheet_name)    
     Reader = csv.reader(open(fname, 'rU'), delimiter='\t')
     if sheet_name == '10_SNP':
-        Reader = variant_id_link(Reader, sheet)
+        Reader = add_links(Reader, sheet, fname)
     else:
         for rowx, row in enumerate(Reader):
             for colx, value in enumerate(row):

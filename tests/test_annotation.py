@@ -61,7 +61,7 @@ class TestAnnotation(TestBase):
         Tests spliting the chr_loc from chr1:1-100 to 1, 1, 100
         Returns strings, not integers
         """
-        result01=split_chr_loc('chr1:1-100')
+        result01=split_chr_loc('chr1:1-100 ')
         result02=split_chr_loc('1:1-100')
         self.assertEquals(result01, ('1','1','100'))
         self.assertEquals(result02, ('1','1','100'))
@@ -81,16 +81,19 @@ class TestAnnotation(TestBase):
 
     def testBuildVariantID(self):
         """
-        Tests creation of variant id from
+        Tests creation of variant id and read count from
         chrX:start-stop, ref_base, var_base or
         chrX:start, ref_base, var_base
         """
-        data1=['chrX:12321', 'A', 'T']
-        data2=['chrX:1234-1256', 'G', 'C']
-        result01=build_variant_id(data1)
-        result02=build_variant_id(data2)
-        self.assertEquals(result01, 'X_12321_12321_A_T')
-        self.assertEquals(result02, 'X_1234_1256_G_C')
+        #A bunch of empty 'columns' to represent the data in the SNP tab
+        data1=['chrX:12321', 'A', 'T','','','','','','','','','','','','','10','11']
+        data2=['chrX:1234-1256', 'G', 'C','','','','','','','','','','','','','12','13']
+        result01,ref_reads01,varreads01=build_variant_id(data1)
+        result02,ref_reads02,varreads02=build_variant_id(data2)
+        self.assertListEqual([result01,ref_reads01,varreads01],['X_12321_12321_A_T','10','11'])
+        self.assertListEqual([result02,ref_reads02,varreads02], ['X_1234_1256_G_C','12','13'])
+
+        
 
     def testFixPfx(self):
         self.assertEqual(fix_pfx('48_A03_BROv7-HA0186-NA12878'), '48_A03_BROv7_HA0186_NA12878')

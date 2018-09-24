@@ -1,4 +1,5 @@
 import logging
+import sys
 import re
 from __init__ import __version__
 
@@ -47,11 +48,11 @@ def split_chr_loc(d):
     output = multi_split(d, 'chr:-')
     #if SNP, there is not end position so set end=start
     try:
-        end=output[2]
+        end=output[2].strip()
     except IndexError:
-        end=output[1]
-    chrm = output[0]
-    start = output[1]
+        end=output[1].strip()
+    chrm = output[0].strip()
+    start = output[1].strip()
     return chrm, start, end
 
 
@@ -79,12 +80,14 @@ def build_variant_id(data):
     """
     d={}
     if data[0]=='Position':
-        return 'link'
+        return 'gendb_link','',''
     else:
         d['chromosome'], d['start'], d['end'] = split_chr_loc(data[0])
         d['ref_base'], d['var_base'] =  data[1], data[2]
-        return '{chromosome}_{start}_{end}_{ref_base}_{var_base}'.format(**d)
-
+        ref_reads=data[15]
+        var_reads=data[16]
+        variant_id='{chromosome}_{start}_{end}_{ref_base}_{var_base}'.format(**d)
+        return variant_id, ref_reads, var_reads
 
 def pfx_ok(pfx, pattern=pfx_pattern):
     """Return True if pfx matches compiled regular expression `pattern`

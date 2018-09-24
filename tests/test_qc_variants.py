@@ -60,11 +60,9 @@ class TestQCVariants(TestBase):
         """
         pipefname = open(path.join(qc_testfiles, '{}.merged.exonic_variant_function').format(control))
         pipe = list(csv.reader(pipefname, delimiter="\t"))
-        kgfname = open(path.join(qc_testfiles, 'NA12878.1000g.hg19.exonic_variant_function'))
-        kg = list(csv.reader(kgfname, delimiter="\t"))
-        cgfname = open(path.join(qc_testfiles, 'NA12878.CG.hg19.exonic_variant_function'))
-        cg = list(csv.reader(cgfname, delimiter="\t"))
-        output = qc_variants.match(pipe, kg, cg)
+        nistfname = open(path.join(qc_testfiles, 'NA12878.NIST.hg19.exonic_variant_function'))
+        nist = list(csv.reader(nistfname, delimiter="\t"))
+        output = qc_variants.match(pipe, nist)
         #There should be 3 lines that match
         self.assertEqual(len(output), 3)
         #The second entry on the second line should be SCN8A:NM_001177984:exon5:c.576C>T:p.D192D,SCN8A:NM_014191:exon5:c.576C>T:p.D192D
