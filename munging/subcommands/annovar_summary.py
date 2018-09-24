@@ -3,7 +3,7 @@ Summarize output from Annovar and EVS
 
 Usage:
 
- munge summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
+ munge annovar_summary /path/to/captured/genes/ $SAVEPATH/$PFX.* -o $SAVEPATH/${PFX}_Analysis.txt;
 
 """
 
@@ -54,7 +54,7 @@ snp_file_types = {
     'uw_dec_p_values.csv': ({1: 'UW_DEC_p'}, [2, 3, 4, 5, 6]),
 
 }
-
+### When STH retires, remove indel_file_types!!!
 indel_file_types = {
 #files
     'pindel.variant_function': ({0: 'var_type_1',
@@ -63,6 +63,17 @@ indel_file_types = {
                                  15: 'Read_Headers',
                                  16: 'Reads',
                                  17: 'Reads2'},
+                                [2, 3, 4, 5, 6]),
+    'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
+}
+
+pindel_file_types = {
+#files
+    'pindel.variant_function': ({0: 'var_type_1',
+                                 1: 'Gene',
+                                 14: 'Sequence',
+                                 15: 'Read_Headers',
+                                 16: 'Reads'},
                                 [2, 3, 4, 5, 6]),
     'pindel.exonic_variant_function': ({1: 'var_type_2', 2: 'Transcripts'}, [3, 4, 5, 6, 7]),
 }
@@ -270,7 +281,7 @@ def build_parser(parser):
     parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
         help='Capture genes file with RefSeq in second column')
     parser.add_argument(
-        'type', choices=['SNP', 'INDEL'],
+        'type', choices=['SNP', 'INDEL', 'PINDEL'],
         help='Type of files to create tab, SNP or INDEL')
     parser.add_argument(
         'infiles', action='append', nargs='+',
@@ -337,6 +348,22 @@ def action(args):
         'RF_Alter_Splice',
         ]
 
+    if args.type == 'PINDEL':
+        headers = ['Position'] + variant_headers[3:5] + [
+            'Clinically_Flagged',
+            'Variant_Type',
+            'UW_Freq',
+            'Gene',
+            'p.',
+            'c.',
+            'Faves_Y/N',
+            'Ref_Reads',
+            'Var_Reads',
+            'Allele_Frac',
+            'Transcripts',
+            'UW_Count',
+        ]
+
     writer = csv.DictWriter(args.outfile,
                             fieldnames=headers,
                             quoting=csv.QUOTE_MINIMAL,
@@ -352,16 +379,19 @@ def action(args):
             file_types = snp_file_types
         elif args.type == 'INDEL':
             file_types = indel_file_types
+        elif args.type == 'PINDEL':
+            file_types = pindel_file_types
+
         try:
             _, file_type = path.basename(fname).split('.', 1)
         except ValueError:
             continue
+
         try:
             #if the file type matches one we want,
             #header ids are output columns
             #var_key_ids are chrm:str:stp:ref:var
             header_ids, var_key_ids = file_types[file_type]
-        
         except KeyError:
             if re.search('dropped', fname):
                 continue
