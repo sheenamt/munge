@@ -114,25 +114,36 @@ def action(args):
 
     for gene in DictReader(open(args.pref_trans, 'r'), delimiter='\t', fieldnames=pref_trans_header):
         transcript = gene['RefSeq'].split('.')[0]
+
         if transcript.upper()=='REFSEQ':
             continue
         try:
-            gene['bases_covered']=refseqs[transcript]['bases_covered']
-            #Only count this as a covered gene if it has coverage
-            if gene['bases_covered'] > 0:
-                gene_count +=1
+            #assert that the NM provided in the Pref_Trans is for the Gene they requested
+            if refseqs[transcript]['name']!=gene['Gene']:
+                outfields = dict([('gene', gene['Gene']), 
+                                  ('refseq', gene['RefSeq']),
+                                  ('total_bases_targeted', 'Incorrect RefSeq for this Gene'),
+                                  ('length_of_gene','NA'),
+                                  ('fraction_of_gene_covered','NA'),
+                                  ('exons_with_any_coverage','NA'),
+                                  ('total_exons_in_gene','NA')])
+            else:
+                gene['bases_covered']=refseqs[transcript]['bases_covered']
+                #Only count this as a covered gene if it has coverage
+                if gene['bases_covered'] > 0:
+                    gene_count +=1
 
-            exons = [exon for exon in refseqs[transcript]['exonTracker'].exons.values()].count(True)
-            outfields = dict([('gene', gene['Gene']), 
-                              ('refseq', gene['RefSeq']),
-                              ('total_bases_targeted', gene['bases_covered']),
-                              ('length_of_gene',refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),
-                              ('fraction_of_gene_covered',round(float(gene['bases_covered']) /
-                                float(refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),3)),
-                              ('exons_with_any_coverage',exons),
-                              ('total_exons_in_gene',len(refseqs[transcript]['exonTracker'].exons))])
-            total_coding_bases += gene['bases_covered']
-            total_exons += exons
+                exons = [exon for exon in refseqs[transcript]['exonTracker'].exons.values()].count(True)
+                outfields = dict([('gene', gene['Gene']), 
+                                  ('refseq', gene['RefSeq']),
+                                  ('total_bases_targeted', gene['bases_covered']),
+                                  ('length_of_gene',refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),
+                                  ('fraction_of_gene_covered',round(float(gene['bases_covered']) /
+                                                                    float(refseqs[transcript]['chromEnd'] - refseqs[transcript]['chromStart']),3)),
+                                  ('exons_with_any_coverage',exons),
+                                  ('total_exons_in_gene',len(refseqs[transcript]['exonTracker'].exons))])
+                total_coding_bases += gene['bases_covered']
+                total_exons += exons
 
         #If this refseq isn't found, we should state that, cleanly 
         except KeyError:
@@ -143,11 +154,13 @@ def action(args):
                               ('fraction_of_gene_covered','NA'),
                               ('exons_with_any_coverage','NA'),
                               ('total_exons_in_gene','NA')])
-
         pref_trans[gene['Gene']] = outfields
 
+    
+    #Process all data in the refseq file that overlaps our probes
     for transcript,data in refseqs.iteritems():
-        if data['name'] in pref_trans.keys():
+        #add data for probes we didn't plan to cover
+        if data['name'] in pref_trans.keys() :
             continue
         else:
             if data['bases_covered'] > 0:
