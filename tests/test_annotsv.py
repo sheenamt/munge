@@ -70,6 +70,15 @@ class TestAnnotSV(TestBase):
          expected_genes=['EGFR/EGFR-AS1', 'EGFR', 'EGFR/EGFR-AS1', 'KIAA1549', 'KIAA1549', 'BRAF', 'BRAF', 'AR', 'AR', 'AR', 'AR', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'MSH6', 'MSH6', 'MSH6', 'MSH6', '']
          genes=[x for x in genes_df['Gene']]
          self.assertListEqual(sorted(genes), sorted(expected_genes))
+
+    def testParseLocation(self):
+         ''' Split location and remove duplicates'''
+
+         #Make sure the function is working correctly
+         locs_df=self.annotsv_df.apply(annotsv_summary.parse_location, axis=1)
+         expected_locs=['intron18', 'intron16-intron6',  'intron8', 'exon1', 'exon1', 'intron5', 'intron5', 'intron3', 'intron3']
+         locs=[x for x in locs_df['location'] if str(x) != 'nan' and str(x) !='']
+         self.assertListEqual(sorted(locs), sorted(expected_locs))
     
     def testParseDGV(self):
         '''Combine DGV gain/loss columns into
@@ -95,12 +104,12 @@ class TestAnnotSV(TestBase):
     def testSmooshEventIntoOneLine(self):
         ''' Test Smooshing a multiline annotsv event into one line'''
 
-        expected_result=['chr7:138541913','chr7:140490765','KIAA1549','BRAF','intron16-intron16','intron8-intron8','NM_001354609;NM_001164665','322.03','LOW_QUAL','','','MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','0|0','0|0']
+        expected_result=['chr7:138541913','chr7:140490765','KIAA1549','BRAF','intron16-intron6','intron8-intron8','NM_001354609;NM_001164665','322.03','LOW_QUAL','','','MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','0|0','0|0']
         eventIDs_df=self.annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1)
         event='gridss137_4056'
         input_data=eventIDs_df.loc[(eventIDs_df['EventID']==event)]
         smooshed_result=annotsv_summary.smoosh_event_into_one_line(input_data.copy())
-        self.assertListEqual(smooshed_result,expected_result)
+        self.assertListEqual(sorted(smooshed_result),sorted(expected_result))
 
     def testCollapseEvent(self):
         ''' Combine various column entries into one string each'''
@@ -108,7 +117,7 @@ class TestAnnotSV(TestBase):
         o_event='gridss137_4056o'
         input_o_data=self.annotsv_df.loc[(self.annotsv_df['ID']==o_event)]
         o_dict = annotsv_summary.collapse_event(input_o_data)
-        expected_o_dict={'INFO': 'AS=1;ASQ=85.61;ASRP=3;ASSR=11;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEID=asm137-11351,asm137-6182;BEIDH=0,0;BEIDL=115,300;BQ=0.00;BSC=0;BSCQ=0.00;BUM=0;BUMQ=0.00;BVF=0;CAS=0;CASQ=0.00;CIPOS=-2,0;CIRPOS=-2,0;CQ=322.03;EVENT=gridss137_4056;HOMLEN=2;HOMSEQ=GA;IC=0;IHOMPOS=-2,0;IQ=0.00;PARID=gridss137_4056h;RAS=1;RASQ=140.29;REF=0;REFPAIR=0;RP=2;RPQ=21.04;SB=0.0;SC=1X1N1X176M;SR=4;SRQ=75.09;SVTYPE=BND;VF=9', 'Repeats_type_right': 'MLT2B1', 'Repeats_type_left': 'MLT2B1', 'NM': 'NM_001164665', 'DGV_GAIN_n_samples_tested': '0', 'DGV_LOSS_n_samples_with_SV': '0', 'promoters': '', '1000g_max_AF': '', 'DGV_GAIN_n_samples_with_SV': '0', 'SV end': '138541914', 'ID': 'gridss137_4056o', 'FILTER': 'LOW_QUAL', 'QUAL': '322.03', 'Gene name': 'KIAA1549', 'SV start': '138541913', 'DGV_LOSS_n_samples_tested': '0', 'ALT': ']7:140490765]C', '1000g_event': '', 'SV chrom': '7', 'location': 'intron16-intron16'}
+        expected_o_dict={'INFO': 'AS=1;ASQ=85.61;ASRP=3;ASSR=11;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEID=asm137-11351,asm137-6182;BEIDH=0,0;BEIDL=115,300;BQ=0.00;BSC=0;BSCQ=0.00;BUM=0;BUMQ=0.00;BVF=0;CAS=0;CASQ=0.00;CIPOS=-2,0;CIRPOS=-2,0;CQ=322.03;EVENT=gridss137_4056;HOMLEN=2;HOMSEQ=GA;IC=0;IHOMPOS=-2,0;IQ=0.00;PARID=gridss137_4056h;RAS=1;RASQ=140.29;REF=0;REFPAIR=0;RP=2;RPQ=21.04;SB=0.0;SC=1X1N1X176M;SR=4;SRQ=75.09;SVTYPE=BND;VF=9', 'Repeats_type_right': 'MLT2B1', 'Repeats_type_left': 'MLT2B1', 'NM': 'NM_001164665', 'DGV_GAIN_n_samples_tested': '0', 'DGV_LOSS_n_samples_with_SV': '0', 'promoters': '', '1000g_max_AF': '', 'DGV_GAIN_n_samples_with_SV': '0', 'SV end': '138541914', 'ID': 'gridss137_4056o', 'FILTER': 'LOW_QUAL', 'QUAL': '322.03', 'Gene name': 'KIAA1549', 'SV start': '138541913', 'DGV_LOSS_n_samples_tested': '0', 'ALT': ']7:140490765]C', '1000g_event': '', 'SV chrom': '7', 'location': 'intron16-intron6'}
         self.assertEqual(o_dict, expected_o_dict)
 
 
