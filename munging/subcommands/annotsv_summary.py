@@ -74,6 +74,17 @@ def parse_dgv(data):
     data['DGV_LOSS_found|tested']=str(data['DGV_LOSS_n_samples_with_SV'])+'|'+str(data['DGV_LOSS_n_samples_tested'])
     return pd.Series(data)
 
+def parse_location(data):
+    '''Split the annotsv location into two, if both are the same'''
+
+    if data['location'] != '':
+        a,b=data['location'].split('-')
+        if a == b:
+            data['location']=a
+        else:
+            print('different!:', a,b)
+    return pd.Series(data)
+
 def parse_repeats(data):
     ''' Combine left and right repeat info into one column'''
 
@@ -166,7 +177,6 @@ def smoosh_event_into_one_line(event_df):
     # return here
     return [event1, event2, gene1, gene2, location1, location2, nm, qual, vcf_filter, thousandg_event, thousandg_max_AF, repeats1, repeats2, dgv_gain, dgv_loss]
 
-
 def collapse_event(sub_event_df):
     ''' Collapses set of o or h columns into one event'''
     result_dict = {}
@@ -175,6 +185,7 @@ def collapse_event(sub_event_df):
             #do not join empty strings or 'nan'
             result_dict[key]=';'.join(str(x) for x in sub_event_df[key].unique() if str(x) != 'nan' and str(x) !='' )
     return result_dict
+
 
 def action(args):
     #Make dataframe of annotsv annotation
@@ -185,11 +196,12 @@ def action(args):
                                                                                    'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested'])
     annotsv_df.fillna('', inplace=True)
 
-    #Parse the parts we care about
-    annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1)
-
     #filter all calls less than 200 quality
     annotsv_df=annotsv_df[annotsv_df['QUAL']>=200]
+
+    #Parse the parts we care about
+    annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1).apply(parse_location, axis=1)
+
 
     # get list of unique Event_ID
     events_list = annotsv_df['EventID'].unique()
