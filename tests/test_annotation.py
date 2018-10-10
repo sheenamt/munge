@@ -16,6 +16,8 @@ from munging.annotation import split_string_in_two
 from munging.annotation import split_chr_loc
 from munging.annotation import build_variant_id
 from munging.annotation import fix_pfx
+from munging.annotation import get_exons
+
 
 from __init__ import TestBase
 import __init__ as config
@@ -101,3 +103,19 @@ class TestAnnotation(TestBase):
         self.assertEqual(fix_pfx('UNK-124-455'), 'UNK_124_455')
         self.assertEqual(fix_pfx('LMG-240'), 'LMG240')
 
+    def testGetExons(self):
+        """Test the creation of exon/intron partion, 
+        which maps exon/intron number to coordinates"""
+
+        starts='66763873,66863097,66905851,66931243,66937319,66941674,66942668,66943527,'
+        ends='66766604,66863249,66905968,66931531,66937464,66941805,66942826,66950461,'
+
+        start2='7571719,7573926,7576852,7577018,7577498,7578176,7578370,7579311,7579699,7579838,7590694,'
+        ends2='7573008,7574033,7576926,7577155,7577608,7578289,7578554,7579590,7579721,7579940,7590868,'
+        forward_expected=[('ex1',200,300),('int1',301,399),('ex2',400,500),('int2',501,599),('ex3',600,700)]
+        reverse_expected=[('ex1',200,300),('int1',301,399),('ex2',400,500),('int2',501,599),('ex3',600,700)]
+
+        forward_output=get_exons(starts, ends, '+')
+        reverse_output=get_exons(starts, ends, '-')
+        self.assertEqual(forward_expected, forward_output)
+        self.assertEqual(reverse_expected, reverse_output)
