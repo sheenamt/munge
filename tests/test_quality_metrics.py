@@ -11,7 +11,7 @@ import sys
 import json
 import subprocess
 import filecmp
-from munging.subcommands import quality_metrics
+from munging.subcommands import quality_summary
 
 from __init__ import TestBase
 import __init__ as config
@@ -27,7 +27,7 @@ class Test_QualityMetrics(TestBase):
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "simple-qm.csv")
         expected =  path.join(self.quality_testfiles, "qm.csv")
-        cmd=["munge", "quality_metrics", "--quality_metrics", self.qm_file, "-o" , simplecsv]
+        cmd=["munge", "quality_summary", "--quality_metrics", self.qm_file, "-o" , simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 
@@ -35,7 +35,7 @@ class Test_QualityMetrics(TestBase):
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "simple-hs.csv")
         expected =  path.join(self.quality_testfiles, "hs.csv")
-        cmd=["munge", "quality_metrics", "--hsmetrics", self.hs_file, "-o" ,simplecsv]
+        cmd=["munge", "quality_summary", "--hsmetrics", self.hs_file, "-o" ,simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 
@@ -43,7 +43,7 @@ class Test_QualityMetrics(TestBase):
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "simple-hs-qm.csv")
         expected =  path.join(self.quality_testfiles, "hs-qm.csv")
-        cmd=["munge", "quality_metrics", "--quality_metrics", self.qm_file,"--hsmetrics", self.hs_file, "-o" ,simplecsv]
+        cmd=["munge", "quality_summary", "--quality_metrics", self.qm_file,"--hsmetrics", self.hs_file, "-o" ,simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 
