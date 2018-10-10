@@ -81,8 +81,6 @@ def parse_location(data):
         a,b=data['location'].split('-')
         if a == b:
             data['location']=a
-        else:
-            print('different!:', a,b)
     return pd.Series(data)
 
 def parse_repeats(data):
