@@ -10,7 +10,7 @@ import csv
 import sys
 import json
 
-from munging.subcommands import xlsmaker
+from munging.subcommands import xlsxmaker
 
 from __init__ import TestBase
 import __init__ as config
@@ -45,9 +45,9 @@ data3 = {'Gene': 'BRCA1',
          'Variant_Type': ''}
 
 
-class TestXlsmaker(TestBase):
+class TestXlsxmaker(TestBase):
     """
-    Test the xlsmaker which combines all the analysis files
+    Test the xlsxmaker which combines all the analysis files
     into one workbook and renames sheets for clarity in sign out
     """
 
@@ -57,8 +57,8 @@ class TestXlsmaker(TestBase):
         """
         test01 = 'Gene'
         test02 = '12'
-        self.assertTrue(xlsmaker.float_if_possible(test01), 'Gene')
-        self.assertTrue(xlsmaker.float_if_possible(test02), '12.0')
+        self.assertTrue(xlsxmaker.float_if_possible(test01), 'Gene')
+        self.assertTrue(xlsxmaker.float_if_possible(test02), '12.0')
 
     def testProcessFiles(self):
         """
@@ -69,7 +69,7 @@ class TestXlsmaker(TestBase):
         files = []
         files.append(path.join(summary_testfiles, '{}.SNP_Analysis.txt'.format(control)))
         files.append(path.join(summary_testfiles, '{}.Quality_Analysis.txt'.format(control)))
-        data, fname = xlsmaker.process_files(files, tab, filetype)
+        data, fname = xlsxmaker.process_files(files, tab, filetype)
         self.assertEqual(data, '10_SNP')
         self.assertEqual(fname, 'testfiles/annovar_summary/{}.SNP_Analysis.txt'.format(control))
         self.assertNotEqual(fname, 'testfiles/annovar_summary/{}.Quality_Analysis.txt'.format(control))
