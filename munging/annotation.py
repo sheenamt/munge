@@ -1,9 +1,27 @@
+import os
+import csv
+from collections import namedtuple, defaultdict
+from operator import itemgetter
+import pprint
 import logging
 import sys
 import re
+from intervaltree import Interval, IntervalTree
 from __init__ import __version__
 
-pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|UNK|TESTDATA)', re.IGNORECASE)
+try:
+    from urllib import urlopen
+    from StringIO import StringIO as BytesIO
+except ImportError: # Python 3?
+    from urllib.request import urlopen
+    from io import BytesIO
+
+import zlib
+import warnings
+from collections import defaultdict
+from intervaltree import Interval, IntervalTree
+
+pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|MONC|UNK|TESTDATA)', re.IGNORECASE)
 pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
 
 log = logging.getLogger(__name__)
@@ -107,4 +125,245 @@ def fix_pfx(pfx):
         if pfx_ok(pfx, pattern=pfx_pattern_old):
             return pfx.replace('-', '').strip()
     return pfx.strip()
+
+
+refgene_fields = """
+bin
+name
+chrom
+strand
+txStart
+txEnd
+cdsStart
+cdsEnd
+exonCount
+exonStarts
+exonEnds
+score
+name2
+cdsStartStat
+cdsEndStat
+exonFrames
+""".split()
+
+# Various files and data strctures specify chromosomes as strings
+# encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
+# ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
+# 'chrX'). `chromosomes` maps all three to the numeric representation.
+chrnums = range(1, 23) + ['X', 'Y']
+chromosomes = {'chr{}'.format(c): c for c in chrnums}
+chromosomes.update({str(c): c for c in chrnums})
+chromosomes.update({c: c for c in chrnums})
+
+
+def as_number(val):
+    if isinstance(val, int):
+        return val
+    else:
+        return int(''.join(c for c in val if c.isdigit()))
+
+def read_refgene(file):
+    """Read open file-like object `file` containing annotations and
+    return a sequence of dicts.
+
+    The `annotations` file is available from the UCSC Genome Browser
+    website:
+    http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz
+
+    To view the schema, go to https://genome.ucsc.edu/cgi-bin/hgTables
+    --> choose track "refSeq Genes" --> choose table "refGene" -->
+    "describe table schema"
+
+    """
+
+    return csv.DictReader(file, fieldnames=refgene_fields, delimiter='\t')
+
+
+def get_preferred_transcripts(transcripts):
+    """Return a dict of {gene: {set of transcripts}} given `rows`, a
+    sequence of tuples in the format ("gene",
+    "transcript1[/transcript/...]")
+
+    """
+
+    tdict = defaultdict(set)
+    for row in transcripts:
+        # file may have more than one column, or only one: skip genes
+        # without a preferred transcript.
+        if row[0].upper()=='GENE' and row[1].upper()=='REFSEQ':
+            continue
+        try:
+            gene, transcript = row[0], row[1]
+        except IndexError:
+            continue
+
+        # "transcript" may identify more than one transcript separated
+        # with a slash
+        tdict[gene].update({t.strip().split('.')[0]
+                            for t in transcript.split('/') if t.strip()})
+
+    # convert to a plain dictionary to prevent inadvertently adding keys
+    return dict(tdict)
+
+
+class UCSCTable(object):
+    '''A container class for the parsing functions, used in GenomeIntervalTree.from_table``.'''
+    REF_GENE_FIELDS = ['bin', 'name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames']
+    @staticmethod
+    def REF_GENE(line):
+        return dict(zip(UCSCTable.REF_GENE_FIELDS, line.split(b'\t')))
+
+class IntervalMakers(object):
+    '''A container class for interval-making functions, used in GenomeIntervalTree.from_table and GenomeIntervalTree.from_bed.'''
+
+    @staticmethod
+    def TX(d):
+        return [Interval(int(d['txStart']), int(d['txEnd']), d)]
+
+    @staticmethod
+    def CDS(d):
+        return [Interval(int(d['cdsStart']), int(d['cdsEnd']), d)]
+
+    @staticmethod
+    def EXONS(d):
+        exStarts = d['exonStarts'].split(b',')
+        exEnds = d['exonEnds'].split(b',')
+        intron_count=int(d['exonCount'])-1
+        for i in range(int(d['exonCount'])):
+            exon_d = d.copy()
+            exon_d['exonNum']=str(i+1)
+            yield Interval(int(exStarts[i]), int(exEnds[i]), exon_d)
+
+            #Setup the intron info
+            if i < intron_count:
+                intron_start=int(exEnds[i])+1
+                intron_end=int(exStarts[i+1])-1
+                new_d=d.copy()
+                if new_d['strand']=='-':
+                    new_d['intronNum']=str(intron_count - i)
+                elif new_d['strand']=='+':
+                    new_d['intronNum']=str(i+1)
+                yield Interval(intron_start, intron_end, new_d)
+
+def _fix(interval):
+    '''
+    Helper function for ``GenomeIntervalTree.from_bed and ``.from_table``.
+
+    Data tables may contain intervals with begin >= end. Such intervals lead to infinite recursions and
+    other unpleasant behaviour, so something has to be done about them. We 'fix' them by simply setting end = begin+1.
+    '''
+    if interval.begin >= interval.end:
+        warnings.warn("Interval with reversed coordinates (begin >= end) detected when reading data. Interval was automatically fixed to point interval [begin, begin+1).")
+        return Interval(interval.begin, interval.begin+1, interval.data)
+    else:
+        return interval
+
+class GenomeIntervalTree(defaultdict):
+    '''
+    The data structure maintains a set of IntervalTrees, one for each chromosome.
+    It is essentially a ``defaultdict(IntervalTree)`` with a couple of convenience methods
+    for reading various data formats.
+
+    Examples::
+
+        >>> gtree = GenomeIntervalTree()
+        >>> gtree.addi('chr1', 0, 100)
+        >>> gtree.addi('chr1', 1, 100)
+        >>> gtree.addi('chr2', 0, 100)
+        >>> len(gtree)
+        3
+        >>> len(gtree['chr1'])
+        2
+        >>> sorted(gtree.keys())
+        ['chr1', 'chr2']
+
+    '''
+    def __init__(self):
+        super(GenomeIntervalTree, self).__init__(IntervalTree)
+
+    def addi(self, chrom, begin, end, data=None):
+        self[chrom].addi(begin, end, data)
+
+    def __len__(self):
+        return sum([len(tree) for tree in self.values()])
+
+    @staticmethod
+    def from_table(fileobj=None, url='http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz',
+                    parser=UCSCTable.REF_GENE, mode='tx', decompress=None):
+        '''
+        UCSC Genome project provides several tables with gene coordinates (https://genome.ucsc.edu/cgi-bin/hgTables),
+        such as knownGene, refGene, ensGene, wgEncodeGencodeBasicV19, etc.
+        Indexing the rows of those tables into a ``GenomeIntervalTree`` is a common task, implemented in this method.
+
+        The table can be either specified as a ``fileobj`` (in which case the data is read line by line),
+        or via an ``url`` (the ``url`` may be to a ``txt`` or ``txt.gz`` file either online or locally).
+        The type of the table is specified using the ``parser`` parameter. This is a function that takes a line
+        of the file (with no line ending) and returns a dictionary, mapping field names to values. This dictionary will be assigned
+        to the ``data`` field of each interval in the resulting tree.
+
+        Finally, there are different ways genes can be mapped into intervals for the sake of indexing as an interval tree.
+        One way is to represent each gene via its transcribed region (``txStart``..``txEnd``). Another is to represent using
+        coding region (``cdsStart``..``cdsEnd``). Finally, the third possibility is to map each gene into several intervals,
+        corresponding to its exons (``exonStarts``..``exonEnds``).
+
+        The mode, in which genes are mapped to intervals is specified via the ``mode`` parameter. The value can be ``tx``, ``cds`` and
+        ``exons``, corresponding to the three mentioned possibilities.
+
+        The ``parser`` function must ensure that its output contains the field named ``chrom``, and also fields named ``txStart``/``txEnd`` if ``mode=='tx'``,
+        fields ``cdsStart``/``cdsEnd`` if ``mode=='cds'``, and fields ``exonCount``/``exonStarts``/``exonEnds`` if ``mode=='exons'``.
+
+        The ``decompress`` parameter specifies whether the provided file is gzip-compressed.
+        This only applies to the situation when the url is given (no decompression is made if fileobj is provided in any case).
+        If decompress is None, data is decompressed if the url ends with .gz, otherwise decompress = True forces decompression.
+
+        >> knownGene = GenomeIntervalTree.from_table()
+        >> len(knownGene)
+        82960
+        >> result = knownGene[b'chr1'].search(100000, 138529)
+        >> len(result)
+        1
+        >> list(result)[0].data['name']
+        b'uc021oeg.2'
+        '''
+        #Read in data from URL if file not provided
+        if fileobj is None:
+            data = urlopen(url).read()
+            if (decompress is None and url.endswith('.gz')) or decompress:
+                data = zlib.decompress(data, 16+zlib.MAX_WBITS)
+            fileobj = BytesIO(data)
+
+        interval_lists = defaultdict(list)
+
+        #Setup the interval type
+        if mode == 'tx':
+            interval_maker = IntervalMakers.TX
+        elif mode == 'cds':
+            interval_maker = IntervalMakers.CDS
+        elif mode == 'exons':
+            interval_maker = IntervalMakers.EXONS
+        elif getattr(mode, __call__, None) is None:
+            raise Exception("Parameter `mode` may only be 'tx', 'cds', 'exons' or a callable")
+        else:
+            interval_maker = mode
+
+        #Parse the genome data
+        for ln in fileobj:
+            if not isinstance(ln, bytes):
+                ln = ln.encode()
+            ln = ln.strip()
+            d = parser(ln)
+            for interval in interval_maker(d):
+                interval_lists[d['chrom']].append(_fix(interval))
+                
+        # Now convert interval lists into trees
+        gtree = GenomeIntervalTree()
+        for chrom, lst in getattr(interval_lists, 'iteritems', interval_lists.items)():
+            gtree[chrom] = IntervalTree(lst)
+        return gtree
+        
+    def __reduce__(self):
+        t = defaultdict.__reduce__(self)
+        return (t[0], ()) + t[2:]
+
+
 

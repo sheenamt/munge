@@ -16,6 +16,8 @@ from munging.annotation import split_string_in_two
 from munging.annotation import split_chr_loc
 from munging.annotation import build_variant_id
 from munging.annotation import fix_pfx
+from munging.annotation import get_exons
+
 
 from __init__ import TestBase
 import __init__ as config
@@ -100,4 +102,18 @@ class TestAnnotation(TestBase):
         self.assertEqual(fix_pfx('48_A03_BROv7-HA0186-NA12878 '), '48_A03_BROv7_HA0186_NA12878')
         self.assertEqual(fix_pfx('UNK-124-455'), 'UNK_124_455')
         self.assertEqual(fix_pfx('LMG-240'), 'LMG240')
+
+    def testGetExons(self):
+        """Test the creation of exon/intron partion, 
+        which maps exon/intron number to coordinates"""
+
+        starts='66763873,66863097,66905851,66931243,66937319,66941674,66942668,66943527,'
+        ends='66766604,66863249,66905968,66931531,66937464,66941805,66942826,66950461,'
+
+        forward_expected=[('ex1', 66763873, 66766604), ('ex2', 66863097, 66863249), ('ex3', 66905851, 66905968), ('ex4', 66931243, 66931531), ('ex5', 66937319, 66937464), ('ex6', 66941674, 66941805), ('ex7', 66942668, 66942826), ('ex8', 66943527, 66950461), ('int1', 66766605, 66863096), ('int2', 66863250, 66905850), ('int3', 66905969, 66931242), ('int4', 66931532, 66937318), ('int5', 66937465, 66941673), ('int6', 66941806, 66942667), ('int7', 66942827, 66943526)]
+        reverse_expected= [('ex1', 66943527, 66950461), ('ex2', 66942668, 66942826), ('ex3', 66941674, 66941805), ('ex4', 66937319, 66937464), ('ex5', 66931243, 66931531), ('ex6', 66905851, 66905968), ('ex7', 66863097, 66863249), ('ex8', 66763873, 66766604), ('int1', 66942827, 66943526), ('int2', 66941806, 66942667), ('int3', 66937465, 66941673), ('int4', 66931532, 66937318), ('int5', 66905969, 66931242), ('int6', 66863250, 66905850), ('int7', 66766605, 66863096)]
+        forward_output=get_exons(starts, ends, '+')
+        reverse_output=get_exons(starts, ends, '-')
+        self.assertEqual(forward_expected, forward_output)
+        self.assertEqual(reverse_expected, reverse_output)
 
