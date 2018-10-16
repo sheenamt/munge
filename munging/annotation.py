@@ -6,7 +6,20 @@ import pprint
 import logging
 import sys
 import re
+from intervaltree import Interval, IntervalTree
 from __init__ import __version__
+
+try:
+    from urllib import urlopen
+    from StringIO import StringIO as BytesIO
+except ImportError: # Python 3?
+    from urllib.request import urlopen
+    from io import BytesIO
+
+import zlib
+import warnings
+from collections import defaultdict
+from intervaltree import Interval, IntervalTree
 
 pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|MONC|UNK|TESTDATA)', re.IGNORECASE)
 pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
@@ -177,6 +190,8 @@ def get_preferred_transcripts(transcripts):
     for row in transcripts:
         # file may have more than one column, or only one: skip genes
         # without a preferred transcript.
+        if row[0].upper()=='GENE' and row[1].upper()=='REFSEQ':
+            continue
         try:
             gene, transcript = row[0], row[1]
         except IndexError:
@@ -191,135 +206,164 @@ def get_preferred_transcripts(transcripts):
     return dict(tdict)
 
 
-Node = namedtuple('Node', 'name start end left right')
+class UCSCTable(object):
+    '''A container class for the parsing functions, used in GenomeIntervalTree.from_table``.'''
+    REF_GENE_FIELDS = ['bin', 'name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames']
+    @staticmethod
+    def REF_GENE(line):
+        return dict(zip(UCSCTable.REF_GENE_FIELDS, line.split(b'\t')))
 
+class IntervalMakers(object):
+    '''A container class for interval-making functions, used in GenomeIntervalTree.from_table and GenomeIntervalTree.from_bed.'''
 
-def partition(features):
-    """Partition `features` into a binary tree where `features` is an
-    ordered list of items (name string, start int, end int). The tree
-    is constructed of Nodes, each of which is a namedtuple with
-    elements 'name start end left right'.
+    @staticmethod
+    def TX(d):
+        return [Interval(int(d['txStart']), int(d['txEnd']), d)]
 
-    * name - a string or other object identifying the node
-    * start, end - the starting and ending coordinates of a range
-    * left - a subtree in which node.start < start for all nodes or None
-    * right - a subtree in which node.end > end for all nodes or None
+    @staticmethod
+    def CDS(d):
+        return [Interval(int(d['cdsStart']), int(d['cdsEnd']), d)]
 
-    """
+    @staticmethod
+    def EXONS(d):
+        exStarts = d['exonStarts'].split(b',')
+        exEnds = d['exonEnds'].split(b',')
+        intron_count=int(d['exonCount'])-1
+        for i in range(int(d['exonCount'])):
+            exon_d = d.copy()
+            exon_d['exonNum']=str(i+1)
+            yield Interval(int(exStarts[i]), int(exEnds[i]), exon_d)
 
-    if features:
-        i = len(features) / 2
-        left, (name, start, end), right = features[:i], features[i], features[i + 1:]
-        assert all(row[1] >= end for row in right)        
-        assert all(row[2] <= start for row in left)
+            #Setup the intron info
+            if i < intron_count:
+                intron_start=int(exEnds[i])+1
+                intron_end=int(exStarts[i+1])-1
+                new_d=d.copy()
+                if new_d['strand']=='-':
+                    new_d['intronNum']=str(intron_count - i)
+                elif new_d['strand']=='+':
+                    new_d['intronNum']=str(i+1)
+                yield Interval(intron_start, intron_end, new_d)
 
-        return Node(name, start, end, partition(left), partition(right))
+def _fix(interval):
+    '''
+    Helper function for ``GenomeIntervalTree.from_bed and ``.from_table``.
 
+    Data tables may contain intervals with begin >= end. Such intervals lead to infinite recursions and
+    other unpleasant behaviour, so something has to be done about them. We 'fix' them by simply setting end = begin+1.
+    '''
+    if interval.begin >= interval.end:
+        warnings.warn("Interval with reversed coordinates (begin >= end) detected when reading data. Interval was automatically fixed to point interval [begin, begin+1).")
+        return Interval(interval.begin, interval.begin+1, interval.data)
+    else:
+        return interval
 
-def assign(tree, val):
-    """Assign `val` a name if it falls within an interval corresponding to
-    a Node in `tree` or None otherwise.
+class GenomeIntervalTree(defaultdict):
+    '''
+    The data structure maintains a set of IntervalTrees, one for each chromosome.
+    It is essentially a ``defaultdict(IntervalTree)`` with a couple of convenience methods
+    for reading various data formats.
 
-    """
+    Examples::
 
-    if tree:
-        if val < tree.start:
-            return assign(tree.left, val)
-        elif val > tree.end:
-            return assign(tree.right, val)
+        >>> gtree = GenomeIntervalTree()
+        >>> gtree.addi('chr1', 0, 100)
+        >>> gtree.addi('chr1', 1, 100)
+        >>> gtree.addi('chr2', 0, 100)
+        >>> len(gtree)
+        3
+        >>> len(gtree['chr1'])
+        2
+        >>> sorted(gtree.keys())
+        ['chr1', 'chr2']
+
+    '''
+    def __init__(self):
+        super(GenomeIntervalTree, self).__init__(IntervalTree)
+
+    def addi(self, chrom, begin, end, data=None):
+        self[chrom].addi(begin, end, data)
+
+    def __len__(self):
+        return sum([len(tree) for tree in self.values()])
+
+    @staticmethod
+    def from_table(fileobj=None, url='http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz',
+                    parser=UCSCTable.REF_GENE, mode='tx', decompress=None):
+        '''
+        UCSC Genome project provides several tables with gene coordinates (https://genome.ucsc.edu/cgi-bin/hgTables),
+        such as knownGene, refGene, ensGene, wgEncodeGencodeBasicV19, etc.
+        Indexing the rows of those tables into a ``GenomeIntervalTree`` is a common task, implemented in this method.
+
+        The table can be either specified as a ``fileobj`` (in which case the data is read line by line),
+        or via an ``url`` (the ``url`` may be to a ``txt`` or ``txt.gz`` file either online or locally).
+        The type of the table is specified using the ``parser`` parameter. This is a function that takes a line
+        of the file (with no line ending) and returns a dictionary, mapping field names to values. This dictionary will be assigned
+        to the ``data`` field of each interval in the resulting tree.
+
+        Finally, there are different ways genes can be mapped into intervals for the sake of indexing as an interval tree.
+        One way is to represent each gene via its transcribed region (``txStart``..``txEnd``). Another is to represent using
+        coding region (``cdsStart``..``cdsEnd``). Finally, the third possibility is to map each gene into several intervals,
+        corresponding to its exons (``exonStarts``..``exonEnds``).
+
+        The mode, in which genes are mapped to intervals is specified via the ``mode`` parameter. The value can be ``tx``, ``cds`` and
+        ``exons``, corresponding to the three mentioned possibilities.
+
+        The ``parser`` function must ensure that its output contains the field named ``chrom``, and also fields named ``txStart``/``txEnd`` if ``mode=='tx'``,
+        fields ``cdsStart``/``cdsEnd`` if ``mode=='cds'``, and fields ``exonCount``/``exonStarts``/``exonEnds`` if ``mode=='exons'``.
+
+        The ``decompress`` parameter specifies whether the provided file is gzip-compressed.
+        This only applies to the situation when the url is given (no decompression is made if fileobj is provided in any case).
+        If decompress is None, data is decompressed if the url ends with .gz, otherwise decompress = True forces decompression.
+
+        >> knownGene = GenomeIntervalTree.from_table()
+        >> len(knownGene)
+        82960
+        >> result = knownGene[b'chr1'].search(100000, 138529)
+        >> len(result)
+        1
+        >> list(result)[0].data['name']
+        b'uc021oeg.2'
+        '''
+        #Read in data from URL if file not provided
+        if fileobj is None:
+            data = urlopen(url).read()
+            if (decompress is None and url.endswith('.gz')) or decompress:
+                data = zlib.decompress(data, 16+zlib.MAX_WBITS)
+            fileobj = BytesIO(data)
+
+        interval_lists = defaultdict(list)
+
+        #Setup the interval type
+        if mode == 'tx':
+            interval_maker = IntervalMakers.TX
+        elif mode == 'cds':
+            interval_maker = IntervalMakers.CDS
+        elif mode == 'exons':
+            interval_maker = IntervalMakers.EXONS
+        elif getattr(mode, __call__, None) is None:
+            raise Exception("Parameter `mode` may only be 'tx', 'cds', 'exons' or a callable")
         else:
-            return tree.name
+            interval_maker = mode
 
+        #Parse the genome data
+        for ln in fileobj:
+            if not isinstance(ln, bytes):
+                ln = ln.encode()
+            ln = ln.strip()
+            d = parser(ln)
+            for interval in interval_maker(d):
+                interval_lists[d['chrom']].append(_fix(interval))
+                
+        # Now convert interval lists into trees
+        gtree = GenomeIntervalTree()
+        for chrom, lst in getattr(interval_lists, 'iteritems', interval_lists.items)():
+            gtree[chrom] = IntervalTree(lst)
+        return gtree
+        
+    def __reduce__(self):
+        t = defaultdict.__reduce__(self)
+        return (t[0], ()) + t[2:]
 
-def check_overlapping(features):
-    """Check for elements of `features` with overlapping ranges. In the
-    case of overlap, print an informative error message and return
-    names and positions of overlapping features.
-
-    """
-
-    features = features[:]
-    overlapping = []
-    for i in range(len(features)-1):
-        prev_name, prev_start, prev_end = features[i]
-        name, start, end = features[i+1]
-        if prev_end > start:
-            overlap = ((prev_name, prev_start, prev_end), (name, start, end))
-            overlapping.append(overlap)
-            log.warning('overlapping features: ' + pprint.pformat(overlap))
-            raise ValueError('overlapping features: ' + pprint.pformat(overlap))
-    return overlapping
-
-def get_exons(starts, ends, strand='+'):
-    """Return a list of (exon, start, end). `exon` is an int, and `starts`
-    and `ends` are strings representing comma-delimited lists of
-    chromosomal coordinates. `strand` corresponds to the `strand`
-    column of the refGene annotation table; if '-', the order of the
-    exon numbers is reversed.
-
-    """
-    exon_startpos = [int(i) for i in starts.split(',') if i.strip()]
-    exon_endpos = [int(i) for i in ends.split(',') if i.strip()]
-
-    #introns are the sections between exons, but not before or after
-    intron_startpos=list([x+1 for x in exon_endpos])
-    del intron_startpos[-1]
-    intron_endpos=list([x-1 for x in exon_startpos])
-    del intron_endpos[0]
-
-    exon_count = range(1, len(exon_startpos) + 1)
-    intron_count = range(1, len(intron_startpos) +1)
-    
-    #reverse the number for naming if on the reverse strand
-    if strand == '-':
-        exon_count.reverse()
-        intron_count.reverse()
-
-    exon_nums=['ex'+str(x) for x in exon_count]
-    intron_nums=['int'+str(x) for x in intron_count]
-
-    exons=zip(exon_nums, exon_startpos, exon_endpos)
-    introns=zip(intron_nums, intron_startpos, intron_endpos)
-    
-    return sorted(exons+introns)
-
-
-
-def build_trees(file):
-    """Returns (genes, exons). Each is a dictionary keyed by chromosome
-    (`genes`) or gene (`exons`). Values are trees generated by
-    `partition`.
-
-    """
-    sort_key = itemgetter(1, 2)  # sorts by (start, end)
-    genes = defaultdict(list)
-    exon_trees = {}
-
-    for row in read_refgene(file):
-        # this fails with a KeyError if a nonstandard chromosome name
-        # is encountered (assume these have been filtered out already)
-
-        chr = str(chromosomes[row['chrom']])
-        # gene = row['name2']
-        # for now, include refgene ID in gene name for validation
-        gene = '{name2}:{name}'.format(**row)
-
-        genes[chr].append((gene, int(row['txStart']), int(row['txEnd'])))
-
-        exons = get_exons(row['exonStarts'], row['exonEnds'], row['strand'])
-        exons = sorted(exons, key=sort_key)
-        check_overlapping(exons)
-        exon_trees[gene] = partition(exons)
-
-
-
-    # create a gene tree for each chromosome
-    gene_trees = {}
-    for chr, rows in genes.iteritems():
-        rows = sorted(rows, key=sort_key)
-        check_overlapping(rows)
-        gene_trees[chr] = partition(rows)
-
-    return gene_trees, exon_trees
 
 
