@@ -14,14 +14,14 @@ from operator import itemgetter
 import logging
 
 from munging.utils import Opener
-from munging.annotation import (chromosomes,assign,build_trees)
+from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
 
 
 log = logging.getLogger(__name__)
 
 
 def build_parser(parser):
-    parser.add_argument('refgene', type=Opener(), 
+    parser.add_argument('refgene', 
                         help='RefGene file, filtered by preferred transcripts file')
     parser.add_argument('pindel_vcfs', action='append', nargs='+',
                         help='Input files which are vcfs from pindel output')
@@ -40,11 +40,10 @@ def parse_event(data):
     else:
         svtype=info['SVTYPE']
     end=info['END']
-    return size,info['SVTYPE'], end
+    return size,svtype, end
 
 def action(args):
-
-    genes,exons = build_trees(args.refgene)
+    exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
     output = []
 
     #Skip the header lines 
@@ -63,36 +62,49 @@ def action(args):
                 # each segment is assigned to a gene if either the
                 # start or end coordinate falls within the feature boundaries.
                 try:
-                    chr1 = str(chromosomes[row['CHROM']])
+                    chr1 = 'chr'+str(chromosomes[row['CHROM']])
                 except KeyError:
                     print('chrm not being processed: {}'.format(row['CHROM']))
                     continue
 
-                start=int(row['POS'])
-                end=int(row['End'])
-                try:
-                    gene1 = assign(genes[chr1], start)
-                    region_start = assign(exons[gene1], start)
-                    region_end = assign(exons[gene1], end)
-                except KeyError:
-                    gene1='Intergenic'
-                    region_start='Intergenic'
-                    region_end='Intergenic'
-
-                out_fieldnames=['Gene','Gene Regions','Event_Type','Size','Position','Reads','Transcripts']
-        
-                row['Position']='chr'+str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
-                row['Reads']=int(row['READS'].split(',')[-1])
-                region=['-'.join([region_start,region_end]) if region_start != region_end else region_start]
-                row['Gene Region']=region[0]
+                #Setup the variable to be returned
+                gene1=[]
+                region=''
+                transcripts=[]
                 
-                row['Gene'] = gene1
+                #setup the interval tree for this position. 
+                #Since ranges are inclusive of the lower limit, but non-inclusive of the upper limit,
+                #Make sure we cover everything
+                
+                chrm_start=exons[chr1].search(int(row['POS']))
+                chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
+
+                if not chrm_start.issubset(chrm_exons):
+                    print 'somthing bad happened'
+                    sys.exit()
+                for start, stop, data in chrm_exons:
+                    gene1.append(data['name2'])
+                    if 'exonNum' in data.keys():
+                        region='Exonic'
+                        transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
+                        transcripts.append(transcript)
+                    if 'intronNum' in data.keys():
+                        region='Intronic'
+                        transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
+                        transcripts.append(transcript)
+
+                row['Gene'] =';'.join(str(x) for x in set(gene1))
+                row['Gene_Region']=region
+                row['Transcripts']=';'.join(str(x) for x in set(transcripts))
+
+                row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
+                row['Reads']=int(row['READS'].split(',')[-1])
 
                 output.append(row)
 
     sorted_output = sorted(output, key=itemgetter('Reads'), reverse=True)  #Sort on reads
 
-    out_fieldnames=['Gene','Gene Region','Event_Type','Size','Position','Reads']
+    out_fieldnames=['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
     writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
     writer.writeheader()
     writer.writerows(sorted_output) 
