@@ -52,7 +52,7 @@ def action(args):
         matching_genes1=genes[chr1].search(start1)
         
         if len(matching_genes1)<1:
-            gene1='Intergenic'
+            gene1=['Intergenic',]
         else:
             gene1=[]
             for start, stop, data in matching_genes1:
@@ -65,7 +65,7 @@ def action(args):
         matching_genes2=genes[chr2].search(start2)
         
         if len(matching_genes2)<1:
-            gene2='Intergenic'
+            gene2=['Intergenic',]
         else:
             gene2=[]
             for start, stop, data in matching_genes2:
