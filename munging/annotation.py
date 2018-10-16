@@ -350,6 +350,8 @@ class GenomeIntervalTree(defaultdict):
         for ln in fileobj:
             if not isinstance(ln, bytes):
                 ln = ln.encode()
+            if ln.startswith('#'):
+                continue
             ln = ln.strip()
             d = parser(ln)
             for interval in interval_maker(d):
