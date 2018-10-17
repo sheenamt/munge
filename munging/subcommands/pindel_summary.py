@@ -80,7 +80,7 @@ def action(args):
                 chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
 
                 if not chrm_start.issubset(chrm_exons):
-                    print 'somthing bad happened'
+                    print '{} {} not found in refseq'.format(chr1, row['POS'])
                     sys.exit()
                 for start, stop, data in chrm_exons:
                     gene1.append(data['name2'])
