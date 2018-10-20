@@ -25,10 +25,23 @@ class TestPindelSummary(TestBase):
         self.outdir = self.mkoutdir()
         self.refgene = os.path.join(refgene_testfiles, 'expected_refgene.txt')
 
+    def testParseEvent(self):
+    ''' Return the length and type of event, corrects end position if necessary '''
+    #Test when start==stop but size > 1 (which only size >1 should ever hit this parser
+    pass
+
+    def testDefineTranscripts(self):
+    """Given the interval, set the gene, region and transcripts"""
+    pass
+    # Test when start/stop cover multiple exons
+
+
     def testPindelSummary(self):
-        #Test that if a gene has a preferred transcript, that one is chosen
-        #Test that if a gene doesn't have a preferred transcript, one line of data is still output
-        #Test that overlapping genes are allowed 
+        # Test when start/stop are in coding
+        # Test when start/stop are not incoding
+        # Test when start is in coding but stop isn't
+        # Test when start is not in coding but stop is
+
         pindel_vcfs=[]
         for root, dirs, files in os.walk(pindel_testfiles):
             for file in files:
@@ -38,3 +51,5 @@ class TestPindelSummary(TestBase):
         cmd=["munge", "pindel_summary", self.refgene,pindel_vcfs  ] #, '-o',simplecsv ]
         subprocess.call(cmd)
 #        self.assertTrue(filecmp.cmp(self.expected_output, simplecsv))
+
+
