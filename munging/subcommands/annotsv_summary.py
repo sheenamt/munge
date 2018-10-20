@@ -8,7 +8,8 @@ import sys
 from munging.annotation import multi_split
 
 log = logging.getLogger(__name__)
-pd.options.display.width = 180
+pd.options.display.width = 1000
+pd.options.display.max_columns=30
 
 
 def build_parser(parser):
@@ -110,18 +111,18 @@ def smoosh_event_into_one_line(event_df):
     dgv_loss = None
 
     sub_events = event_df['ID'].unique()
+    if len(sub_events) !=2:
+       return ['Fail', 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])]
+
     o_event = None
     h_event = None
-    if len(sub_events) != 2:
-        print("something went wrong later")
-        sys.exit()
+
     # set o and h events
     for sub_event in sub_events:
         if sub_event.endswith('o'):
             o_event = sub_event
         elif sub_event.endswith('h'):
             h_event = sub_event
-
     # collapse event sides into one result
     o_dict = collapse_event(event_df.loc[(event_df['ID']==o_event)])
     h_dict = collapse_event(event_df.loc[(event_df['ID']==h_event)])
@@ -133,8 +134,11 @@ def smoosh_event_into_one_line(event_df):
     h_event2 = event_df.loc[event_df['ID']==h_event,'Event2'].iloc[0]
 
     #double check we're labeling event1 and 2 correctly:
-    assert(o_event2 == h_event1)
-    assert(o_event1 == h_event2)
+    try:
+        assert(o_event2 == h_event1)
+        assert(o_event1 == h_event2)
+    except:
+        return ['Fail', """Calls did not match for events o {}/h {}, expected: o1 {} == h2 {}; o2 {} == h1 {}""".format(o_event, h_event, o_event1, h_event2, o_event2, h_event1)]
 
     #Great, set things to o_event
     event1=o_event1
@@ -203,7 +207,6 @@ def action(args):
 
     # get list of unique Event_ID
     events_list = annotsv_df['EventID'].unique()
-
     event_results_list = []
     for event_id in events_list:
         # get subset dataframe with just that event_id
@@ -213,7 +216,11 @@ def action(args):
             sys.exit()
         # feed current event df copy to new function
         event_result = smoosh_event_into_one_line(current_event_df.copy())
-        event_results_list.append(event_result)
+        #Sometimes the second event has a lower quality score that was filtered out, print that to a log and move on
+        if event_result[0]=='Fail':
+            print(event_result[1])
+        else:
+            event_results_list.append(event_result)
 
     # turn event_results_list into DF for output
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
