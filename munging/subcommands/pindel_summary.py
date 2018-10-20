@@ -46,6 +46,21 @@ def parse_event(data):
         end=info['END']
     return size,svtype, end
 
+def define_transcripts(chrm_data):
+    """Given the interval, set the gene, region and transcripts"""
+    gene1, transcripts=[],[]
+    for start, stop, data in chrm_data: 
+        gene1.append(data['name2'])
+        if 'exonNum' in data.keys():
+            region='Exonic'
+            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
+            transcripts.append(transcript)
+        if 'intronNum' in data.keys():
+            region='Intronic'
+            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
+            transcripts.append(transcript)
+    return gene1, region, transcripts
+
 def action(args):
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
     output = []
@@ -78,35 +93,16 @@ def action(args):
                 
                 #Since ranges are inclusive of the lower limit, but non-inclusive of the upper limit,
                 #Make sure we cover everything
-                #Usual case: both start and stop are in a coding region
                 chrm_start=exons[chr1].search(int(row['POS']))
                 chrm_stop=exons[chr1].search(int(row['End']))
                 chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
-                if chrm_exons:
-                    for start, stop, data in chrm_exons:
-                        gene1.append(data['name2'])
-                        if 'exonNum' in data.keys():
-                            region='Exonic'
-                            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
-                            transcripts.append(transcript)
-                        if 'intronNum' in data.keys():
-                            region='Intronic'
-                            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
-                            transcripts.append(transcript)
 
+                #Usual case: both start and stop are in a coding region
+                if chrm_exons:
+                    gene1, region, transcripts=define_transcripts(chrm_exons)
                 #But if start isn't in coding, but stop is, process stop
-                elif not chrm_start.issubset(chrm_exons):
-                    if chrm_stop.issubset(chrm_exons):
-                        for start, stop, data in chrm_stop:
-                            gene1.append(data['name2'])
-                            if 'exonNum' in data.keys():
-                                region='Exonic'
-                                transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
-                                transcripts.append(transcript)
-                            if 'intronNum' in data.keys():
-                                region='Intronic'
-                                transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
-                                transcripts.append(transcript)
+                elif chrm_stop.issubset(chrm_exons) and not chrm_start.issubset(chrm_exons):
+                    gene1, region, transcripts=define_transcripts(chrom_stop)
                 #Otherwise if neither start nor stop are in coding, label everything as intergenic
                 else:
                     gene1=['Intergenic',]
