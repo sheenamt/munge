@@ -8,16 +8,9 @@ import sys
 import re
 from intervaltree import Interval, IntervalTree
 from __init__ import __version__
-
-try:
-    from urllib import urlopen
-    from StringIO import StringIO as BytesIO
-except ImportError: # Python 3?
-    from urllib.request import urlopen
-    from io import BytesIO
-
+from urllib import urlopen
+from StringIO import StringIO as BytesIO
 import zlib
-import warnings
 from collections import defaultdict
 from intervaltree import Interval, IntervalTree
 
@@ -25,6 +18,15 @@ pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|MONC|UNK|TESTDATA)', re.I
 pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
 
 log = logging.getLogger(__name__)
+
+# Various files and data strctures specify chromosomes as strings
+# encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
+# ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
+# 'chrX'). `chromosomes` maps all three to the numeric representation.
+chrnums = range(1, 23) + ['X', 'Y']
+chromosomes = {'chr{}'.format(c): c for c in chrnums}
+chromosomes.update({str(c): c for c in chrnums})
+chromosomes.update({c: c for c in chrnums})
 
 def get_location(chr, start, stop, **kwargs):
     """
@@ -127,85 +129,6 @@ def fix_pfx(pfx):
     return pfx.strip()
 
 
-refgene_fields = """
-bin
-name
-chrom
-strand
-txStart
-txEnd
-cdsStart
-cdsEnd
-exonCount
-exonStarts
-exonEnds
-score
-name2
-cdsStartStat
-cdsEndStat
-exonFrames
-""".split()
-
-# Various files and data strctures specify chromosomes as strings
-# encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
-# ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
-# 'chrX'). `chromosomes` maps all three to the numeric representation.
-chrnums = range(1, 23) + ['X', 'Y']
-chromosomes = {'chr{}'.format(c): c for c in chrnums}
-chromosomes.update({str(c): c for c in chrnums})
-chromosomes.update({c: c for c in chrnums})
-
-
-def as_number(val):
-    if isinstance(val, int):
-        return val
-    else:
-        return int(''.join(c for c in val if c.isdigit()))
-
-def read_refgene(file):
-    """Read open file-like object `file` containing annotations and
-    return a sequence of dicts.
-
-    The `annotations` file is available from the UCSC Genome Browser
-    website:
-    http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz
-
-    To view the schema, go to https://genome.ucsc.edu/cgi-bin/hgTables
-    --> choose track "refSeq Genes" --> choose table "refGene" -->
-    "describe table schema"
-
-    """
-
-    return csv.DictReader(file, fieldnames=refgene_fields, delimiter='\t')
-
-
-def get_preferred_transcripts(transcripts):
-    """Return a dict of {gene: {set of transcripts}} given `rows`, a
-    sequence of tuples in the format ("gene",
-    "transcript1[/transcript/...]")
-
-    """
-
-    tdict = defaultdict(set)
-    for row in transcripts:
-        # file may have more than one column, or only one: skip genes
-        # without a preferred transcript.
-        if row[0].upper()=='GENE' and row[1].upper()=='REFSEQ':
-            continue
-        try:
-            gene, transcript = row[0], row[1]
-        except IndexError:
-            continue
-
-        # "transcript" may identify more than one transcript separated
-        # with a slash
-        tdict[gene].update({t.strip().split('.')[0]
-                            for t in transcript.split('/') if t.strip()})
-
-    # convert to a plain dictionary to prevent inadvertently adding keys
-    return dict(tdict)
-
-
 class UCSCTable(object):
     '''A container class for the parsing functions, used in GenomeIntervalTree.from_table``.'''
     REF_GENE_FIELDS = ['bin', 'name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames']
@@ -253,7 +176,7 @@ def _fix(interval):
     other unpleasant behaviour, so something has to be done about them. We 'fix' them by simply setting end = begin+1.
     '''
     if interval.begin >= interval.end:
-        warnings.warn("Interval with reversed coordinates (begin >= end) detected when reading data. Interval was automatically fixed to point interval [begin, begin+1).")
+        log.info("Interval with reversed coordinates (begin >= end) detected when reading data. Interval was automatically fixed to point interval [begin, begin+1).")
         return Interval(interval.begin, interval.begin+1, interval.data)
     else:
         return interval
@@ -263,20 +186,6 @@ class GenomeIntervalTree(defaultdict):
     The data structure maintains a set of IntervalTrees, one for each chromosome.
     It is essentially a ``defaultdict(IntervalTree)`` with a couple of convenience methods
     for reading various data formats.
-
-    Examples::
-
-        >>> gtree = GenomeIntervalTree()
-        >>> gtree.addi('chr1', 0, 100)
-        >>> gtree.addi('chr1', 1, 100)
-        >>> gtree.addi('chr2', 0, 100)
-        >>> len(gtree)
-        3
-        >>> len(gtree['chr1'])
-        2
-        >>> sorted(gtree.keys())
-        ['chr1', 'chr2']
-
     '''
     def __init__(self):
         super(GenomeIntervalTree, self).__init__(IntervalTree)
@@ -291,9 +200,7 @@ class GenomeIntervalTree(defaultdict):
     def from_table(fileobj=None, url='http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz',
                     parser=UCSCTable.REF_GENE, mode='tx', decompress=None):
         '''
-        UCSC Genome project provides several tables with gene coordinates (https://genome.ucsc.edu/cgi-bin/hgTables),
-        such as knownGene, refGene, ensGene, wgEncodeGencodeBasicV19, etc.
-        Indexing the rows of those tables into a ``GenomeIntervalTree`` is a common task, implemented in this method.
+        Index the rows of UCSC tables into a ``GenomeIntervalTree`` 
 
         The table can be either specified as a ``fileobj`` (in which case the data is read line by line),
         or via an ``url`` (the ``url`` may be to a ``txt`` or ``txt.gz`` file either online or locally).
@@ -316,14 +223,6 @@ class GenomeIntervalTree(defaultdict):
         This only applies to the situation when the url is given (no decompression is made if fileobj is provided in any case).
         If decompress is None, data is decompressed if the url ends with .gz, otherwise decompress = True forces decompression.
 
-        >> knownGene = GenomeIntervalTree.from_table()
-        >> len(knownGene)
-        82960
-        >> result = knownGene[b'chr1'].search(100000, 138529)
-        >> len(result)
-        1
-        >> list(result)[0].data['name']
-        b'uc021oeg.2'
         '''
         #Read in data from URL if file not provided
         if fileobj is None:
