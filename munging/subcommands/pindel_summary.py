@@ -39,7 +39,11 @@ def parse_event(data):
         svtype='DEL'
     else:
         svtype=info['SVTYPE']
-    end=info['END']
+    #Pindel reports insertions wrong by not setting the end position correctly. It may do it with other data, so test based on reported size rather than svtype
+    if size >1 and data['POS'] == info['END']:
+        end=int(info['END'])+size
+    else:
+        end=info['END']
     return size,svtype, end
 
 def action(args):
@@ -72,26 +76,42 @@ def action(args):
                 region=''
                 transcripts=[]
                 
-                #setup the interval tree for this position. 
                 #Since ranges are inclusive of the lower limit, but non-inclusive of the upper limit,
                 #Make sure we cover everything
-                
+                #Usual case: both start and stop are in a coding region
                 chrm_start=exons[chr1].search(int(row['POS']))
+                chrm_stop=exons[chr1].search(int(row['End']))
                 chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
+                if chrm_exons:
+                    for start, stop, data in chrm_exons:
+                        gene1.append(data['name2'])
+                        if 'exonNum' in data.keys():
+                            region='Exonic'
+                            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
+                            transcripts.append(transcript)
+                        if 'intronNum' in data.keys():
+                            region='Intronic'
+                            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
+                            transcripts.append(transcript)
 
-                if not chrm_start.issubset(chrm_exons):
-                    print '{} {} not found in refseq'.format(chr1, row['POS'])
-                    sys.exit()
-                for start, stop, data in chrm_exons:
-                    gene1.append(data['name2'])
-                    if 'exonNum' in data.keys():
-                        region='Exonic'
-                        transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
-                        transcripts.append(transcript)
-                    if 'intronNum' in data.keys():
-                        region='Intronic'
-                        transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
-                        transcripts.append(transcript)
+                #But if start isn't in coding, but stop is, process stop
+                elif not chrm_start.issubset(chrm_exons):
+                    if chrm_stop.issubset(chrm_exons):
+                        for start, stop, data in chrm_stop:
+                            gene1.append(data['name2'])
+                            if 'exonNum' in data.keys():
+                                region='Exonic'
+                                transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
+                                transcripts.append(transcript)
+                            if 'intronNum' in data.keys():
+                                region='Intronic'
+                                transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
+                                transcripts.append(transcript)
+                #Otherwise if neither start nor stop are in coding, label everything as intergenic
+                else:
+                    gene1=['Intergenic',]
+                    region='Intergenic'
+                    transcripts=[]
 
                 row['Gene'] =';'.join(str(x) for x in set(gene1))
                 row['Gene_Region']=region
