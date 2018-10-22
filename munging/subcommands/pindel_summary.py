@@ -16,7 +16,7 @@ import logging
 from munging.utils import Opener
 from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
 
-
+csv.field_size_limit(10000000)
 log = logging.getLogger(__name__)
 
 
@@ -47,15 +47,15 @@ def parse_event(data):
 
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
-    gene1, transcripts=[],[]
+    gene1, region, transcripts=[],[],[]
     for start, stop, data in chrm_data: 
         gene1.append(data['name2'])
         if 'exonNum' in data.keys():
-            region='Exonic'
+            region.append('Exonic')
             transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
             transcripts.append(transcript)
         if 'intronNum' in data.keys():
-            region='Intronic'
+            region.append('Intronic')
             transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
             transcripts.append(transcript)
     return gene1, region, sorted(transcripts)
@@ -70,7 +70,7 @@ def action(args):
         with open(vcf, 'rU')  as f:
             # read in the entire input file so that we can sort it
             fieldnames=['CHROM','POS','ID','REF','ALT','QUAL','FILTER','INFO','FORMAT','READS']
-            reader = csv.DictReader(filter(lambda row: row[0]!='#', f), delimiter='\t',fieldnames=fieldnames)
+            reader = csv.DictReader(filter(lambda row: row[0]!='#', f), delimiter='\t',fieldnames=fieldnames, quoting=csv.QUOTE_NONE)
 
             rows = list(reader)
             for row in rows:
@@ -92,24 +92,26 @@ def action(args):
                 
                 #Since ranges are inclusive of the lower limit, but non-inclusive of the upper limit,
                 #Make sure we cover everything
+                chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
                 chrm_start=exons[chr1].search(int(row['POS']))
                 chrm_stop=exons[chr1].search(int(row['End']))
-                chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
 
                 #Usual case: both start and stop are in a coding region
                 if chrm_exons:
                     gene1, region, transcripts=define_transcripts(chrm_exons)
-                #But if start isn't in coding, but stop is, process stop
-                elif chrm_stop.issubset(chrm_exons) and not chrm_start.issubset(chrm_exons):
+                # #But if start isn't in coding, but stop is, process stop
+                elif chrm_stop and not chrm_start:
+                    print 'hit this case'
+                    sys.exit()
                     gene1, region, transcripts=define_transcripts(chrom_stop)
                 #Otherwise if neither start nor stop are in coding, label everything as intergenic
                 else:
                     gene1=['Intergenic',]
-                    region='Intergenic'
+                    region=['Intergenic',]
                     transcripts=[]
 
                 row['Gene'] =';'.join(str(x) for x in set(gene1))
-                row['Gene_Region']=region
+                row['Gene_Region']=';'.join(str(x) for x in set(region))
                 row['Transcripts']=';'.join(str(x) for x in set(transcripts))
 
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
