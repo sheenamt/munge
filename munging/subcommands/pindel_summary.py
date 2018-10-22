@@ -30,8 +30,7 @@ def build_parser(parser):
 
 
 def parse_event(data):
-    ''' Return the length and type of event '''
-    
+    ''' Return the length and type of event, corrects end position if necessary '''
     #Parse read depth and SVtype
     info=dict(item.split('=') for item in data['INFO'].split(";") if "=" in item)
     size=int(info['SVLEN'])
@@ -43,7 +42,7 @@ def parse_event(data):
     if size >1 and data['POS'] == info['END']:
         end=int(info['END'])+size
     else:
-        end=info['END']
+        end=int(info['END'])
     return size,svtype, end
 
 def define_transcripts(chrm_data):
@@ -59,7 +58,7 @@ def define_transcripts(chrm_data):
             region='Intronic'
             transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
             transcripts.append(transcript)
-    return gene1, region, transcripts
+    return gene1, region, sorted(transcripts)
 
 def action(args):
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
