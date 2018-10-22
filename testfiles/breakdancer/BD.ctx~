@@ -1,0 +1,11 @@
+#Software: 1.4.5 (commit 251f983)
+#Command: breakdancer-max output/165R02_B01_MONCv1_NA0261/165R02_B01_MONCv1_NA0261.cfg -h -g output/165R02_B01_MONCv1_NA0261/165R02_B01_MONCv1_NA0261.bed 
+#Library Statistics:
+#output/165R02_B01_MONCv1_NA0261/165R02_B01_MONCv1_NA0261.final.bam	mean:165	std:60	uppercutoff:550	lowercutoff:0	readlen:101	library:MiniOncoKAPA165R-MONCv1	reflen:2995589796	seqcov:0.0394449	phycov:0.0322198	1:25	2:20	4:78519	8:31	32:11
+#Chr1	Pos1	Orientation1	Chr2	Pos2	Orientation2	Type	Size	Score	num_Reads	num_Reads_lib	Allele_frequency	165R02_B01_MONCv1_NA0261.final.bam
+#size filtered
+4	1806370	61+51-	4	1806641	0+2-	DEL	35	99	2	output/185R01_A01_MONCv2_MA0392/185R01_A01_MONCv2_MA0392.final.bam|2	-8352.74	16707.49
+#normal
+4	1806374	61+51-	4	1806641	0+2-	DEL	335	99	2	output/185R01_A01_MONCv2_MA0392/185R01_A01_MONCv2_MA0392.final.bam|2	-8352.74	16707.49
+#intergenic
+4	1806374	61+51-	4	1806641	0+2-	DEL	335	99	2	output/185R01_A01_MONCv2_MA0392/185R01_A01_MONCv2_MA0392.final.bam|2	-8352.74	16707.49
