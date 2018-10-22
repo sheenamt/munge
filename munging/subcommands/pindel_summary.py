@@ -39,7 +39,7 @@ def parse_event(data):
     else:
         svtype=info['SVTYPE']
     #Pindel reports insertions wrong by not setting the end position correctly. It may do it with other data, so test based on reported size rather than svtype
-    if size >1 and data['POS'] == info['END']:
+    if abs(size)>1 and data['POS'] == info['END']:
         end=int(info['END'])+size
     else:
         end=int(info['END'])
@@ -61,15 +61,17 @@ def define_transcripts(chrm_data):
     return gene1, region, sorted(transcripts)
 
 def action(args):
+    #Create interval tree of introns and exons,  grouped by chr
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
+
     output = []
 
-    #Skip the header lines 
     (pindel_vcfs,) = args.pindel_vcfs
     for vcf in pindel_vcfs:
         with open(vcf, 'rU')  as f:
             # read in the entire input file so that we can sort it
             fieldnames=['CHROM','POS','ID','REF','ALT','QUAL','FILTER','INFO','FORMAT','READS']
+            #Skip the header lines 
             reader = csv.DictReader(filter(lambda row: row[0]!='#', f), delimiter='\t',fieldnames=fieldnames, quoting=csv.QUOTE_NONE)
 
             rows = list(reader)
@@ -77,21 +79,18 @@ def action(args):
                 row['Size'], row['Event_Type'],row['End']=parse_event(row)
                 if row['Size'] in range(-10,10):
                     continue
-                # each segment is assigned to a gene if either the
-                # start or end coordinate falls within the feature boundaries.
+                #only normal chr are process, GL amd MT are ignored
                 try:
                     chr1 = 'chr'+str(chromosomes[row['CHROM']])
                 except KeyError:
                     print('chrm not being processed: {}'.format(row['CHROM']))
                     continue
 
-                #Setup the variable to be returned
-                gene1=[]
-                region=''
-                transcripts=[]
+                #Setup the variables to be returned
+                gene1, region, transcripts=[],[],[]
                 
-                #Since ranges are inclusive of the lower limit, but non-inclusive of the upper limit,
-                #Make sure we cover everything
+                # each segment is assigned to a gene if either the
+                # start or end coordinate falls within the feature boundaries.
                 chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
                 chrm_start=exons[chr1].search(int(row['POS']))
                 chrm_stop=exons[chr1].search(int(row['End']))
@@ -99,7 +98,7 @@ def action(args):
                 #Usual case: both start and stop are in a coding region
                 if chrm_exons:
                     gene1, region, transcripts=define_transcripts(chrm_exons)
-                # #But if start isn't in coding, but stop is, process stop
+                # #But if start isn't in coding, but stop is, currently an error
                 elif chrm_stop and not chrm_start:
                     print 'hit this case'
                     sys.exit()
