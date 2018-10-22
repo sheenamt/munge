@@ -21,13 +21,30 @@ log = logging.getLogger(__name__)
 
 def build_parser(parser):
     parser.add_argument('refgene', type=Opener(), 
-                        help='RefGene file, filtered by preferred transcripts file')
+                        help='RefGene file')
     parser.add_argument('bd_file', type=Opener(), 
                         help='Breakdancer output')
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
 
 
+
+def set_gene_event(start_pos, chrm, genes):
+    """Given start position and gene interval tree, 
+    return gene and event"""
+    start=int(start_pos)
+    matching_genes=genes[chrm].search(start)
+    
+    if len(matching_genes)<1:
+        gene=['Intergenic',]
+    else:
+        gene=[]
+        for start, stop, data in matching_genes:
+            gene.append(data['name2'])
+    event=chrm+':'+start_pos
+    genes=';'.join(str(x) for x in set(gene))
+
+    return event, genes
 
 def action(args):
     genes = GenomeIntervalTree.from_table(args.refgene, parser=UCSCTable.REF_GENE, mode='tx')
@@ -48,31 +65,8 @@ def action(args):
             print('chrm not being processed: {} or {}'.format(row['#Chr1'], row['Chr2']))
             continue
 
-        start1=int(row['Pos1'])
-        matching_genes1=genes[chr1].search(start1)
-        
-        if len(matching_genes1)<1:
-            gene1=['Intergenic',]
-        else:
-            gene1=[]
-            for start, stop, data in matching_genes1:
-                gene1.append(data['name2'])
-
-        row['Event_1'] = chr1+':'+row['Pos1']
-        row['Gene_1'] = ';'.join(str(x) for x in set(gene1))
-
-        start2=int(row['Pos2'])
-        matching_genes2=genes[chr2].search(start2)
-        
-        if len(matching_genes2)<1:
-            gene2=['Intergenic',]
-        else:
-            gene2=[]
-            for start, stop, data in matching_genes2:
-                gene2.append(data['name2'])
-
-        row['Event_2'] = chr2+':'+row['Pos2']
-        row['Gene_2'] = ';'.join(str(x) for x in set(gene2))
+        row['Event_1'], row['Gene_1']=set_gene_event(row['Pos1'], chr1, genes)
+        row['Event_2'], row['Gene_2']=set_gene_event(row['Pos2'], chr2, genes)
 
         #discard those between -101 and 101
         if int(row['Size']) not in range(-101,101):
