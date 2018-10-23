@@ -14,7 +14,7 @@ from operator import itemgetter
 import logging
 from munging.utils import Opener
 from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
-
+import pandas
 
 log = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def set_gene_event(start_pos, chrm, genes):
         gene=[]
         for start, stop, data in matching_genes:
             gene.append(data['name2'])
-    event=chrm+':'+start_pos
+    event=str(chrm)+':'+str(start_pos)
     genes=';'.join(str(x) for x in set(gene))
 
     return event, genes
@@ -49,12 +49,11 @@ def set_gene_event(start_pos, chrm, genes):
 def action(args):
     genes = GenomeIntervalTree.from_table(args.refgene, parser=UCSCTable.REF_GENE, mode='tx')
 
-    # read in the entire input file so that we can sort it
-    in_fieldnames=['#Chr1','Pos1','Orientation1','Chr2','Pos2','Orientation2','Type','Size','Score','num_Reads','num_Reads_lib','Allele_frequency','SampleID']
-    reader = csv.DictReader(filter(lambda row: row[0]!='#', args.bd_file), delimiter='\t', fieldnames=in_fieldnames)
-
-    rows = list(reader)
-    
+    # read in only the columns we care about, because real data can be too large sometimes
+    headers=['#Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
+    reader = pandas.read_csv(args.bd_file, comment='#', delimiter='\t',header=None,usecols=[0,1,3,4,6,7,9], names=headers)
+    #Convert to a dictionary for processing clearly
+    rows = reader.T.to_dict().values()
     output = []
     for row in rows:
         # each segment is assigned to a gene or exon if either the
