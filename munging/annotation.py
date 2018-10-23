@@ -155,12 +155,14 @@ class IntervalMakers(object):
         for i in range(int(d['exonCount'])):
             exon_d = d.copy()
             exon_d['exonNum']=str(i+1)
-            yield Interval(int(exStarts[i]), int(exEnds[i]), exon_d)
+            #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
+            yield Interval(int(exStarts[i]), int(exEnds[i])+1, exon_d)
 
             #Setup the intron info
             if i < intron_count:
+            #Since interval trees are not inclsive of upper limit, add one to the intron start boundary and not to the end boundary
                 intron_start=int(exEnds[i])+1
-                intron_end=int(exStarts[i+1])-1
+                intron_end=int(exStarts[i+1])
                 new_d=d.copy()
                 if new_d['strand']=='-':
                     new_d['intronNum']=str(intron_count - i)
