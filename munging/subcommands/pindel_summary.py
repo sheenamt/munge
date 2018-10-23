@@ -12,7 +12,7 @@ import csv
 from collections import defaultdict
 from operator import itemgetter
 import logging
-
+import pandas
 from munging.utils import Opener
 from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
 
@@ -69,12 +69,12 @@ def action(args):
     (pindel_vcfs,) = args.pindel_vcfs
     for vcf in pindel_vcfs:
         with open(vcf, 'rU')  as f:
-            # read in the entire input file so that we can sort it
-            fieldnames=['CHROM','POS','ID','REF','ALT','QUAL','FILTER','INFO','FORMAT','READS']
-            #Skip the header lines 
-            reader = csv.DictReader(filter(lambda row: row[0]!='#', f), delimiter='\t',fieldnames=fieldnames, quoting=csv.QUOTE_NONE)
+            #Skip the header lines, read in only the columns we need because some unnecessary columns can be millions of characters long
+            headers=['CHROM','POS','INFO','READS']
+            reader = pandas.read_csv(f, comment='#', delimiter='\t',header=None,usecols=[0,1,7,9], names=headers)
+            #Convert to a dictionary for processing clearly
+            rows = reader.T.to_dict().values()
 
-            rows = list(reader)
             for row in rows:
                 row['Size'], row['Event_Type'],row['End']=parse_event(row)
                 if row['Size'] in range(-10,10):
@@ -83,7 +83,6 @@ def action(args):
                 try:
                     chr1 = 'chr'+str(chromosomes[row['CHROM']])
                 except KeyError:
-                    print('chrm not being processed: {}'.format(row['CHROM']))
                     continue
 
                 #Setup the variables to be returned
