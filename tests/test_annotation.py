@@ -2,13 +2,10 @@
 Test the annotation functions
 """
 
-import os
-from os import path
-import unittest
 import logging
-import pprint
-import sys
-import json
+import os
+import __init__ as config
+from intervaltree import Interval, IntervalTree
 
 from munging.annotation import get_location
 from munging.annotation import multi_split
@@ -17,24 +14,20 @@ from munging.annotation import split_string_in_two
 from munging.annotation import build_variant_id
 from munging.annotation import pfx_ok
 from munging.annotation import fix_pfx
-from munging.annotation import as_number
-from munging.annotation import read_refgene
-from munging.annotation import get_preferred_transcripts
 from munging.annotation import _fix
 from munging.annotation import GenomeIntervalTree
+from munging.annotation import UCSCTable
 
 
 from __init__ import TestBase
-import __init__ as config
+ 
 log = logging.getLogger(__name__)
 
 class TestAnnotation(TestBase):
 
     def setUp(self):
         self.outdir = self.mkoutdir()
-
-    def tearDown(self):
-        pass
+        self.refgene = os.path.join(config.datadir, 'pindel', 'refgene_test.txt')
 
     def testGetLocation01(self):
         """
@@ -100,12 +93,22 @@ class TestAnnotation(TestBase):
         self.assertListEqual([result01,ref_reads01,varreads01],['X_12321_12321_A_T','10','11'])
         self.assertListEqual([result02,ref_reads02,varreads02], ['X_1234_1256_G_C','12','13'])
 
-        
-
     def testFixPfx(self):
         self.assertEqual(fix_pfx('48_A03_BROv7-HA0186-NA12878'), '48_A03_BROv7_HA0186_NA12878')
         self.assertEqual(fix_pfx('48_A03_BROv7-HA0186-NA12878 '), '48_A03_BROv7_HA0186_NA12878')
         self.assertEqual(fix_pfx('UNK-124-455'), 'UNK_124_455')
         self.assertEqual(fix_pfx('LMG-240'), 'LMG240')
 
+    def test_fix(self):
+        ok_interval=Interval(1,10,('1-10'))
+        bkwds_interval=Interval(10,1,('10-1'))
+        
+        correct_interval_ok=Interval(1,10,('1-10'))
+        correct_interval_bkwds=Interval(10,11,('10-1'))
+        self.assertEqual(_fix(ok_interval), correct_interval_ok)
+        self.assertEqual(_fix(bkwds_interval), correct_interval_bkwds)
 
+    def testGenomeIntervalTree(self):
+        data=IntervalTree()
+        exons=GenomeIntervalTree.from_table(open(self.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
+        self.assertEqual(data,exons[0])
