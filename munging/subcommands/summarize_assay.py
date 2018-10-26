@@ -7,12 +7,13 @@ Requires refgene data in bed format, use refgene_to_bed script to create
 import sys
 import subprocess
 from csv import DictReader, DictWriter
-from os import path
+import os
  
 def build_parser(parser):
     parser.add_argument('--assay', required=True, help="Assay Reference bed file, sorted, with ^M removed from end of lines")
     parser.add_argument('--pref_trans', required=True, help="Gene, RefSeq for assay")
     parser.add_argument('--refgene', required=True, help="UCSC Refgene data in bed format ")
+    parser.add_argument('--bedtools', default='',help='Location of bedtools singularity image')
     parser.add_argument('--outdir', required=False, help="Output directory for summary scripts")
 
 class exonTracker:
@@ -32,6 +33,8 @@ class exonTracker:
                     self.exons[(exonStart,exonEnd)] = True
  
 def action(args):
+    BEDTOOLS='singularity exec --bind {} --pwd {} {}'.format(os.getcwd(), os.getcwd(), args.bedtools)
+
     out = args.outdir if args.outdir else ''
     refseqs = {}
     pref_trans = {}
@@ -42,7 +45,6 @@ def action(args):
     pref_trans_header = ['Gene', 'RefSeq']
 
     # 1) Read refGene.bed into the refseqs dictionary
-    print('reading in refgene')
     for line in DictReader(open(args.refgene, 'r'), delimiter='\t', fieldnames=refgene_header):
         refseq = line['refseq']
         name = line['name']
@@ -78,15 +80,13 @@ def action(args):
     # Next, intersect it with refgene to see which bases belong to a gene
     # Finally, also output regions that are not in genes 
     
-    print('merging probes')
-    merged_probes=path.join(out,'merged_probes.bed')
+    merged_probes=os.path.join(out,'merged_probes.bed')
     write_probes=open(merged_probes, 'w')
-    merge_probes_args = ['bedtools', 'merge', '-i', args.assay]
+    merge_probes_args = [x for x in BEDTOOLS.split(' ')]+['bedtools', 'merge', '-i', args.assay]
     merge_probes = subprocess.Popen(merge_probes_args, stdout=write_probes) 
     write_probes.close()
-    
-    print('intersecting probes with refgene')
-    intersect_args = ['bedtools', 'intersect', '-wo' ,'-a', merged_probes, '-b', args.refgene]
+
+    intersect_args = [x for x in BEDTOOLS.split(' ')]+['bedtools','intersect', '-wo' ,'-a', merged_probes, '-b', args.refgene]
     intersect = subprocess.Popen(intersect_args, stdout=subprocess.PIPE)
     
     # Parse that output, collecting the number of covered bases per-gene, and annotate refseqs dictionary
@@ -105,7 +105,7 @@ def action(args):
     per_refseq_header = ['gene','refseq','total_bases_targeted','length_of_gene',
                        'fraction_of_gene_covered',
                        'exons_with_any_coverage','total_exons_in_gene']
-    per_refseq_writer = DictWriter(open(path.join(out, "per_refseq_summary.txt"), 'w'), fieldnames=per_refseq_header,  delimiter='\t')
+    per_refseq_writer = DictWriter(open(os.path.join(out, "per_refseq_summary.txt"), 'w'), fieldnames=per_refseq_header,  delimiter='\t')
     per_refseq_writer.writeheader()
     # While we're looping through refseqs, count the total bases, exons, and refseqs covered
     total_coding_bases = 0
@@ -196,12 +196,12 @@ def action(args):
         return total_cov
 
     total_bases = calulate_total_covered(merged_probes)
+    non_intersect_args = [x for x in BEDTOOLS.split(' ')]+['bedtools','intersect', '-v' ,'-a', merged_probes, '-b', args.refgene]
 
-    non_intersect_args = ['bedtools', 'intersect', '-v' ,'-a', merged_probes, '-b', args.refgene]
     non_intersect = subprocess.Popen(non_intersect_args, stdout=subprocess.PIPE)
     
     # 6) Print overall summary
-    overall = open(path.join(out, "overall_summary.txt"),'w')
+    overall = open(os.path.join(out, "overall_summary.txt"),'w')
 
     # Note: The total bases and exon counts are probably slightly overestimated, since refseqs can
     # overlap and share bases.  The number of overlapping bases and exons, however, are neglible
