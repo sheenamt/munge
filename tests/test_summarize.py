@@ -30,8 +30,10 @@ class TestSummaryAssay(TestBase):
         pref_trans = os.path.join(assay_testfiles, 'test-gene-list.txt')
         refgene = os.path.join(assay_testfiles, 'test-refGene.bed')
         outdir = self.mkoutdir()
-        cmd=["munge", "summarize_assay", "--assay", assay, "--pref_trans", pref_trans, "--refgene", refgene, "--outdir", outdir]
+        bedtools='/mnt/disk2/com/container-images/bedtools-2.26.img'
+        cmd=["munge", "summarize_assay", "--assay", assay, "--pref_trans", pref_trans, "--refgene", refgene, "--outdir", outdir, "--bedtools", bedtools]
         subprocess.call(cmd)
+
         #files made in this include "overall_summary.txt", "per_refseq_summary.txt", "merged_probes.bed"
         expected_overall=os.path.join(assay_testfiles, "expected-overall_summary.txt")
         expected_per_refseq=os.path.join(assay_testfiles, "expected-per_refseq_summary.txt")
