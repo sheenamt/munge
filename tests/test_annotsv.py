@@ -37,13 +37,13 @@ class TestAnnotSV(TestBase):
         returning Event2'''
 
         #Make sure the input to the test hasn't changed
-        expected_input_alts=['A[7:55249011[', 'A[7:55249011[', ']7:55248960]A', ']7:140490765]C', ']7:140490765]C', 'A[7:138541913[', 'A[7:138541913[', 'T[X:66766396[', 'T[X:66766396[', ']X:66766356]G', ']X:66766356]G', 'C[3:178921649[', 'C[3:178921649[', ']3:178921591]T', ']3:178921591]T', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', 'C[2:48028531[']
+        expected_input_alts=['A[7:55249011[', 'A[7:55249011[', ']7:55248960]A', ']7:140490765]C', ']7:140490765]C', 'A[7:138541913[', 'A[7:138541913[', 'T[X:66766396[', 'T[X:66766396[', ']X:66766356]G', ']X:66766356]G', 'C[3:178921649[', 'C[3:178921649[', ']3:178921591]T', ']3:178921591]T', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', 'C[2:48028531[', 'T[7:98550704[', 'T[7:98550704[', ']7:98550669]T', ']7:98550669]T']
         df_alts=[x for x in self.annotsv_df['ALT']]
         self.assertListEqual(sorted(df_alts),sorted(expected_input_alts))
 
         #Make sure the function is working correctly
         event2_alt_df=self.annotsv_df.apply(annotsv_summary.parse_sv_alt, axis=1)
-        expected_event2_alts=['chr7:55249011', 'chr7:55249011', 'chr7:55248960', 'chr7:140490765', 'chr7:140490765', 'chr7:138541913', 'chr7:138541913', 'chrX:66766396', 'chrX:66766396', 'chrX:66766356', 'chrX:66766356', 'chr3:178921649', 'chr3:178921649', 'chr3:178921591', 'chr3:178921591', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr2:48028531']
+        expected_event2_alts=['chr7:55249011', 'chr7:55249011', 'chr7:55248960', 'chr7:140490765', 'chr7:140490765', 'chr7:138541913', 'chr7:138541913', 'chrX:66766396', 'chrX:66766396', 'chrX:66766356', 'chrX:66766356', 'chr3:178921649', 'chr3:178921649', 'chr3:178921591', 'chr3:178921591', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr2:48028531', 'chr7:98550704', 'chr7:98550704', 'chr7:98550669', 'chr7:98550669']
         event2_alts=[x for x in event2_alt_df['Event2']]
         self.assertListEqual(sorted(event2_alts), sorted(expected_event2_alts))
         
@@ -52,7 +52,7 @@ class TestAnnotSV(TestBase):
         '''
 
         event1_df=self.annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1)
-        expected_event1=['chr7:55248960', 'chr7:55248960', 'chr7:55249011', 'chr7:138541913', 'chr7:138541913', 'chr7:140490765', 'chr7:140490765', 'chrX:66766356', 'chrX:66766356', 'chrX:66766396', 'chrX:66766396', 'chr3:178921591', 'chr3:178921591', 'chr3:178921649', 'chr3:178921649', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr12:66451467']
+        expected_event1=['chr7:55248960', 'chr7:55248960', 'chr7:55249011', 'chr7:138541913', 'chr7:138541913', 'chr7:140490765', 'chr7:140490765', 'chrX:66766356', 'chrX:66766356', 'chrX:66766396', 'chrX:66766396', 'chr3:178921591', 'chr3:178921591', 'chr3:178921649', 'chr3:178921649', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr12:66451467', 'chr7:98550671', 'chr7:98550671', 'chr7:98550704', 'chr7:98550704']
         event1=[x for x in event1_df['Event1']]
         self.assertListEqual(sorted(event1), sorted(expected_event1))
 
@@ -62,7 +62,7 @@ class TestAnnotSV(TestBase):
 
         #Make sure the function is working correctly
         eventIDs_df=self.annotsv_df.apply(annotsv_summary.parse_info, axis=1)
-        expected_eventIDs=['gridss129_14', 'gridss129_14', 'gridss129_14', 'gridss137_4056', 'gridss137_4056', 'gridss137_4056', 'gridss137_4056', 'gridss295_7', 'gridss295_7', 'gridss295_7', 'gridss295_7', 'gridss67_8', 'gridss67_8', 'gridss67_8', 'gridss67_8', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153']
+        expected_eventIDs=['gridss129_14', 'gridss129_14', 'gridss129_14', 'gridss133_319', 'gridss133_319', 'gridss133_319', 'gridss133_319','gridss137_4056', 'gridss137_4056', 'gridss137_4056', 'gridss137_4056', 'gridss295_7', 'gridss295_7', 'gridss295_7', 'gridss295_7', 'gridss67_8', 'gridss67_8', 'gridss67_8', 'gridss67_8', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153']
         eventIDs=[x for x in eventIDs_df['EventID']]
         self.assertListEqual(sorted(eventIDs), sorted(expected_eventIDs))
 
@@ -71,7 +71,7 @@ class TestAnnotSV(TestBase):
 
          #Make sure the function is working correctly
          genes_df=self.annotsv_df.apply(annotsv_summary.parse_gene_promoter, axis=1)
-         expected_genes=['EGFR/EGFR-AS1', 'EGFR', 'EGFR/EGFR-AS1', 'KIAA1549', 'KIAA1549', 'BRAF', 'BRAF', 'AR', 'AR', 'AR', 'AR', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'MSH6', 'MSH6', 'MSH6', 'MSH6', '']
+         expected_genes=['EGFR/EGFR-AS1', 'EGFR', 'EGFR/EGFR-AS1', 'KIAA1549', 'KIAA1549', 'BRAF', 'BRAF', 'AR', 'AR', 'AR', 'AR', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'MSH6', 'MSH6', 'MSH6', 'MSH6', '', 'TRRAP', 'TRRAP', 'TRRAP', 'TRRAP']
          genes=[x for x in genes_df['Gene']]
          self.assertListEqual(sorted(genes), sorted(expected_genes))
 
@@ -80,7 +80,7 @@ class TestAnnotSV(TestBase):
 
          #Make sure the function is working correctly
          locs_df=self.annotsv_df.apply(annotsv_summary.parse_location, axis=1)
-         expected_locs=['intron18', 'intron16-intron6',  'intron8', 'exon1', 'exon1', 'intron5', 'intron5', 'intron3', 'intron3']
+         expected_locs=['intron18', 'intron16-intron6',  'intron8', 'exon1', 'exon1', 'intron5', 'intron5', 'intron3', 'intron3','intron37','intron37']
          locs=[x for x in locs_df['location'] if str(x) != 'nan' and str(x) !='']
          self.assertListEqual(sorted(locs), sorted(expected_locs))
     
@@ -91,8 +91,8 @@ class TestAnnotSV(TestBase):
         dgv_df=self.annotsv_df.apply(annotsv_summary.parse_dgv, axis=1)
         dgv_gain=[x for x in dgv_df['DGV_GAIN_found|tested']]
         dgv_lost=[x for x in dgv_df['DGV_LOSS_found|tested']]
-        expected_dgv_gain=['0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '11|33', '11|33', '11|33', '11|33', '0|0', '0|0', '0|0', '0|0', '0|0']
-        expected_dgv_lost=['0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '10|20', '10|20', '10|20', '10|20', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '10|97']
+        expected_dgv_gain=['0|0', '0|0', '0|0', '0|0','0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '11|33', '11|33', '11|33', '11|33', '0|0', '0|0', '0|0', '0|0', '0|0']
+        expected_dgv_lost=['0|0', '0|0', '0|0', '0|0','0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '10|20', '10|20', '10|20', '10|20', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '0|0', '10|97']
         self.assertListEqual(sorted(dgv_gain),sorted(expected_dgv_gain))
         self.assertListEqual(sorted(dgv_lost),sorted(expected_dgv_lost))
 
@@ -101,7 +101,7 @@ class TestAnnotSV(TestBase):
 
         #Make sure the function is working correctly
         repeats_df=self.annotsv_df.apply(annotsv_summary.parse_repeats, axis=1)
-        expected_repeats=['MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','(CGG)n[left];(CGG)n[right]','(CGG)n[left];(CGG)n[right]','AluJb[left];AluJb[right]','AluJb[left];AluJb[right]','(T)n/AluSx1[left];(T)n/AluSx1[right]']
+        expected_repeats=['MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','(CGG)n[left];(CGG)n[right]','(CGG)n[left];(CGG)n[right]','AluJb[left];AluJb[right]','AluJb[left];AluJb[right]','(T)n/AluSx1[left];(T)n/AluSx1[right]','(TG)n[left];(TG)n[right]','MER4C/(TG)n[left];MER4C/(TG)n[right]']
         repeats=[x for x in repeats_df['Repeats'] if str(x) != 'nan' and str(x) !='']
         self.assertListEqual(sorted(repeats), sorted(expected_repeats))
 
@@ -135,7 +135,7 @@ class TestAnnotSV(TestBase):
         cmd=["munge", "annotsv_summary",in_file, '-o', testing_output]
         failure=subprocess.check_output(cmd).split('\n')
         self.assertEqual('only 1 event found for gridss129_14o, probably due to quality: [366.85, 366.85]',failure[0])
-        self.assertEqual('Calls did not match for events o gridss133_319o/h gridss133_319h, expected: o1 chroutput/143R62_F08_OPXv5_HA0414/143R62_F08_OPXv5_HA0414.annotsv.tsv:7:98550671 == h2 chr7:98550669; o2 chr7:98550704 == h1 chroutput/143R62_F08_OPXv5_HA0414/143R62_F08_OPXv5_HA0414.annotsv.tsv:7:98550704',failure[1])
+        self.assertEqual('Calls did not match for events o gridss133_319o/h gridss133_319h, expected: o1 chr7:98550671 == h2 chr7:98550669; o2 chr7:98550704 == h1 chr7:98550704',failure[1])
         
 
 
