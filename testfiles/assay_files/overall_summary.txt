@@ -1,6 +1,0 @@
-71326 unique bases were targeted
-5568 unique coding bases were targeted
-1 unique refseqs had at least one base targeted
-1 total exons had some coverage
-The following probes did not intersect with transcription region of any UCSC gene:
-7	105096947	105162705
