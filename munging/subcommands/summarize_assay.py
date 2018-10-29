@@ -203,6 +203,7 @@ def action(args):
     non_intersect_args = [x for x in BEDTOOLS.split(' ')]+['bedtools','intersect', '-v' ,'-a', merged_probes, '-b', args.refgene]
     non_intersect = subprocess.call(non_intersect_args, stdout=write_non_intersect)
     write_non_intersect.close()
+
     # 6) Print overall summary
     overall = open(os.path.join(out, "overall_summary.txt"),'w')
 
@@ -218,5 +219,5 @@ def action(args):
     if data:
         overall.write("The following probes did not intersect with transcription region of any UCSC gene:\n")
         for line in data:
-            overall.write(line) # + "\n")
+            overall.write(line)
    
