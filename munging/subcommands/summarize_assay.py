@@ -83,16 +83,19 @@ def action(args):
     merged_probes=os.path.join(out,'merged_probes.bed')
     write_probes=open(merged_probes, 'w')
     merge_probes_args = [x for x in BEDTOOLS.split(' ')]+['bedtools', 'merge', '-i', args.assay]
-    merge_probes = subprocess.Popen(merge_probes_args, stdout=write_probes) 
+    merge_probes = subprocess.call(merge_probes_args, stdout=write_probes) 
     write_probes.close()
 
+    intersection=os.path.join(out,'intersect_probes_refgene.txt')
+    write_intersect=open(intersection, 'w')
     intersect_args = [x for x in BEDTOOLS.split(' ')]+['bedtools','intersect', '-wo' ,'-a', merged_probes, '-b', args.refgene]
-    intersect = subprocess.Popen(intersect_args, stdout=subprocess.PIPE)
-    
+    intersect = subprocess.call(intersect_args, stdout=write_intersect)
+    write_intersect.close()
+
     # Parse that output, collecting the number of covered bases per-gene, and annotate refseqs dictionary
     # Note: Communicate returns (stdoutdata, stderrdata), stdout is a giant string, not an iterable
     # Also, the last line is just a newline, which must be skipped
-    for line in intersect.communicate()[0].split('\n')[:-1]:
+    for line in open(intersection):
         ls = line.split('\t')
         refseq = ls[7]          # We pick out the refseq of the gene from refGene that was matched
         overlap = int(ls[-1]) # The '-wo' switch from intersect_args put the amount of overlap here
@@ -114,7 +117,6 @@ def action(args):
 
     for gene in DictReader(open(args.pref_trans, 'r'), delimiter='\t', fieldnames=pref_trans_header):
         transcript = gene['RefSeq'].split('.')[0]
-
         if transcript.upper()=='REFSEQ':
             continue
         try:
@@ -196,10 +198,11 @@ def action(args):
         return total_cov
 
     total_bases = calulate_total_covered(merged_probes)
+    non_intersection=os.path.join(out,'non_intersect_probes_refgene.txt')
+    write_non_intersect=open(non_intersection, 'w')
     non_intersect_args = [x for x in BEDTOOLS.split(' ')]+['bedtools','intersect', '-v' ,'-a', merged_probes, '-b', args.refgene]
-
-    non_intersect = subprocess.Popen(non_intersect_args, stdout=subprocess.PIPE)
-    
+    non_intersect = subprocess.call(non_intersect_args, stdout=write_non_intersect)
+    write_non_intersect.close()
     # 6) Print overall summary
     overall = open(os.path.join(out, "overall_summary.txt"),'w')
 
@@ -211,9 +214,9 @@ def action(args):
     overall.write("{} unique refseqs had at least one base targeted\n".format(gene_count))
     overall.write("{} total exons had some coverage\n".format(total_exons))
 
-    data=non_intersect.communicate()[0].split('\n')[:-1]
+    data=open(non_intersection)
     if data:
         overall.write("The following probes did not intersect with transcription region of any UCSC gene:\n")
         for line in data:
-            overall.write(line + "\n")
+            overall.write(line) # + "\n")
    
