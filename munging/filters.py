@@ -86,6 +86,12 @@ def genotype_analysis(pth):
     """
     return pth.fname.split('.')[-2] in set (['Genotype_Analysis'])
 
+def annotsv_analysis(pth):
+    """
+    True only for pfx.SV_Analysis.{txt,csv}
+    """
+    return pth.fname.split('.')[-2] in set (['SV_Analysis'])
+
 def polyhunter_analysis(pth):
     """
     True only for pfx.Genotype_Analysis.{txt,csv}
