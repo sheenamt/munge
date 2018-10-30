@@ -422,3 +422,33 @@ def parse_qualitymetrics(lines, variant_keys):
     #Only print the keys we care about:
     output_dict = dict(zip(variant_keys,itemgetter(*variant_keys)(metrics_dict)))
     return output_dict, variant_keys
+
+def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_order):
+    """Parse the annotsv analysis file, give total counts of samples with site"""
+
+    files = filter(filters.annotsv_analysis, files)
+    variant_keys = ['Event1', 'Event2', 'Gene1', 'Gene2', 'NM']
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            prefixes.append(pfx['mini-pfx'])
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][pfx['mini-pfx']] = row['QUAL']
+                    annotation[variant] = row
+
+                    
+    #Update the specimen dict for this variant, count samples present
+    for key, value in specimens.iteritems():
+        specimens[key]['Count']=len(value)
+
+    #Add 'Count' to prefixes for correct dict zipping/printing    
+    prefixes.append('Count')
+    fieldnames = variant_keys + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys            
