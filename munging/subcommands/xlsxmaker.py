@@ -66,7 +66,7 @@ def process_files(infiles, tab, filetype):
                         sheet_name = '8_CNV_Exon'
                 #48_A03_BROv7_HA0186_NA12878_SV_Analysis
                 elif sheet_name[-2] == 'SV':
-                    sheet_name = '4_SV_Crest'
+                    sheet_name = '4_SV_Gridss'
                 #48_A03_BROv7_HA0186_NA12878_Breakdancer_Analysis
                 elif sheet_name[-2] == 'Breakdancer':
                     sheet_name = '5_SV_Breakdancer'
@@ -153,7 +153,7 @@ def action(args):
     (infiles, ) = args.infiles
     if filetype == 'Analysis':
         tabs = ['0_QC', '1_QC_Metrics', '2_QC_by_Gene', '3_QC_by_Exon',
-                '4_SV_Crest', '5_SV_Breakdancer', '6_SV_Pindel',
+                '4_SV_Gridss', '5_SV_Breakdancer', '6_SV_Pindel',
                 '7_CNV_Gene', '8_CNV_Exon', '9_Clinically_Flagged', 
                 '10_SNP','11_INDEL', '12_MSI', '13_Amplicons', '14_PolyHunter']
         #    for each tab, find its file and process.
