@@ -217,3 +217,18 @@ class TestParsers(TestBase):
         self.assertEqual(specimens[('chr3:37034946', 'G', 'A')]['0228T_Status'], 'HET')#.2-.7
         self.assertEqual(specimens[('chr2:215661788','C','T')]['0228T_Status'], 'HOMO')#>.7
         self.assertEqual(specimens[('chr13:32936674', 'C', 'T')]['0228T_Status'], 'NEG')#<.1
+
+    def testAnnotSVParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
+        analysis_type='parsers.parse_annotsv'
+        files = ifilter(filters.any_analysis, walker(testfiles))  
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(prefixes,['0228T', '5437_NA12878', '6037_NA12878','Count'])
+        self.assertListEqual(fieldnames, ['Event1','Event2','Gene1','Gene2','NM','0228T', '5437_NA12878', '6037_NA12878','Count'])
+        self.assertListEqual(variant_keys, ['Event1','Event2','Gene1','Gene2','NM'])
+        self.assertEqual(len(specimens), 19)
