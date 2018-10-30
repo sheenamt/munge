@@ -143,9 +143,9 @@ def smoosh_event_into_one_line(event_df):
     #Great, set things to o_event
     event1=o_event1
     event2=o_event2
-
-    gene1 = o_dict['Gene'] 
-    gene2 = h_dict['Gene']
+    
+    gene1 = o_dict['Gene']  or 'Intergenic'
+    gene2 = h_dict['Gene'] or 'Intergenic'
     location1 = o_dict['location']
     location2 = h_dict['location']
     repeats1 = o_dict['Repeats']
