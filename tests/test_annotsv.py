@@ -130,12 +130,18 @@ class TestAnnotSV(TestBase):
         2. o_ref != h_alt
         '''
         testing_output=path.join(annotsv_testfiles, 'testing_output.txt')
-        expected_output=path.join(annotsv_testfiles, 'expected_output.txt')
         in_file=path.join(annotsv_testfiles, 'small_annotsv.txt')
         cmd=["munge", "annotsv_summary",in_file, '-o', testing_output]
-        failure=subprocess.check_output(cmd).split('\n')
+        failure=subprocess.check_output(cmd) .split('\n')
         self.assertEqual('only 1 event found for gridss129_14o, probably due to quality: [366.85, 366.85]',failure[0])
         self.assertEqual('Calls did not match for events o gridss133_319o/h gridss133_319h, expected: o1 chr7:98550671 == h2 chr7:98550669; o2 chr7:98550704 == h1 chr7:98550704',failure[1])
         
-
+    def testParseSingleton(self):
+        annotsv_df=self.annotsv_df.copy()
+        annotsv_df=annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1).apply(annotsv_summary.parse_location, axis=1)
+        o_event='gridss133_319o'
+        o_dict = annotsv_summary.collapse_event(annotsv_df.loc[(annotsv_df['ID']==o_event)])
+        output=annotsv_summary.parse_singleton(o_dict)
+        expected_output=['chr7:98550671', 'chr7:98550704', 'TRRAP', 'TRRAP', 'intron37', 'SINGLETON EVENT', 'NM_003496', '215.25', 'SINGLETON EVENT;LOW_QUAL', '', '', 'MER4C/(TG)n[left];MER4C/(TG)n[right]', 'SINGLETON EVENT', '0|0', '0|0']
+        self.assertEqual(sorted(output), sorted(expected_output))
 
