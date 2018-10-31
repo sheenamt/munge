@@ -62,7 +62,6 @@ def parse_gene_promoter(data):
         promoter=str(data['promoters'])+'[Promoter]'
     if data['Gene name'] != '':
         gene=data['Gene name']
-
     data['Gene']=";".join(filter(None, [gene,promoter]))
 
     return pd.Series(data)
@@ -76,7 +75,10 @@ def parse_dgv(data):
     return pd.Series(data)
 
 def parse_location(data):
-    '''Split the annotsv location into two, if both are the same'''
+    '''Split the annotsv location into two, if both are the same
+    intron37-intron37 returns intron37
+    intron37-intron39 returns intron37-intron39
+    '''
 
     if data['location'] != '':
         a,b=data['location'].split('-')
@@ -96,6 +98,9 @@ def parse_repeats(data):
     data['Repeats']=';'.join(filter(None,[repeat_left,repeat_right]))
     return pd.Series(data)
 
+def parse_singleton(event):
+    return [event['Event1'], event['Event2'], event['Gene'], event['Gene name'], event['location'],'SINGLETON EVENT', event['NM'], event['QUAL'], 'SINGLETON EVENT;'+event['FILTER'], event['1000g_event'],event['1000g_max_AF'],event['Repeats'],'SINGLETON EVENT',event['DGV_GAIN_found|tested'],event['DGV_LOSS_found|tested']]
+
 def smoosh_event_into_one_line(event_df):
     ''' Smooshes a multiline annotsv event into one line'''
 
@@ -111,9 +116,6 @@ def smoosh_event_into_one_line(event_df):
     dgv_loss = None
 
     sub_events = event_df['ID'].unique()
-    if len(sub_events) !=2:
-       return ['Fail', 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])]
-
     o_event = None
     h_event = None
 
@@ -123,10 +125,19 @@ def smoosh_event_into_one_line(event_df):
             o_event = sub_event
         elif sub_event.endswith('h'):
             h_event = sub_event
+    
     # collapse event sides into one result
     o_dict = collapse_event(event_df.loc[(event_df['ID']==o_event)])
     h_dict = collapse_event(event_df.loc[(event_df['ID']==h_event)])
     
+    if o_dict and not h_dict:
+        print 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])
+        return parse_singleton(o_dict)
+    elif h_dict and not o_dict:
+        print 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])
+        return parse_singleton(h_dict)
+       
+
     # combine sub_events into one event
     o_event1 = event_df.loc[event_df['ID']==o_event,'Event1'].iloc[0]
     o_event2 = event_df.loc[event_df['ID']==o_event,'Event2'].iloc[0]
@@ -138,14 +149,17 @@ def smoosh_event_into_one_line(event_df):
         assert(o_event2 == h_event1)
         assert(o_event1 == h_event2)
     except:
-        return ['Fail', """Calls did not match for events o {}/h {}, expected: o1 {} == h2 {}; o2 {} == h1 {}""".format(o_event, h_event, o_event1, h_event2, o_event2, h_event1)]
+        print "Calls did not match for events o {}/h {}, expected: o1 {} == h2 {}; o2 {} == h1 {}".format(o_event, h_event, o_event1, h_event2, o_event2, h_event1)
+        return ['Error', parse_singleton(o_dict), parse_singleton(h_dict)]
 
     #Great, set things to o_event
     event1=o_event1
     event2=o_event2
+
+    #Remove duplicate gene entries or set to 'Intergenic' if no gene is present
+    gene1=';'.join([x for x in set([x for x in o_dict['Gene'].split(';')])]) or 'Intergenic'
+    gene2=';'.join([x for x in set([x for x in h_dict['Gene'].split(';')])]) or 'Intergenic'
     
-    gene1 = o_dict['Gene']  or 'Intergenic'
-    gene2 = h_dict['Gene'] or 'Intergenic'
     location1 = o_dict['location']
     location2 = h_dict['location']
     repeats1 = o_dict['Repeats']
@@ -213,12 +227,13 @@ def action(args):
         current_event_df = annotsv_df.loc[(annotsv_df['EventID']==event_id)]
         if len(current_event_df) == 0:
             print("something went wrong...")
-            sys.exit()
+            sys.exit(1)
         # feed current event df copy to new function
         event_result = smoosh_event_into_one_line(current_event_df.copy())
         #Sometimes the second event has a lower quality score that was filtered out, print that to a log and move on
-        if event_result[0]=='Fail':
-            print(event_result[1])
+        if event_result[0]=='Error':
+            event_results_list.append(event_result[1])
+            event_results_list.append(event_result[2])
         else:
             event_results_list.append(event_result)
 
