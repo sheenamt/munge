@@ -74,10 +74,10 @@ def action(args):
     headers = ['Position', 'Ref_Base', 'Var_Base', 'variant_type', 'anno']
     #If the 'missed' dataframe is empty, we found all of the variants
     if missed.empty:
-        new_line="Found {} of expected {} variants:".format(len(matched.index), len(control_df.index))
+        new_line="Found {} of expected {} variants".format(len(matched.index), len(control_df.index))
         output.write(new_line)
     else:
-        new_line={'Position':"Found {} of expected {} variants".format(found, expected_count),  'Ref_Base':'', 'Var_Base':'', 'Variant_Type':'', 'anno':'', '_merge':''}  #[]#+ [' ']*(len(missed.columns)-1)
+        new_line={'Position':"Found {} of expected {} variants. Missed:".format(found, expected_count),  'Ref_Base':'', 'Var_Base':'', 'Variant_Type':'', 'anno':'', '_merge':''}  #[]#+ [' ']*(len(missed.columns)-1)
         missed.loc[-1]=new_line
         missed.index = missed.index +1
         missed=missed.sort_index()
