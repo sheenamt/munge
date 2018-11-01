@@ -17,6 +17,25 @@ from os import path
 
 from munging.annotation import get_location, multi_split, split_string_in_two
 
+
+
+def build_parser(parser):
+    parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
+        help='Capture genes file with RefSeq in second column')
+    parser.add_argument(
+        'type', choices=['SNP', 'INDEL', 'PINDEL'],
+        help='Type of files to create tab, SNP or INDEL')
+    parser.add_argument(
+        'infiles', action='append', nargs='+',
+        help='Input files')
+    parser.add_argument(
+        '-o', '--outfile',
+        help='Output file', default=sys.stdout,
+        type=argparse.FileType('w'))
+    parser.add_argument(
+        '--strict', action='store_true', default=False,
+        help='Exit with error if an input file has no match.')
+
 variant_headers = ['chr', 'start', 'stop', 'Ref_Base', 'Var_Base']
 
 # (pattern, header_ids, var_key_ids)
@@ -275,24 +294,6 @@ def merge_data(output,data):
         if k not in multi_trans_keys:
             output[k]=data.get(k)
     return output
-
-
-def build_parser(parser):
-    parser.add_argument('RefSeqs', type=argparse.FileType('rU'),
-        help='Capture genes file with RefSeq in second column')
-    parser.add_argument(
-        'type', choices=['SNP', 'INDEL', 'PINDEL'],
-        help='Type of files to create tab, SNP or INDEL')
-    parser.add_argument(
-        'infiles', action='append', nargs='+',
-        help='Input files')
-    parser.add_argument(
-        '-o', '--outfile',
-        help='Output file', default=sys.stdout,
-        type=argparse.FileType('w'))
-    parser.add_argument(
-        '--strict', action='store_true', default=False,
-        help='Exit with error if an input file has no match.')
 
 def action(args):
 
