@@ -9,12 +9,15 @@ import subprocess
 from munging.utils import munge_path
 
 def build_parser(parser):
-    parser.add_argument('run_dir',
-                        help='Directory where input file is located')
     parser.add_argument('out_dir',
                         help='Directory where output files will be created')
     parser.add_argument('input_file', default=None,
                         help='Explicitly specify input file of variants in Annovar format')
+    parser.add_argument('--machine',
+                        choices=['H', 'N', 'M'],
+                        help='Machine type for internal frequencies')
+    parser.add_argument('--assay',
+                        help='Assay code for interal frequencies')
     parser.add_argument('--ref_gene_only', action='store_true',
                         help='Run only the ref_gene annotation')
     parser.add_argument('--clin_flagged_only', action='store_true',
@@ -57,11 +60,11 @@ def action(args):
     AnnotInfo =  namedtuple('AnnotInfo', ['dbtype', 'anno_type', 'args', 'library_dir'])
     AnnotInfo.__new__.__defaults__ = ('-filter','', args.library_dir)
 
-    #Default library dir is used in all but git versioned files
-
-    pathinfo = munge_path(args.run_dir)
-    internal_freq_file = '_'.join(['hg19',pathinfo['machine'],pathinfo['assay']])
-    internal_cadd_file = '_'.join(['hg19','CADD',pathinfo['assay']])    
+    #if info given for interal frequencies, name that file
+    machine=args.machine
+    assay=args.assay.split('v')[0]
+    internal_freq_file = '_'.join(['hg19',machine,assay])
+    internal_cadd_file = '_'.join(['hg19','CADD',assay])
 
     variants_file = args.input_file
     file_pfx = os.path.basename(args.input_file).replace('.ann','')
@@ -104,11 +107,11 @@ def action(args):
         if a.anno_type=='--genericdbfile':
             generic_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.hg19_generic_dropped')
             #Case for moving frequency file
-            if pathinfo['machine'] in a.args[0]:
-                gen_file_basename = a.args[0].replace(pathinfo['machine']+'_'+pathinfo['assay'],'UW_freq')
+            if machine in a.args[0]:
+                gen_file_basename = a.args[0].replace(machine+'_'+assay,'UW_freq')
             #Case for moving CADD file and cli
-            elif pathinfo['assay'] in a.args[0]:
-                gen_file_basename = a.args[0].replace(pathinfo['assay'],'').strip('_')
+            elif assay in a.args[0]:
+                gen_file_basename = a.args[0].replace(assay,'').strip('_')
             else:
                 gen_file_basename = generic_db_fname
             specific_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.'+gen_file_basename+'_dropped')
