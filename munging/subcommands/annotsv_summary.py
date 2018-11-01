@@ -214,7 +214,11 @@ def action(args):
 
     #filter all calls less than 200 quality
     annotsv_df=annotsv_df[annotsv_df['QUAL']>=200]
-
+    #Setup columns for output
+    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
+    if annotsv_df.empty:
+        annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
+        sys.exit()
     #Parse the parts we care about
     annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1).apply(parse_location, axis=1)
 
@@ -237,7 +241,6 @@ def action(args):
         else:
             event_results_list.append(event_result)
 
-    # turn event_results_list into DF for output
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
     output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
