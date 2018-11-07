@@ -204,18 +204,24 @@ def collapse_event(sub_event_df):
 
 
 def action(args):
-    #Make dataframe of annotsv annotation
-    annotsv_df=pd.read_csv(args.annotsv, delimiter='\t', index_col=False, usecols=['SV chrom','SV start','SV end', 'ID', 'ALT','Gene name','NM','QUAL',
-                                                                                   'FILTER','INFO','location','promoters','1000g_event', '1000g_max_AF', 
-                                                                                   'Repeats_type_left', 'Repeats_type_right',
-                                                                                   'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
-                                                                                   'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested'])
-    annotsv_df.fillna('', inplace=True)
-
-    #filter all calls less than 200 quality
-    annotsv_df=annotsv_df[annotsv_df['QUAL']>=200]
     #Setup columns for output
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
+
+    #Make dataframe of annotsv annotation
+    try:
+        annotsv_df=pd.read_csv(args.annotsv, delimiter='\t', index_col=False, usecols=['SV chrom','SV start','SV end', 'ID', 'ALT','Gene name','NM','QUAL',
+                                                                                       'FILTER','INFO','location','promoters','1000g_event', '1000g_max_AF', 
+                                                                                       'Repeats_type_left', 'Repeats_type_right',
+                                                                                       'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
+                                                                                       'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested'])
+    except ValueError:
+        output_df=pd.DataFrame(event_results_list,columns=var_cols)
+        output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
+        
+    annotsv_df.fillna('', inplace=True)
+        
+    #filter all calls less than 200 quality
+    annotsv_df=annotsv_df[annotsv_df['QUAL']>=200]
     if annotsv_df.empty:
         annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
         sys.exit()
