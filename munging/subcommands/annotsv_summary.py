@@ -215,9 +215,9 @@ def action(args):
                                                                                        'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
                                                                                        'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested'])
     except ValueError:
-        output_df=pd.DataFrame(event_results_list,columns=var_cols)
-        output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
-        
+        args.outfile.write('\t'.join(var_cols) + '\n')
+        sys.exit()
+
     annotsv_df.fillna('', inplace=True)
         
     #filter all calls less than 200 quality
