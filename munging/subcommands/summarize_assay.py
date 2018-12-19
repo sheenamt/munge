@@ -8,13 +8,16 @@ import sys
 import subprocess
 from csv import DictReader, DictWriter
 import os
- 
+
+from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
+
 def build_parser(parser):
     parser.add_argument('--assay', required=True, help="Assay Reference bed file, sorted, with ^M removed from end of lines")
     parser.add_argument('--pref_trans', required=True, help="Gene, RefSeq for assay")
     parser.add_argument('--refgene', required=True, help="UCSC Refgene data in bed format ")
     parser.add_argument('--bedtools', default='',help='Location of bedtools singularity image')
     parser.add_argument('--outdir', required=False, help="Output directory for summary scripts")
+
 
 class exonTracker:
     """
@@ -25,13 +28,12 @@ class exonTracker:
         self.exons = dict(((start,end),False) for start,end in zip(exonStarts,exonEnds))
         assert(len(exonStarts) == len(exonEnds))
     def insert(self, start, end):
-        # If a probe begins or ends within an exon, mark that exon as covered.
+        #Probes are merged, and therefore may cover multiple exons
+        #probe: 1-100, exons: 1-20, 30-49, 59-99
         for exonStart, exonEnd in self.exons.keys():
-            if ((exonStart <= start and end < exonEnd) or
-                (exonStart < end and end <= exonEnd)):
-                if self.exons[(exonStart,exonEnd)] == False:
-                    self.exons[(exonStart,exonEnd)] = True
- 
+            if (int(start) >= int(exonStart) and int(end) < int(exonEnd)) or (int(end) > int(exonStart) and int(end) <= int(exonEnd)) or (int(exonStart) > int(start) and int(exonEnd) < int(end)):
+                self.exons[(exonStart,exonEnd)] = True
+                
 def action(args):
     BEDTOOLS='singularity exec --bind {} --pwd {} {}'.format(os.getcwd(), os.getcwd(), args.bedtools)
 
@@ -39,25 +41,21 @@ def action(args):
     refseqs = {}
     pref_trans = {}
 
-    refgene_header = ['chrom','chromStart','chromEnd','name', 'refseq','score','strand','thickStart',
-                      'thickEnd','itemRgb','exonCount','exonSizes','exonStarts'] 
+    refgene_header = ['chrom','chromStart','chromEnd','name', 'refseq','exonCount','exonSizes','exonStarts','exonEnds'] 
     probes_header = ['chrom', 'chromStart', 'chromEnd' ]
     pref_trans_header = ['Gene', 'RefSeq']
 
-    # 1) Read refGene.bed into the refseqs dictionary
+    
+    # 1) Read refGene.txt into the refseqs dictionary
     for line in DictReader(open(args.refgene, 'r'), delimiter='\t', fieldnames=refgene_header):
         refseq = line['refseq']
         name = line['name']
         # Dictionary-ize refgene.bed
         # Insert unseen refseqs into the dictionary; 
         # We asume that refgene only has ONE line per refseq
+        exonStarts=[x for x in line['exonStarts'].split(',')]
+        exonEnds=[x for x in line['exonEnds'].split(',')]
         if refseq not in refseqs:
-            exonStarts = [int(line['chromStart']) + int(exonStart) for exonStart in
-                            line['exonStarts'].split(',')]
-
-            exonEnds = [exonStart + int(exonSize) for exonStart, exonSize in
-                            zip(exonStarts, line['exonSizes'].split(','))]
-
             refseqs[refseq] = dict( [('name', name),
                                      ('refseq', line['refseq']),
                                      ('chrom', line['chrom'].strip('chr')),
@@ -66,12 +64,12 @@ def action(args):
                                      ('exonTracker', exonTracker(exonStarts, exonEnds)),
                                      ('bases_covered', 0)])
             
-            # Sanity checks
+            #Sanity checks
             assert(len(exonStarts) == len(exonEnds))
             for start,end in zip(exonStarts, exonEnds):
-                assert(start < end)
-                assert(int(line['chromStart']) <= start and start < int(line['chromEnd']))
-                assert(int(line['chromStart']) < end and end <= int(line['chromEnd']))
+                assert(int(start) < int(end))
+                assert(int(line['chromStart']) <= int(start) and int(start) < int(line['chromEnd']))
+                assert(int(line['chromStart']) < int(end) and int(end) <= int(line['chromEnd']))
         else:
             sys.stderr.write("Refseq {} is listed twice in refGene!".format(line['refseq']))
 
@@ -102,13 +100,10 @@ def action(args):
         refseqs[refseq]['bases_covered'] += overlap
         refseqs[refseq]['exonTracker'].insert(int(ls[1]), int(ls[2]))
 
-        assert(refseqs[refseq]['bases_covered'] <= int(refseqs[refseq]['chromEnd']) - int(refseqs[refseq]['chromStart']))
-
     # 4) Print per-refseq summary
-    per_refseq_header = ['gene','refseq','total_bases_targeted','length_of_gene',
-                       'fraction_of_gene_covered',
-                       'exons_with_any_coverage','total_exons_in_gene']
-    per_refseq_writer = DictWriter(open(os.path.join(out, "per_refseq_summary.txt"), 'w'), fieldnames=per_refseq_header,  delimiter='\t')
+    per_refseq_header = ['gene','refseq','total_bases_targeted','length_of_gene','fraction_of_gene_covered'] 
+#                         'fraction_of_gene_covered','exons_with_any_coverage','total_exons_in_gene']
+    per_refseq_writer = DictWriter(open(os.path.join(out, "per_refseq_summary.txt"), 'w'), fieldnames=per_refseq_header,  delimiter='\t', extrasaction='ignore')
     per_refseq_writer.writeheader()
     # While we're looping through refseqs, count the total bases, exons, and refseqs covered
     total_coding_bases = 0
@@ -134,8 +129,8 @@ def action(args):
                 #Only count this as a covered gene if it has coverage
                 if gene['bases_covered'] > 0:
                     gene_count +=1
-
                 exons = [exon for exon in refseqs[transcript]['exonTracker'].exons.values()].count(True)
+
                 outfields = dict([('gene', gene['Gene']), 
                                   ('refseq', gene['RefSeq']),
                                   ('total_bases_targeted', gene['bases_covered']),
@@ -211,9 +206,9 @@ def action(args):
     # overlap and share bases.  The number of overlapping bases and exons, however, are neglible
     # and cumbersome to calculate
     overall.write("{} unique bases were targeted\n".format(total_bases))
-    overall.write("{} unique coding bases were targeted\n".format(total_coding_bases))
+    overall.write("{} unique bases within gene boundaries were targeted\n".format(total_coding_bases))
     overall.write("{} unique refseqs had at least one base targeted\n".format(gene_count))
-    overall.write("{} total exons had some coverage\n".format(total_exons))
+#    overall.write("{} total exons had some coverage\n".format(total_exons))
 
     data=open(non_intersection)
     if data:
