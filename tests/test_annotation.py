@@ -17,6 +17,7 @@ from munging.annotation import fix_pfx
 from munging.annotation import _fix
 from munging.annotation import GenomeIntervalTree
 from munging.annotation import UCSCTable
+from munging.annotation import IntervalMakers
 
 
 from __init__ import TestBase
@@ -111,4 +112,25 @@ class TestAnnotation(TestBase):
     def testGenomeIntervalTree(self):
         data=IntervalTree()
         exons=GenomeIntervalTree.from_table(open(self.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
-        self.assertEqual(data,exons[0])
+        for start,end,data in exons['chr17'].search(int(7577100)):
+            if data['name']=='NM_000546':
+                rev_exon=data
+
+        for start,end,data in exons['chr17'].search(int(7577700)):
+            if data['name']=='NM_000546':
+                rev_intron=data
+        #TP53:NM_000546, reverse strand, position 7577100 is in exon8,position 7577100 is in intron6
+        self.assertEqual(rev_exon['exonNum'],'8')
+        self.assertEqual(rev_intron['intronNum'],'6')
+        
+
+        for start,end,data in exons['chrX'].search(int(66763880)):
+            if data['name']=='NM_000044':
+                forward_exon=data
+        for start,end,data in exons['chrX'].search(int(66942830)):
+            if data['name']=='NM_000044':
+                forward_intron=data
+        #AR:NM_000044, forward strand, position 66763880  is in exon1,position 66942830 is in intron7
+        self.assertEqual(forward_exon['exonNum'],'1')
+        self.assertEqual(forward_intron['intronNum'],'7')
+
