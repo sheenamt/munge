@@ -139,6 +139,7 @@ class UCSCTable(object):
 class IntervalMakers(object):
     '''A container class for interval-making functions, used in GenomeIntervalTree.from_table and GenomeIntervalTree.from_bed.'''
 
+
     @staticmethod
     def TX(d):
         return [Interval(int(d['txStart']), int(d['txEnd']), d)]
@@ -152,9 +153,14 @@ class IntervalMakers(object):
         exStarts = d['exonStarts'].split(b',')
         exEnds = d['exonEnds'].split(b',')
         intron_count=int(d['exonCount'])-1
-        for i in range(int(d['exonCount'])):
+        exon_count=int(d['exonCount'])
+        strand = d['strand']
+        for i in range(exon_count):
             exon_d = d.copy()
-            exon_d['exonNum']=str(i+1)
+            if strand == '+':
+                exon_d['exonNum']=str(i+1)
+            elif strand == '-':
+                exon_d['exonNum']=str(exon_count-i)
             #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
             yield Interval(int(exStarts[i]), int(exEnds[i])+1, exon_d)
 

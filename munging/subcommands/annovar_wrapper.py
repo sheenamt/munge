@@ -45,7 +45,7 @@ ANNOTATIONS = [('snp138',),  # dbsnp
                ('esp6500siv2_aa',),  # evs-african american
                ('esp6500siv2_ea',),  # evs-european
                ('cosmic84',),  # cosmic84, created internally
-               ('clinvar_20170905',),  # CLINVAR database with Variant Clinical Significance (unknown, untested, non-pathogenic, probable-non-pathogenic, probable-pathogenic, pathogenic, drug-response, histocompatibility, other) and Variant disease name, Clinvar version 20170905 with separate columns (CLINSIG CLNDBN CLNACC CLNDSDB CLNDSDBID
+               ('clinvar_20180603',),  # CLINVAR database with Variant Clinical Significance (unknown, untested, non-pathogenic, probable-non-pathogenic, probable-pathogenic, pathogenic, drug-response, histocompatibility, other) and Variant disease name, Clinvar version 20170905 with separate columns (CLINSIG CLNDBN CLNACC CLNDSDB CLNDSDBID
                ('nci60',),  # NCI-60 human tumor cell line panel exome sequencing allele frequency data
                ('segdup', '--regionanno',),  # segdup annotation:              
                ('refGene', '--geneanno', ['--splicing_threshold','10', '--hgvs']),  # Gene level annotation:
@@ -81,9 +81,10 @@ def action(args):
 
     #if info given for interal frequencies, name that file
     machine=args.machine
-    assay=args.assay.split('v')[0]
-    internal_freq_file = '_'.join(['hg19',machine,assay])
-    internal_cadd_file = '_'.join(['hg19','CADD',assay])
+    if args.assay:
+        assay=args.assay.split('v')[0]
+        internal_freq_file = '_'.join(['hg19',machine,assay])
+        internal_cadd_file = '_'.join(['hg19','CADD',assay])
 
     variants_file = args.input_file
     file_pfx = os.path.basename(args.input_file).replace('.ann','')
@@ -102,6 +103,10 @@ def action(args):
         #There is not always an internal frequency file
         if os.path.isfile(os.path.join(args.library_dir, internal_freq_file)):
             annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_freq_file, '-filter']))
+        #There is not always an internal cadd file
+        if os.path.isfile(os.path.join(args.library_dir, internal_cadd_file)):
+            annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))
+
         #There is always a clin flagged
         annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[generic_db_fname, '-filter'], library_dir=generic_db_dirname))
 
