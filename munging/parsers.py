@@ -20,23 +20,6 @@ some include additional annotation headers,
 sample counts, and scores calculated based on counts
 """
 
-def parse_quality_metrics(fname):
-    """
-    Parses the Pindel quality metrics file into a dictionary.
-    Only uses values in the first line, ignores all else.
-    """
-    f = open(fname, 'r')
-    lines = f.readlines()
-    keys = []
-    values = []
-    for i in range(len(lines)-1):
-        parts = lines[i].strip('\n').split('\t')
-        if len(parts) > 0 and parts[0] == 'LIBRARY':
-            keys = parts
-            values = lines[i+1].strip('\n').split('\t')
-    quality_metrics = OrderedDict(zip(keys, values))
-    return quality_metrics
-
 def parse_quality(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """ Parse the sample quality analysis file, from hs_metrics"""
     files = filter(filters.quality_analysis, files)
