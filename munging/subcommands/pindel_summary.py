@@ -63,6 +63,11 @@ def define_transcripts(chrm_data):
 def action(args):
     #Create interval tree of introns and exons,  grouped by chr
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
+    
+    #try to match chr string in reference file and input data
+    chrm=False
+    if 'chr' in exons.keys()[0]:
+        chrm = True
 
     output = []
 
@@ -81,13 +86,15 @@ def action(args):
                     continue
                 #only normal chr are process, GL amd MT are ignored
                 try:
-                    chr1 = 'chr'+str(chromosomes[row['CHROM']])
+                    if chrm:
+                        chr1 = 'chr'+str(chromosomes[row['CHROM']])
+                    else:
+                        chr1 = str(chromosomes[row['CHROM']])
                 except KeyError:
                     continue
 
                 #Setup the variables to be returned
                 gene1, region, transcripts=[],[],[]
-                
                 # each segment is assigned to a gene if either the
                 # start or end coordinate falls within the feature boundaries.
                 chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
