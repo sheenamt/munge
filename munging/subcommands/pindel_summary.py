@@ -14,7 +14,7 @@ from operator import itemgetter
 import logging
 import pandas
 from munging.utils import Opener
-from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
+from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts
 
 csv.field_size_limit(10000000)
 log = logging.getLogger(__name__)
