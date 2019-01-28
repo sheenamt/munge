@@ -276,3 +276,17 @@ class GenomeIntervalTree(defaultdict):
 
 
 
+def define_transcripts(chrm_data):
+    """Given the interval, set the gene, region and transcripts"""
+    gene1, region, transcripts=[],[],[]
+    for start, stop, data in chrm_data: 
+        gene1.append(data['name2'])
+        if 'exonNum' in data.keys():
+            region.append('Exonic')
+            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
+            transcripts.append(transcript)
+        if 'intronNum' in data.keys():
+            region.append('Intronic')
+            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
+            transcripts.append(transcript)
+    return gene1, region, sorted(transcripts)
