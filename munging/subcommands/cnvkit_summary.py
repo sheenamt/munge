@@ -19,6 +19,8 @@ def build_parser(parser):
                         help='RefGene file, filtered by preferred transcripts file')
     parser.add_argument('cnvkit_cnr', type=Opener(),
                         help='*cnr file from CNVkit')
+    parser.add_argument('-p', '--plot', type=Opener('w'), metavar='FILE',
+                        default=sys.stdout, help='Create output file required for R plotting scripts')
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
 
@@ -42,7 +44,6 @@ def define_transcripts(chrm_data):
 def action(args):
     #Create interval tree of introns and exons,  grouped by chr
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
-
     output = []
 
     #try to match chr string in reference file and input data
@@ -96,8 +97,15 @@ def action(args):
         output.append(row)
 
     sorted_output = natsorted(output, key=itemgetter('Position'))  #Sort by gene name
-    out_fieldnames=['Gene','Position','Depth','Adjusted.Mean.of.LogRatio','Weight', 'Transcripts','Exon.Number','Chr','OriStCoordinate', 'Gene.Sym']
+    out_fieldnames=['Gene','Position','Depth','Adjusted.Mean.of.LogRatio','Weight', 'Transcripts']
     writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
     writer.writeheader()
     writer.writerows(sorted_output) 
+
+    if args.plot:
+        out_fieldnames=['Adjusted.Mean.of.LogRatio','Exon.Number','Chr','OriStCoordinate', 'Gene.Sym']
+        writer = csv.DictWriter(args.plot, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
+        writer.writeheader()
+        writer.writerows(sorted_output) 
+
 
