@@ -5,7 +5,7 @@ import logging
 import argparse
 import pandas as pd
 import sys
-from munging.annotation import multi_split
+from munging.annotation import multi_split, chromosomes
 
 log = logging.getLogger(__name__)
 pd.options.display.width = 1000
@@ -23,8 +23,11 @@ def build_parser(parser):
 def parse_sv_event1(data):
     ''' Combine fields to make Event1 
     '''
+    try:
+        data['Event1']='chr'+str(chromosomes[data['SV chrom']])+':'+str(data['SV start'])
+    except KeyError:
+        print 'here:',data['SV chrom']
 
-    data['Event1']='chr'+str(data['SV chrom'])+':'+str(data['SV start'])
     return pd.Series(data)
 
 def parse_sv_alt(data):
@@ -34,15 +37,22 @@ def parse_sv_alt(data):
     '''
 
     a,b=multi_split(data['ALT'],'[]')
-
     #Create Event2
     #the position has a : in it while the sequence does not
     if ':' in a:
-        data['Event2']='chr'+a
-        data['Seq']=b
+        try:
+            chrom=a.split(':')
+            data['Event2']='chr'+str(chromosomes[a[0]])+str(a[1:])
+            data['Seq']=b
+        except KeyError:
+            print 'a', a
     else:
-        data['Event2']='chr'+b
-        data['Seq']=a
+        try:
+            chrom=b.split(':')
+            data['Event2']='chr'+str(chromosomes[b[0]])+str(b[1:])
+            data['Seq']=a
+        except KeyError:
+            print 'b', b
     return pd.Series(data)
 
 def parse_info(data):
@@ -225,6 +235,9 @@ def action(args):
     if annotsv_df.empty:
         annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
         sys.exit()
+
+    #filter calls that are not chr1-23,X,Y
+    
     #Parse the parts we care about
     annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1).apply(parse_location, axis=1)
 
