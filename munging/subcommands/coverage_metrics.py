@@ -57,15 +57,13 @@ def action(args):
         data=pd.DataFrame(columns=['CHROM','START','END','Mean Coverage'])
         for i, j in pr:
             new_df=df.loc[i:j]
-            mean_data = new_df['READS'].mean()
+            mean_data = int(new_df['READS'].mean())
             chrom=new_df.iloc[0]['CHROM']
             start=new_df.iloc[0]['POS']
             end=new_df.iloc[-1]['POS']
             data=data.append({'CHROM':str(chrom),'START':str(start),'END':str(end),'Mean Coverage':mean_data}, ignore_index=True)
                     
-    print('before:',len(data))
     data=data.drop_duplicates()
-    print('after:',len(data))
     #Convert to a dictionary for processing clearly
     rows = data.T.to_dict().values()
 
@@ -80,7 +78,6 @@ def action(args):
                 chr1 = str(chromosomes[row['CHROM']])
         except KeyError:
             continue
-        print(chr1, row['START'], row['END'])
         #Setup the variables to be returned
         gene1, region, transcripts=[],[],[]
         # each segment is assigned to a gene if either the
