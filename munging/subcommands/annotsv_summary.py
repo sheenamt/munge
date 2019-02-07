@@ -23,10 +23,11 @@ def build_parser(parser):
 def parse_sv_event1(data):
     ''' Combine fields to make Event1 
     '''
+    #Only process chr1-23, X, Y
     try:
         data['Event1']='chr'+str(chromosomes[data['SV chrom']])+':'+str(data['SV start'])
     except KeyError:
-        print 'here:',data['SV chrom']
+        pass
 
     return pd.Series(data)
 
@@ -39,20 +40,21 @@ def parse_sv_alt(data):
     a,b=multi_split(data['ALT'],'[]')
     #Create Event2
     #the position has a : in it while the sequence does not
+    #Only process chr1-23, X, Y
     if ':' in a:
         try:
             chrom=a.split(':')
             data['Event2']='chr'+str(chromosomes[a[0]])+str(a[1:])
             data['Seq']=b
         except KeyError:
-            print 'a', a
+            pass
     else:
         try:
             chrom=b.split(':')
             data['Event2']='chr'+str(chromosomes[b[0]])+str(b[1:])
             data['Seq']=a
         except KeyError:
-            print 'b', b
+            pass
     return pd.Series(data)
 
 def parse_info(data):
@@ -141,10 +143,10 @@ def smoosh_event_into_one_line(event_df):
     h_dict = collapse_event(event_df.loc[(event_df['ID']==h_event)])
     
     if o_dict and not h_dict:
-        print 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])
+        print 'only 1 event found for {}, probably due to quality: {} or location {}'.format(sub_events[0], list(set([x for x in event_df['QUAL']])), list(set([x for x in event_df['ALT']])))
         return parse_singleton(o_dict)
     elif h_dict and not o_dict:
-        print 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])
+        print 'only 1 event found for {}, probably due to quality: {} or location {}'.format(sub_events[0], list(set([x for x in event_df['QUAL']])), list(set([x for x in event_df['ALT']])))
         return parse_singleton(h_dict)
        
 
