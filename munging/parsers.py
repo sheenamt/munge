@@ -34,14 +34,14 @@ def parse_quality(files, specimens, annotation, prefixes, variant_keys, sort_ord
             prefixes.append(log_pfx)
             with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
                 reader = csv.DictReader(fname, delimiter='\t')
-                for row in reader:
-                    if re.search('version',row['MEAN_TARGET_COVERAGE']):
-                        continue
-                    variant = tuple(k for k in variant_keys)
-                    specimens[variant][log_pfx] = row['MEAN_TARGET_COVERAGE']
-                    annotation[variant] = specimens[variant]
+                #Only care about the first line of data, second line is git version, probe data may be after that
+                row1=next(reader)
+                variant = tuple(k for k in variant_keys)
+                specimens[variant][log_pfx] = row1['MEAN_TARGET_COVERAGE']
+                annotation[variant] = specimens[variant]
 
     fieldnames = variant_keys + prefixes
+
     return specimens, annotation, prefixes, fieldnames, variant_keys 
 
 def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sort_order):
