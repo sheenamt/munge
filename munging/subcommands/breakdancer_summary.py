@@ -73,9 +73,10 @@ def action(args):
                 row['Size']='N/A'
             output.append(row)
 
-    sorted_output = sorted(output, key=itemgetter('num_Reads'), reverse=True)
+    output.sort(key=itemgetter('Event_1'))
+    output.sort(key=itemgetter('num_Reads'), reverse=True)
     fieldnames=['Event_1','Event_2','Type','Size','Gene_1','Gene_2','num_Reads']
     writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=fieldnames, delimiter='\t')
     writer.writeheader()
-    writer.writerows(sorted_output)
+    writer.writerows(output)
 
