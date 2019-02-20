@@ -15,6 +15,9 @@ pd.options.display.max_columns=30
 def build_parser(parser):
     parser.add_argument('annotsv', 
                         help='A required input file')
+    parser.add_argument('-q','--quality_filter',type=int,
+                        default=200,
+                        help='Threshold for quality filter, 200 default')
     parser.add_argument('-o', '--outfile',
                         help='Output file', default=sys.stdout,
                         type=argparse.FileType('w'))
@@ -233,7 +236,7 @@ def action(args):
     annotsv_df.fillna('', inplace=True)
         
     #filter all calls less than 200 quality
-    annotsv_df=annotsv_df[annotsv_df['QUAL']>=200]
+    annotsv_df=annotsv_df[annotsv_df['QUAL']>=args.quality_filter]
     if annotsv_df.empty:
         annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
         sys.exit()
@@ -257,8 +260,10 @@ def action(args):
         event_result = smoosh_event_into_one_line(current_event_df.copy())
         #Sometimes the second event has a lower quality score that was filtered out, print that to a log and move on
         if event_result[0]=='Error':
-            event_results_list.append(event_result[1])
-            event_results_list.append(event_result[2])
+            #If the events were not a real chrom, it will be empty. Skip those
+            if event_result[1][0] and event_result[2][0]:
+                event_results_list.append(event_result[1])
+                event_results_list.append(event_result[2])
         else:
             event_results_list.append(event_result)
 
