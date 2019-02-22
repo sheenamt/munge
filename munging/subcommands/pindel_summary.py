@@ -14,7 +14,7 @@ from operator import itemgetter
 import logging
 import pandas
 from munging.utils import Opener
-from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
+from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts
 
 csv.field_size_limit(10000000)
 log = logging.getLogger(__name__)
@@ -124,10 +124,11 @@ def action(args):
 
                 output.append(row)
 
-    sorted_output = sorted(output, key=itemgetter('Reads'), reverse=True)  #Sort on reads
+    output.sort(key=itemgetter('Gene'))  #Sort on reads
+    output.sort(key=itemgetter('Reads'), reverse=True)  #Sort on reads
 
     out_fieldnames=['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
     writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
     writer.writeheader()
-    writer.writerows(sorted_output) 
+    writer.writerows(output) 
 

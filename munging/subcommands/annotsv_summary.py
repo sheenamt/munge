@@ -5,7 +5,7 @@ import logging
 import argparse
 import pandas as pd
 import sys
-from munging.annotation import multi_split
+from munging.annotation import multi_split, chromosomes
 
 log = logging.getLogger(__name__)
 pd.options.display.width = 1000
@@ -15,6 +15,9 @@ pd.options.display.max_columns=30
 def build_parser(parser):
     parser.add_argument('annotsv', 
                         help='A required input file')
+    parser.add_argument('-q','--quality_filter',type=int,
+                        default=200,
+                        help='Threshold for quality filter, 200 default')
     parser.add_argument('-o', '--outfile',
                         help='Output file', default=sys.stdout,
                         type=argparse.FileType('w'))
@@ -23,8 +26,12 @@ def build_parser(parser):
 def parse_sv_event1(data):
     ''' Combine fields to make Event1 
     '''
+    #Only process chr1-23, X, Y
+    try:
+        data['Event1']='chr'+str(chromosomes[data['SV chrom']])+':'+str(data['SV start'])
+    except KeyError:
+        pass
 
-    data['Event1']='chr'+str(data['SV chrom'])+':'+str(data['SV start'])
     return pd.Series(data)
 
 def parse_sv_alt(data):
@@ -34,15 +41,23 @@ def parse_sv_alt(data):
     '''
 
     a,b=multi_split(data['ALT'],'[]')
-
     #Create Event2
     #the position has a : in it while the sequence does not
+    #Only process chr1-23, X, Y
     if ':' in a:
-        data['Event2']='chr'+a
-        data['Seq']=b
+        try:
+            chrom=a.split(':')
+            data['Event2']='chr'+str(chromosomes[a[0]])+str(a[1:])
+            data['Seq']=b
+        except KeyError:
+            pass
     else:
-        data['Event2']='chr'+b
-        data['Seq']=a
+        try:
+            chrom=b.split(':')
+            data['Event2']='chr'+str(chromosomes[b[0]])+str(b[1:])
+            data['Seq']=a
+        except KeyError:
+            pass
     return pd.Series(data)
 
 def parse_info(data):
@@ -131,10 +146,10 @@ def smoosh_event_into_one_line(event_df):
     h_dict = collapse_event(event_df.loc[(event_df['ID']==h_event)])
     
     if o_dict and not h_dict:
-        print 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])
+        print 'only 1 event found for {}, probably due to quality: {} or location {}'.format(sub_events[0], list(set([x for x in event_df['QUAL']])), list(set([x for x in event_df['ALT']])))
         return parse_singleton(o_dict)
     elif h_dict and not o_dict:
-        print 'only 1 event found for {}, probably due to quality: {}'.format(sub_events[0], [x for x in event_df['QUAL']])
+        print 'only 1 event found for {}, probably due to quality: {} or location {}'.format(sub_events[0], list(set([x for x in event_df['QUAL']])), list(set([x for x in event_df['ALT']])))
         return parse_singleton(h_dict)
        
 
@@ -221,10 +236,13 @@ def action(args):
     annotsv_df.fillna('', inplace=True)
         
     #filter all calls less than 200 quality
-    annotsv_df=annotsv_df[annotsv_df['QUAL']>=200]
+    annotsv_df=annotsv_df[annotsv_df['QUAL']>=args.quality_filter]
     if annotsv_df.empty:
         annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
         sys.exit()
+
+    #filter calls that are not chr1-23,X,Y
+    
     #Parse the parts we care about
     annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1).apply(parse_location, axis=1)
 
@@ -242,8 +260,10 @@ def action(args):
         event_result = smoosh_event_into_one_line(current_event_df.copy())
         #Sometimes the second event has a lower quality score that was filtered out, print that to a log and move on
         if event_result[0]=='Error':
-            event_results_list.append(event_result[1])
-            event_results_list.append(event_result[2])
+            #If the events were not a real chrom, it will be empty. Skip those
+            if event_result[1][0] and event_result[2][0]:
+                event_results_list.append(event_result[1])
+                event_results_list.append(event_result[2])
         else:
             event_results_list.append(event_result)
 
