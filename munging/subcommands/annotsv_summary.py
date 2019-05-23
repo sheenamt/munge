@@ -18,11 +18,25 @@ def build_parser(parser):
     parser.add_argument('-q','--quality_filter',type=int,
                         default=200,
                         help='Threshold for quality filter, 200 default')
+    parser.add_argument('-s','--report_singletons',action='store_true',
+                        help='Report singleton breakpoints. Results in many more output lines')
     parser.add_argument('-o', '--outfile',
                         help='Output file', default=sys.stdout,
                         type=argparse.FileType('w'))
 
                                                                                 
+def parse_quality(df, quality):
+    ''' Remove calls that do not meet quality threshold
+    '''
+    ids=df.loc[df['QUAL']<=quality,'ID']
+    ids_to_remove=[]
+    for gid in ids:
+        ids_to_remove.append(gid[:-1]+'h')
+        ids_to_remove.append(gid[:-1]+'o')
+    ids_to_remove=set(ids_to_remove)
+    df=df[~df.ID.str.contains('|'.join(ids_to_remove))]
+    return df
+
 def parse_sv_event1(data):
     ''' Combine fields to make Event1 
     '''
@@ -39,25 +53,31 @@ def parse_sv_alt(data):
     ]7:55248960]A  to chr7:55248960
     A[7:55249011[  to chr7:55249011
     '''
-
-    a,b=multi_split(data['ALT'],'[]')
-    #Create Event2
-    #the position has a : in it while the sequence does not
-    #Only process chr1-23, X, Y
-    if ':' in a:
-        try:
-            chrom=a.split(':')
-            data['Event2']='chr'+str(chromosomes[a[0]])+str(a[1:])
-            data['Seq']=b
-        except KeyError:
-            pass
+    if data['ID'].endswith(('o','h')):
+        a,b=multi_split(data['ALT'],'[]')
+        #Create Event2
+        #the position has a : in it while the sequence does not
+        #Only process chr1-23, X, Y
+        if ':' in a:
+            try:
+                chrom=a.split(':')
+                data['Event2']='chr'+str(chromosomes[a[0]])+str(a[1:])
+                data['Seq']=b
+            except KeyError:
+                pass
+        else:
+            try:
+                chrom=b.split(':')
+                data['Event2']='chr'+str(chromosomes[b[0]])+str(b[1:])
+                data['Seq']=a
+            except KeyError:
+                pass
+    elif data['ID'].endswith('b'):
+        data['Event2']='SingleBreakEnd'
+        data['Seq']=data['ALT']
     else:
-        try:
-            chrom=b.split(':')
-            data['Event2']='chr'+str(chromosomes[b[0]])+str(b[1:])
-            data['Seq']=a
-        except KeyError:
-            pass
+        print("some weird data was encountered", data)
+        sys.exit()
     return pd.Series(data)
 
 def parse_info(data):
@@ -129,30 +149,39 @@ def smoosh_event_into_one_line(event_df):
     thousandg_max_AF = None
     dgv_gain = None
     dgv_loss = None
-
+    annotsv_rank = None
+    
     sub_events = event_df['ID'].unique()
     o_event = None
     h_event = None
-
-    # set o and h events
+    b_event = None
+    
+    # set o,h and b events
     for sub_event in sub_events:
         if sub_event.endswith('o'):
             o_event = sub_event
         elif sub_event.endswith('h'):
             h_event = sub_event
-    
+        elif sub_event.endswith('b'):
+            b_event = sub_event
+        else:
+            print("something went wrong...")
+            print(sub_event)
+            sys.exit()
     # collapse event sides into one result
     o_dict = collapse_event(event_df.loc[(event_df['ID']==o_event)])
     h_dict = collapse_event(event_df.loc[(event_df['ID']==h_event)])
+    b_dict = collapse_event(event_df.loc[(event_df['ID']==b_event)])
     
     if o_dict and not h_dict:
-        print 'only 1 event found for {}, probably due to quality: {} or location {}'.format(sub_events[0], list(set([x for x in event_df['QUAL']])), list(set([x for x in event_df['ALT']])))
+        print 'only 1 event found for {}, probably due to location {}'.format(sub_events[0], list(set([x for x in event_df['ALT']])))
         return parse_singleton(o_dict)
     elif h_dict and not o_dict:
-        print 'only 1 event found for {}, probably due to quality: {} or location {}'.format(sub_events[0], list(set([x for x in event_df['QUAL']])), list(set([x for x in event_df['ALT']])))
+        print 'only 1 event found for {}, probably due to location {}'.format(sub_events[0], list(set([x for x in event_df['ALT']])))
         return parse_singleton(h_dict)
-       
-
+    elif b_dict:
+        return parse_singleton(b_dict)
+        
     # combine sub_events into one event
     o_event1 = event_df.loc[event_df['ID']==o_event,'Event1'].iloc[0]
     o_event2 = event_df.loc[event_df['ID']==o_event,'Event2'].iloc[0]
@@ -174,7 +203,9 @@ def smoosh_event_into_one_line(event_df):
     #Remove duplicate gene entries or set to 'Intergenic' if no gene is present
     gene1=';'.join([x for x in set([x for x in o_dict['Gene'].split(';')])]) or 'Intergenic'
     gene2=';'.join([x for x in set([x for x in h_dict['Gene'].split(';')])]) or 'Intergenic'
-    
+
+    annotsv_rank=";".join(set([o_dict['AnnotSV ranking'], h_dict['AnnotSV ranking']]))
+
     location1 = o_dict['location']
     location2 = h_dict['location']
     repeats1 = o_dict['Repeats']
@@ -204,9 +235,8 @@ def smoosh_event_into_one_line(event_df):
                 dgv_gain = val
             elif k == 'DGV_LOSS_found|tested':
                 dgv_loss = val
-            
     # return here
-    return [event1, event2, gene1, gene2, location1, location2, nm, qual, vcf_filter, thousandg_event, thousandg_max_AF, repeats1, repeats2, dgv_gain, dgv_loss]
+    return [event1, event2, gene1, gene2, location1, location2, nm, qual, vcf_filter, thousandg_event, thousandg_max_AF, repeats1, repeats2, dgv_gain, dgv_loss,annotsv_rank]
 
 def collapse_event(sub_event_df):
     ''' Collapses set of o or h columns into one event'''
@@ -220,32 +250,31 @@ def collapse_event(sub_event_df):
 
 def action(args):
     #Setup columns for output
-    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
+    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested','AnnotsvRank']
 
+    'AnnotSV ID','SV chrom','SV start','SV end','SV length','SV type','ID','REF','ALT','QUAL','FILTER','INFO','FORMAT','214R14_F02_OPXv6_HA0594','AnnotSV type','Gene name','NM','CDS length','tx length','location','intersectStart','intersectEnd','DGV_GAIN_IDs','DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested','DGV_GAIN_Frequency','DGV_LOSS_IDs','DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested','DGV_LOSS_Frequency','GD_ID','GD_AN','GD_N_HET','GD_N_HOMALT','GD_AF','GD_POPMAX_AF','GD_ID_others','DDD_SV','DDD_DUP_n_samples_with_SV','DDD_DUP_Frequency','DDD_DEL_n_samples_with_SV','DDD_DEL_Frequency','1000g_event','1000g_AF','1000g_max_AF','IMH_ID','IMH_AF','IMH_ID_others','promoters','dbVar_event','dbVar_variant','dbVar_status','TADcoordinates','ENCODEexperiments','GCcontent_left','GCcontent_right','Repeats_coord_left','Repeats_type_left','Repeats_coord_right','Repeats_type_right','ACMG','HI_CGscore','TriS_CGscore','DDD_status','DDD_mode','DDD_consequence','DDD_disease','DDD_pmids','HI_DDDpercent','synZ_ExAC','misZ_ExAC','pLI_ExAC','delZ_ExAC','dupZ_ExAC','cnvZ_ExAC','morbidGenes','morbidGenesCandidates','Mim Number','Phenotypes','Inheritance','AnnotSV ranking'
     #Make dataframe of annotsv annotation
     try:
         annotsv_df=pd.read_csv(args.annotsv, delimiter='\t', index_col=False, usecols=['SV chrom','SV start','SV end', 'ID', 'ALT','Gene name','NM','QUAL',
                                                                                        'FILTER','INFO','location','promoters','1000g_event', '1000g_max_AF', 
                                                                                        'Repeats_type_left', 'Repeats_type_right',
                                                                                        'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
-                                                                                       'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested'])
+                                                                                       'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested',
+                                                                                       'AnnotSV ranking'])
     except ValueError:
         args.outfile.write('\t'.join(var_cols) + '\n')
         sys.exit()
 
     annotsv_df.fillna('', inplace=True)
-        
+
     #filter all calls less than 200 quality
-    annotsv_df=annotsv_df[annotsv_df['QUAL']>=args.quality_filter]
+    annotsv_df=parse_quality(annotsv_df, quality=args.quality_filter)
     if annotsv_df.empty:
         annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
         sys.exit()
 
-    #filter calls that are not chr1-23,X,Y
-    
     #Parse the parts we care about
     annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1).apply(parse_location, axis=1)
-
 
     # get list of unique Event_ID
     events_list = annotsv_df['EventID'].unique()
@@ -266,9 +295,12 @@ def action(args):
                 event_results_list.append(event_result[2])
         else:
             event_results_list.append(event_result)
-
-    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
+    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested','AnnotsvRank']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
+    if not args.report_singletons:
+
+        # delete all rows for which column 'Age' has value greater than 30 and Country is India 
+        output_df=output_df[(output_df['Event2'] !='SingleBreakEnd') & (output_df['location2'] !='SINGLETON EVENT')]
     output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
 
 
