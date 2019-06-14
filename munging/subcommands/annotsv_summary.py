@@ -39,7 +39,7 @@ def parse_rank(rank_list):
 
 def parse_length(event1,event2):
     '''Create leght if on same chrom,
-    otherwiser print ITX
+    otherwise print CTX (inter-chromosomal translocation)
     '''
     chr1,e1=event1.split(':')
     chr2,e2=event2.split(':')
@@ -47,7 +47,7 @@ def parse_length(event1,event2):
     #If on same chrome, print length
     if chr1==chr2:
         length=abs(int(e1)-int(e2))
-    #Otherwise print ITX
+    #Otherwise print CTX
     else:
         length='CTX'
     return length
@@ -56,13 +56,18 @@ def parse_quality(df, quality):
     ''' Remove calls that do not meet quality threshold
     '''
     ids=df.loc[df['QUAL']<=quality,'ID']
-    ids_to_remove=[]
-    for gid in ids:
-        ids_to_remove.append(gid[:-1]+'h')
-        ids_to_remove.append(gid[:-1]+'o')
-    ids_to_remove=set(ids_to_remove)
-    df=df[~df.ID.str.contains('|'.join(ids_to_remove))]
-    return df
+    #If all calls are above threshold, return the original df
+    if ids.empty:
+        return df
+    else:
+        ids_to_remove=[]
+        for gid in ids:
+            ids_to_remove.append(gid[:-1]+'h')
+            ids_to_remove.append(gid[:-1]+'o')
+        ids_to_remove=set(ids_to_remove)
+        
+        df=df[~df.ID.str.contains('|'.join(ids_to_remove))]
+        return df
 
 def parse_sv_event1(data):
     ''' Combine fields to make Event1 
@@ -287,7 +292,6 @@ def action(args):
     #Setup columns for output
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested','AnnotsvRank']
 
-    'AnnotSV ID','SV chrom','SV start','SV end','SV length','SV type','ID','REF','ALT','QUAL','FILTER','INFO','FORMAT','214R14_F02_OPXv6_HA0594','AnnotSV type','Gene name','NM','CDS length','tx length','location','intersectStart','intersectEnd','DGV_GAIN_IDs','DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested','DGV_GAIN_Frequency','DGV_LOSS_IDs','DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested','DGV_LOSS_Frequency','GD_ID','GD_AN','GD_N_HET','GD_N_HOMALT','GD_AF','GD_POPMAX_AF','GD_ID_others','DDD_SV','DDD_DUP_n_samples_with_SV','DDD_DUP_Frequency','DDD_DEL_n_samples_with_SV','DDD_DEL_Frequency','1000g_event','1000g_AF','1000g_max_AF','IMH_ID','IMH_AF','IMH_ID_others','promoters','dbVar_event','dbVar_variant','dbVar_status','TADcoordinates','ENCODEexperiments','GCcontent_left','GCcontent_right','Repeats_coord_left','Repeats_type_left','Repeats_coord_right','Repeats_type_right','ACMG','HI_CGscore','TriS_CGscore','DDD_status','DDD_mode','DDD_consequence','DDD_disease','DDD_pmids','HI_DDDpercent','synZ_ExAC','misZ_ExAC','pLI_ExAC','delZ_ExAC','dupZ_ExAC','cnvZ_ExAC','morbidGenes','morbidGenesCandidates','Mim Number','Phenotypes','Inheritance','AnnotSV ranking'
     #Make dataframe of annotsv annotation
     try:
         annotsv_df=pd.read_csv(args.annotsv, delimiter='\t', index_col=False, usecols=['SV chrom','SV start','SV end', 'ID', 'ALT','Gene name','NM','QUAL',
@@ -299,15 +303,12 @@ def action(args):
     except ValueError:
         args.outfile.write('\t'.join(var_cols) + '\n')
         sys.exit()
-
     annotsv_df.fillna('', inplace=True)
-
     #filter all calls less than 200 quality
     annotsv_df=parse_quality(annotsv_df, quality=args.quality_filter)
     if annotsv_df.empty:
         annotsv_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
         sys.exit()
-
     #Parse the parts we care about
     annotsv_df=annotsv_df.apply(parse_sv_event1, axis=1).apply(parse_sv_alt, axis=1).apply(parse_gene_promoter,axis=1).apply(parse_dgv, axis=1).apply(parse_repeats,axis=1).apply(parse_info, axis=1).apply(parse_location, axis=1)
 

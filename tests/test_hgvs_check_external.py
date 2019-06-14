@@ -71,7 +71,7 @@ class TestHGVSCheckExternal(TestBase):
 
         expected = os.path.join(hgvs_testfiles,
                                 '{}.SNP_Analysis.hgvs_fixed.txt').format(control_sample)
-        cmd = ["munge", "hgvs_check", "--update", "--output-error-column",
+        cmd = ["./munge", "hgvs_check", "--update", "--output-error-column",
                "-i", infile, "-o", outfile]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(outfile, expected))

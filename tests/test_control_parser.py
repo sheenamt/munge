@@ -35,7 +35,7 @@ class TestControlParser(TestBase):
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "hapmap_qc_full.csv")
         expected =  path.join(control_testfiles, "hapmap_expected_full.csv")
-        cmd=["munge", "control_parser", controlfname, runfname, "-o", simplecsv]
+        cmd=["./munge", "control_parser", controlfname, runfname, "-o", simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 
@@ -49,7 +49,7 @@ class TestControlParser(TestBase):
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "hapmap_qc_missing.csv")
         expected =  path.join(control_testfiles, "hapmap_expected_missing.csv")
-        cmd=["munge", "control_parser", controlfname, runfname, "-o", simplecsv]
+        cmd=["./munge", "control_parser", controlfname, runfname, "-o", simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 

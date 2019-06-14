@@ -25,31 +25,102 @@ class TestAnnotSV(TestBase):
     def setUp(self):
         ''' Read test data into dataframe for use in various tests'''
         annotsv_df=pd.read_csv(path.join(annotsv_testfiles, 'small_annotsv.txt'), delimiter='\t', index_col=False, usecols=['SV chrom','SV start','SV end', 'ID', 'ALT','Gene name','NM','QUAL',
-                                                                                             'FILTER','INFO','location','promoters','1000g_event', '1000g_max_AF', 
-                                                                                             'Repeats_type_left', 'Repeats_type_right',
-                                                                                             'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
-                                                                                             'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested'])
+                                                                                                                            'FILTER','INFO','location','promoters','1000g_event', '1000g_max_AF', 
+                                                                                                                            'Repeats_type_left', 'Repeats_type_right',
+                                                                                                                            'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
+                                                                                                                            'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested',
+                                                                                                                            'AnnotSV ranking'])
         annotsv_df.fillna('', inplace=True)
         self.annotsv_df = annotsv_df
+
+    def testParseRank(self):
+        '''Parse the rank list, which can have 1+ items, remove duplicates
+        '''
+        annotsv_df=self.annotsv_df.copy()
+        o_event='gridss137_4056o'
+        input_o_data=annotsv_df.loc[(annotsv_df['ID']==o_event)]
+        o_dict = annotsv_summary.collapse_event(input_o_data)
+        h_event='gridss137_4056h'
+        input_h_data=annotsv_df.loc[(annotsv_df['ID']==h_event)]
+        h_dict = annotsv_summary.collapse_event(input_h_data)
+        annotsv_rank=';'.join([x for x in annotsv_summary.parse_rank([o_dict['AnnotSV ranking'], h_dict['AnnotSV ranking']])])    
+        self.assertEqual(annotsv_rank,'4;3')
+
+    def testParseLength(self):
+        '''Create leght if on same chrom,
+        otherwiser print ITX
+        '''
+        annotsv_df=self.annotsv_df.copy()
+        annotsv_df=annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1).apply(annotsv_summary.parse_location, axis=1)
+
+        o_event='gridss137_4056o'
+        input_o_data=self.annotsv_df.loc[(annotsv_df['ID']==o_event)]
+        o_dict = annotsv_summary.collapse_event(input_o_data)
+        o_event1 = annotsv_df.loc[annotsv_df['ID']==o_event,'Event1'].iloc[0]
+        o_event2 = annotsv_df.loc[annotsv_df['ID']==o_event,'Event2'].iloc[0]
+        event1=o_event1
+        event2=o_event2
+        length=annotsv_summary.parse_length(event1,event2)
+        self.assertEqual(length, 1948852)
+
+    def testParseLengthCTX(self):
+        '''Create leght if on same chrom,
+        otherwiser print CTX
+        '''
+        annotsv_df=self.annotsv_df.copy()
+        annotsv_df=annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1).apply(annotsv_summary.parse_location, axis=1)
+
+        o_event='gridss29_10153o'
+        input_o_data=self.annotsv_df.loc[(annotsv_df['ID']==o_event)]
+        o_dict = annotsv_summary.collapse_event(input_o_data)
+        o_event1 = annotsv_df.loc[annotsv_df['ID']==o_event,'Event1'].iloc[0]
+        o_event2 = annotsv_df.loc[annotsv_df['ID']==o_event,'Event2'].iloc[0]
+        event1=o_event1
+        event2=o_event2
+        length=annotsv_summary.parse_length(event1,event2)
+        self.assertEqual(length, 'CTX')
+
+
+    def testParseQuality1(self):
+        ''' Test quality parsing when all calls are above threshold
+        '''
+
+        annotsv_df=self.annotsv_df.copy()
+        #filter all calls less than 200 quality
+        annotsv_df=annotsv_summary.parse_quality(annotsv_df, quality=200)
+        expected_quals=[366.85, 366.85, 366.85, 322.03, 322.03, 322.03, 322.03, 2268.1, 2268.1, 2268.1, 2268.1, 1002.51, 1002.51, 1002.51, 1002.51, 1184.9, 1184.9, 1184.9, 1184.9, 1109.12, 215.25, 215.25, 285.77, 285.77]
+        quals=[x for x in annotsv_df['QUAL']]
+        self.assertListEqual(sorted(quals), sorted(expected_quals))
+        
+    def testParseQuality2(self):
+        ''' Test removing calls that do not meet quality threshold
+        '''
+        annotsv_df=self.annotsv_df.copy()
+        #filter all calls less than 200 quality
+        annotsv_df=annotsv_summary.parse_quality(annotsv_df, quality=250)
+        expected_quals=[366.85, 366.85, 366.85, 322.03, 322.03, 322.03, 322.03, 2268.1, 2268.1, 2268.1, 2268.1, 1002.51, 1002.51, 1002.51, 1002.51, 1184.9, 1184.9, 1184.9, 1184.9, 1109.12]
+        quals=[x for x in annotsv_df['QUAL']]
+        self.assertListEqual(sorted(quals), sorted(expected_quals))
+
 
     def testParseSVALT(self):
         '''Parse the ALT breakend format into regular chr#:POS,
         returning Event2'''
-
+        expected_input_alts=['A[7:55249011[', 'A[7:55249011[', ']GL:55248960]A', ']7:140490765]C', ']7:140490765]C', 'A[7:138541913[', 'A[7:138541913[', 'T[X:66766396[', 'T[X:66766396[', ']X:66766356]G', ']X:66766356]G', 'C[3:178921649[', 'C[3:178921649[', ']3:178921591]T', ']3:178921591]T', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', 'C[2:48028531[', 'T[7:98550704[', 'T[7:98550704[', ']7:98550669]T', ']7:98550669]T']
         #Make sure the input to the test hasn't changed
-        expected_input_alts=['A[7:55249011[', 'A[7:55249011[', ']7:55248960]A', ']7:140490765]C', ']7:140490765]C', 'A[7:138541913[', 'A[7:138541913[', 'T[X:66766396[', 'T[X:66766396[', ']X:66766356]G', ']X:66766356]G', 'C[3:178921649[', 'C[3:178921649[', ']3:178921591]T', ']3:178921591]T', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', ']12:66451467]A', 'C[2:48028531[', 'T[7:98550704[', 'T[7:98550704[', ']7:98550669]T', ']7:98550669]T']
         df_alts=[x for x in self.annotsv_df['ALT']]
         self.assertListEqual(sorted(df_alts),sorted(expected_input_alts))
 
+
         #Make sure the function is working correctly
         event2_alt_df=self.annotsv_df.apply(annotsv_summary.parse_sv_alt, axis=1)
-        expected_event2_alts=['chr7:55249011', 'chr7:55249011', 'chr7:55248960', 'chr7:140490765', 'chr7:140490765', 'chr7:138541913', 'chr7:138541913', 'chrX:66766396', 'chrX:66766396', 'chrX:66766356', 'chrX:66766356', 'chr3:178921649', 'chr3:178921649', 'chr3:178921591', 'chr3:178921591', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr2:48028531', 'chr7:98550704', 'chr7:98550704', 'chr7:98550669', 'chr7:98550669']
-        event2_alts=[x for x in event2_alt_df['Event2']]
+        #the 'if x==x' removes any 'nan' from this, which occurs for positions not in regular chrm1-23,X,Y
+        event2_alts=[x for x in event2_alt_df['Event2'] if x==x]
+        expected_event2_alts=['chr7:55249011', 'chr7:55249011', 'chr7:140490765', 'chr7:140490765', 'chr7:138541913', 'chr7:138541913', 'chrX:66766396', 'chrX:66766396', 'chrX:66766356', 'chrX:66766356', 'chr3:178921649', 'chr3:178921649', 'chr3:178921591', 'chr3:178921591', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr12:66451467', 'chr2:48028531', 'chr7:98550704', 'chr7:98550704', 'chr7:98550669', 'chr7:98550669']
         self.assertListEqual(sorted(event2_alts), sorted(expected_event2_alts))
         
     def testParseSVEvent1(self):
-        ''' Combine fields to make Event1 
-        '''
+        ''' Combine fields to make Event1 '''
 
         event1_df=self.annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1)
         expected_event1=['chr7:55248960', 'chr7:55248960', 'chr7:55249011', 'chr7:138541913', 'chr7:138541913', 'chr7:140490765', 'chr7:140490765', 'chrX:66766356', 'chrX:66766356', 'chrX:66766396', 'chrX:66766396', 'chr3:178921591', 'chr3:178921591', 'chr3:178921649', 'chr3:178921649', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr12:66451467', 'chr7:98550671', 'chr7:98550671', 'chr7:98550704', 'chr7:98550704']
@@ -105,10 +176,11 @@ class TestAnnotSV(TestBase):
         repeats=[x for x in repeats_df['Repeats'] if str(x) != 'nan' and str(x) !='']
         self.assertListEqual(sorted(repeats), sorted(expected_repeats))
 
+
     def testSmooshEventIntoOneLine(self):
         ''' Test Smooshing a multiline annotsv event into one line'''
 
-        expected_result=['chr7:138541913','chr7:140490765','KIAA1549','BRAF','intron16-intron6','intron8-intron8','NM_001354609;NM_001164665','322.03','LOW_QUAL','','','MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','0|0','0|0']
+        expected_result=['chr7:138541913','chr7:140490765','KIAA1549','BRAF','intron16-intron6','intron8-intron8', 1948852, 'NM_001354609;NM_001164665','322.03','LOW_QUAL','','','MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','0|0','0|0','4;3']
         eventIDs_df=self.annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1)
         event='gridss137_4056'
         input_data=eventIDs_df.loc[(eventIDs_df['EventID']==event)]
@@ -121,7 +193,7 @@ class TestAnnotSV(TestBase):
         o_event='gridss137_4056o'
         input_o_data=self.annotsv_df.loc[(self.annotsv_df['ID']==o_event)]
         o_dict = annotsv_summary.collapse_event(input_o_data)
-        expected_o_dict={'INFO': 'AS=1;ASQ=85.61;ASRP=3;ASSR=11;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEID=asm137-11351,asm137-6182;BEIDH=0,0;BEIDL=115,300;BQ=0.00;BSC=0;BSCQ=0.00;BUM=0;BUMQ=0.00;BVF=0;CAS=0;CASQ=0.00;CIPOS=-2,0;CIRPOS=-2,0;CQ=322.03;EVENT=gridss137_4056;HOMLEN=2;HOMSEQ=GA;IC=0;IHOMPOS=-2,0;IQ=0.00;PARID=gridss137_4056h;RAS=1;RASQ=140.29;REF=0;REFPAIR=0;RP=2;RPQ=21.04;SB=0.0;SC=1X1N1X176M;SR=4;SRQ=75.09;SVTYPE=BND;VF=9', 'Repeats_type_right': 'MLT2B1', 'Repeats_type_left': 'MLT2B1', 'NM': 'NM_001164665', 'DGV_GAIN_n_samples_tested': '0', 'DGV_LOSS_n_samples_with_SV': '0', 'promoters': '', '1000g_max_AF': '', 'DGV_GAIN_n_samples_with_SV': '0', 'SV end': '138541914', 'ID': 'gridss137_4056o', 'FILTER': 'LOW_QUAL', 'QUAL': '322.03', 'Gene name': 'KIAA1549', 'SV start': '138541913', 'DGV_LOSS_n_samples_tested': '0', 'ALT': ']7:140490765]C', '1000g_event': '', 'SV chrom': '7', 'location': 'intron16-intron6'}
+        expected_o_dict={'INFO': 'AS=1;ASQ=85.61;ASRP=3;ASSR=11;BA=0;BANRP=0;BANRPQ=0.00;BANSR=0;BANSRQ=0.00;BAQ=0.00;BASRP=0;BASSR=0;BEID=asm137-11351,asm137-6182;BEIDH=0,0;BEIDL=115,300;BQ=0.00;BSC=0;BSCQ=0.00;BUM=0;BUMQ=0.00;BVF=0;CAS=0;CASQ=0.00;CIPOS=-2,0;CIRPOS=-2,0;CQ=322.03;EVENT=gridss137_4056;HOMLEN=2;HOMSEQ=GA;IC=0;IHOMPOS=-2,0;IQ=0.00;PARID=gridss137_4056h;RAS=1;RASQ=140.29;REF=0;REFPAIR=0;RP=2;RPQ=21.04;SB=0.0;SC=1X1N1X176M;SR=4;SRQ=75.09;SVTYPE=BND;VF=9', 'Repeats_type_right': 'MLT2B1', 'Repeats_type_left': 'MLT2B1', 'NM': 'NM_001164665', 'DGV_GAIN_n_samples_tested': '0', 'DGV_LOSS_n_samples_with_SV': '0', 'promoters': '', '1000g_max_AF': '', 'DGV_GAIN_n_samples_with_SV': '0', 'SV end': '138541914', 'AnnotSV ranking': '4', 'ID': 'gridss137_4056o', 'FILTER': 'LOW_QUAL', 'QUAL': '322.03', 'Gene name': 'KIAA1549', 'SV start': '138541913', 'DGV_LOSS_n_samples_tested': '0', 'ALT': ']7:140490765]C', '1000g_event': '', 'SV chrom': '7', 'location': 'intron16-intron6'}
         self.assertEqual(o_dict, expected_o_dict)
 
     def testFailures(self):
@@ -131,9 +203,8 @@ class TestAnnotSV(TestBase):
         '''
         testing_output=path.join(annotsv_testfiles, 'testing_output.txt')
         in_file=path.join(annotsv_testfiles, 'small_annotsv.txt')
-        cmd=["munge", "annotsv_summary",in_file, '-o', testing_output]
-        failure=subprocess.check_output(cmd) .split('\n')
-        self.assertEqual('only 1 event found for gridss129_14o, probably due to quality: [366.85, 366.85]',failure[0])
+        cmd=["./munge", "annotsv_summary",in_file, "-s", "-o", testing_output]
+        failure=subprocess.check_output(cmd).split('\n')
         self.assertEqual('Calls did not match for events o gridss133_319o/h gridss133_319h, expected: o1 chr7:98550671 == h2 chr7:98550669; o2 chr7:98550704 == h1 chr7:98550704',failure[1])
         
     def testParseSingleton(self):
@@ -144,4 +215,17 @@ class TestAnnotSV(TestBase):
         output=annotsv_summary.parse_singleton(o_dict)
         expected_output=['chr7:98550671', 'chr7:98550704', 'TRRAP', 'TRRAP', 'intron37', 'SINGLETON EVENT', 'NM_003496', '215.25', 'SINGLETON EVENT;LOW_QUAL', '', '', 'MER4C/(TG)n[left];MER4C/(TG)n[right]', 'SINGLETON EVENT', '0|0', '0|0']
         self.assertEqual(sorted(output), sorted(expected_output))
+
+
+    def testParseBreakEnd(self):
+        """Test parsing of a singleton event"""
+        annotsv_df=self.annotsv_df.copy()
+        annotsv_df=annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1).apply(annotsv_summary.parse_location, axis=1)
+        o_event='gridss133_319o'
+        o_dict = annotsv_summary.collapse_event(annotsv_df.loc[(annotsv_df['ID']==o_event)])
+        output=annotsv_summary.parse_singleton(o_dict)
+        expected_output=['chr7:98550671', 'chr7:98550704', 'TRRAP', 'TRRAP', 'intron37', 'SINGLETON EVENT', 'NM_003496', '215.25', 'SINGLETON EVENT;LOW_QUAL', '', '', 'MER4C/(TG)n[left];MER4C/(TG)n[right]', 'SINGLETON EVENT', '0|0', '0|0']
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+
 
