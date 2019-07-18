@@ -53,7 +53,7 @@ class TestPindelSummary(TestBase):
     
         expected_output0=(['AR','AR'],['Exonic','Intronic'],['AR:NM_000044(exon 1)', 'AR:NM_000044(intron 1)'])
         expected_output1=(['PALB2'],['Intronic'],['PALB2:NM_024675(intron 8)'])
-        expected_output2=(['FGFR3', 'FGFR3', 'FGFR3'],['Exonic','Exonic','Exonic'], sorted(['FGFR3:NM_001163213(exon 15)', 'FGFR3:NM_000142(exon 15)', 'FGFR3:NM_022965(exon 13)']))
+        expected_output2=(['FGFR3', 'FGFR3', 'FGFR3'],['Exonic','Exonic','Exonic'], ['FGFR3:NM_000142(exon 15)', 'FGFR3:NM_022965(exon 13)', 'FGFR3:NM_001163213(exon 15)'])
         #Test exonic
         self.assertEqual(pindel_summary.define_transcripts(self.refdata[0]), expected_output0)
         #Test intronic
