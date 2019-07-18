@@ -25,18 +25,6 @@ def build_parser(parser):
                         type=argparse.FileType('w'))
 
                                                                                 
-def parse_rank(rank_list):
-    '''Parse the rank list, which can have 1+ items, remove duplicates
-    '''
-    rank=[]
-    for r in rank_list:
-        try:
-            rs=r.split(';')
-            [rank.append(x) for x in rs if x not in rank]
-        except:
-            rank.append(r)
-    return(rank)
-
 def parse_length(event1,event2):
     '''Create leght if on same chrom,
     otherwise print CTX (inter-chromosomal translocation)
@@ -181,7 +169,6 @@ def smoosh_event_into_one_line(event_df):
     thousandg_max_AF = None
     dgv_gain = None
     dgv_loss = None
-    annotsv_rank = None
     
     sub_events = event_df['ID'].unique()
     o_event = None
@@ -236,12 +223,6 @@ def smoosh_event_into_one_line(event_df):
     gene1=';'.join([x for x in set([x for x in o_dict['Gene'].split(';')])]) or 'Intergenic'
     gene2=';'.join([x for x in set([x for x in h_dict['Gene'].split(';')])]) or 'Intergenic'
 
-    annotsv_rank=';'.join([x for x in parse_rank([o_dict['AnnotSV ranking'], h_dict['AnnotSV ranking']])])
-    if len(annotsv_rank)>=4:
-        print("weird len:", annotsv_rank)
-        print('odict:', o_dict)
-        print('h_dict:', h_dict)
-        sys.exit()
     location1 = o_dict['location']
     location2 = h_dict['location']
     repeats1 = o_dict['Repeats']
@@ -276,7 +257,7 @@ def smoosh_event_into_one_line(event_df):
             elif k == 'DGV_LOSS_found|tested':
                 dgv_loss = val
     # return here
-    return [event1, event2, gene1, gene2, location1, location2, length, nm, qual, vcf_filter, thousandg_event, thousandg_max_AF, repeats1, repeats2, dgv_gain, dgv_loss,annotsv_rank]
+    return [event1, event2, gene1, gene2, location1, location2, length, nm, qual, vcf_filter, thousandg_event, thousandg_max_AF, repeats1, repeats2, dgv_gain, dgv_loss]
 
 def collapse_event(sub_event_df):
     ''' Collapses set of o or h columns into one event'''
@@ -290,7 +271,7 @@ def collapse_event(sub_event_df):
 
 def action(args):
     #Setup columns for output
-    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested','AnnotsvRank']
+    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
 
     #Make dataframe of annotsv annotation
     try:
@@ -298,8 +279,8 @@ def action(args):
                                                                                        'FILTER','INFO','location','promoters','1000g_event', '1000g_max_AF', 
                                                                                        'Repeats_type_left', 'Repeats_type_right',
                                                                                        'DGV_GAIN_n_samples_with_SV','DGV_GAIN_n_samples_tested',
-                                                                                       'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested',
-                                                                                       'AnnotSV ranking'])
+                                                                                       'DGV_LOSS_n_samples_with_SV','DGV_LOSS_n_samples_tested',])
+                                                                                       
     except ValueError:
         args.outfile.write('\t'.join(var_cols) + '\n')
         sys.exit()
@@ -331,7 +312,7 @@ def action(args):
                 event_results_list.append(event_result[2])
         else:
             event_results_list.append(event_result)
-    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','Length', 'NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested','AnnotsvRank']
+    var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','Length', 'NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
     if not args.report_singletons:
 
