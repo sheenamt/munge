@@ -150,11 +150,9 @@ def action(args):
                     gene1=['Intergenic',]
                     region=['Intergenic',]
                     transcripts=[]
-#                print('trans:', transcripts)
-#                sys.exit()
                 row['Gene'] =';'.join(str(x) for x in set(gene1))
                 row['Gene_Region']=';'.join(str(x) for x in set(region))
-                row['Transcripts']=';'.join(str(x) for x in set(sorted(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
+                row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
                 row['Reads']=int(row['READS'].split(',')[-1])
 
