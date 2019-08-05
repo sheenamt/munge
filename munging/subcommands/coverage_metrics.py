@@ -63,20 +63,24 @@ def action(args):
 
         #Convert to a dictionary for processing clearly
         rows = data.T.to_dict().values()
+        
         for row in rows:
             chrm=row[('CHROM','')]
             start=int(row[('POS','min')])
             end=int(row[('POS','max')])
-            #this is a snp
+            
+            #This is a snp
             if start==end:
-                print("SNP")
+                print("SNP", start)
                 chrm_exons=exons[chrm].search(start)
             else:
-                print("INTE")
+                print("INTE", start, end)
                 chrm_exons=exons[chrm].search(start,end)
+                
             gene1, region, transcripts=define_transcripts(chrm_exons)
-            print("interval:",gene1,transcripts)
-#If a snp, only need to annotate that one position
+            print("interval:",gene1, region, transcripts)
+
+                  
 # print('1:',exons['chr17'].search(41219556))
 #         print('2:',exons['chr17'].search(41219556,41219556))
 #         #If interval, need to annotate that interval

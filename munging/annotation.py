@@ -274,61 +274,78 @@ class GenomeIntervalTree(defaultdict):
         t = defaultdict.__reduce__(self)
         return (t[0], ()) + t[2:]
 
-
 def ranges(i):
     for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
         b = list(b)
         yield b[0][1], b[-1][1]
 
 
+class Transcript(object):
+    """Helper class to encapsulate transcript data"""
+    
+    def __init__(self, gene, accession):
+        self.gene = gene
+        self.accession = accession
+        self.exons = []
+        self.introns = []
+
+        
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
-    gene1, region, transcript,transcripts=[],[],{},[]
-    for start, stop, data in chrm_data: 
-        gene1.append(data['name2'])
-        refseq='{}:{}'.format(data['name2'],data['name'])
-        if 'exonNum' in data.keys():
-            region.append('Exonic')
-            if transcript.has_key(refseq):
-                if transcript[refseq].has_key('exons'):
-                    transcript[refseq]['exons'].append(int(data['exonNum']))
-                else:
-                    transcript[refseq].update({'exons':[int(data['exonNum'])]})
-            else:
-                transcript[refseq]={'exons':[int(data['exonNum'])]}
-            transcript[refseq]['exons'].sort()
-        if 'intronNum' in data.keys():
-            region.append('Intronic')
-            if transcript.has_key(refseq):
-                if transcript[refseq].has_key('introns'):
-                    transcript[refseq]['introns'].append(int(data['intronNum']))
-                else:
-                    transcript[refseq].update({'introns':[int(data['intronNum'])]})
-            else:
-                transcript[refseq]={'introns':[int(data['intronNum'])]}
-            transcript[refseq]['introns'].sort()
 
-    for refseq in transcript:
-        if transcript[refseq].has_key('exons'):
-            exon_ranges=list(ranges(transcript[refseq]['exons']))
-            for r in exon_ranges:
-                if r[0]==r[1]:
-                    transcripts.append('{}(exon {})'.format(refseq,r[0]))
-                else:
-                    transcripts.append('{}(exons {}-{})'.format(refseq,r[0],r[1]))
-        if transcript[refseq].has_key('introns'):
-            intron_ranges=list(ranges(transcript[refseq]['introns']))
-            for i in intron_ranges:
-                if i[0]==i[1]:
-                    transcripts.append('{}(intron {})'.format(refseq,i[0]))
-                else:
-                    transcripts.append('{}(introns {}-{})'.format(refseq,i[0],i[1]))
-    #Now that we have a list of exons and introns, create just one mapping of gene:refseq(exon/intron)
-    #We could clean each of these here
-    #         row['Gene'] =';'.join(str(x) for x in set(gene1))
-    #         row['Gene_Region']=';'.join(str(x) for x in set(region))
-    #         row['Transcripts']=';'.join(str(x) for x in set(transcripts))
-    #gene 1 is the gene name
-    #region/Gene_Region is 'Exonic' or 'Intronic'
-    #Transcripts is a list of formatted introns/exons Gene:RefSeq(intron #s), Gene:RefSeq(exon #s), 
-    return gene1, region, transcripts
+    # NOTE: lists are not sorted by position
+    # NOTE: regions is useless and thus empty
+
+    gene_names, regions, transcript_list = [], [], []
+    
+    # create Transcript dictionary from chrm_data
+    transcripts = {}
+    for _, _, data in chrm_data: 
+        gene = data['name2']
+        accession = data['name']
+
+        if not transcripts.has_key(accession):
+            transcripts[accession] = Transcript(gene, accession)
+
+        t = transcripts[accession]
+        
+        if data.has_key('exonNum'):
+            t.exons.append(int(data['exonNum']))
+
+        elif data.has_key('intronNum'):
+            t.introns.append(int(data['intronNum']))
+
+    # populate gene_names and transcript list
+    for t in transcripts.values():
+        gene_names.append(t.gene)
+        refseq='{}:{}'.format(t.gene,t.accession)
+
+        if len(t.introns) == 0:
+            transcript_annotation = '{}(exon {})'.format(refseq, str(t.exons[0]))
+
+        elif len(t.exons) == 0:
+            transcript_annotation = '{}(intron {})'.format(refseq, str(t.introns[0]))
+
+        else:
+            # can I use first index & last index?
+            min_e, min_i = min(t.exons), min(t.introns)
+            if min_e <= min_i:
+                head = 'exon ' + str(min_e)
+            else:
+                head = 'intron ' + str(min_i)
+
+            max_e, max_i = max(t.exons), max(t.introns)
+            if max_e > max_i:
+                tail = 'exon ' + str(max_e)
+            else:
+                tail = 'intron ' + str(max_i)
+
+            transcript_annotation = '{}({} - {})'.format(refseq, head, tail)
+
+        transcript_list.append(transcript_annotation)
+
+    gene_names.sort()
+    transcript_list.sort()
+    return gene_names, regions, transcript_list
+
+
