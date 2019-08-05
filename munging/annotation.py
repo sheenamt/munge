@@ -12,7 +12,7 @@ from urllib import urlopen
 from StringIO import StringIO as BytesIO
 import zlib
 from collections import defaultdict
-from intervaltree import Interval, IntervalTree
+import itertools
 
 pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|MONC|UNK|TESTDATA)', re.IGNORECASE)
 pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
@@ -275,18 +275,60 @@ class GenomeIntervalTree(defaultdict):
         return (t[0], ()) + t[2:]
 
 
+def ranges(i):
+    for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
+        b = list(b)
+        yield b[0][1], b[-1][1]
+
 
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
-    gene1, region, transcripts=[],[],[]
+    gene1, region, transcript,transcripts=[],[],{},[]
     for start, stop, data in chrm_data: 
         gene1.append(data['name2'])
+        refseq='{}:{}'.format(data['name2'],data['name'])
         if 'exonNum' in data.keys():
             region.append('Exonic')
-            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
-            transcripts.append(transcript)
+            if transcript.has_key(refseq):
+                if transcript[refseq].has_key('exons'):
+                    transcript[refseq]['exons'].append(int(data['exonNum']))
+                else:
+                    transcript[refseq].update({'exons':[int(data['exonNum'])]})
+            else:
+                transcript[refseq]={'exons':[int(data['exonNum'])]}
+            transcript[refseq]['exons'].sort()
         if 'intronNum' in data.keys():
             region.append('Intronic')
-            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
-            transcripts.append(transcript)
-    return gene1, region, sorted(transcripts)
+            if transcript.has_key(refseq):
+                if transcript[refseq].has_key('introns'):
+                    transcript[refseq]['introns'].append(int(data['intronNum']))
+                else:
+                    transcript[refseq].update({'introns':[int(data['intronNum'])]})
+            else:
+                transcript[refseq]={'introns':[int(data['intronNum'])]}
+            transcript[refseq]['introns'].sort()
+
+    for refseq in transcript:
+        if transcript[refseq].has_key('exons'):
+            exon_ranges=list(ranges(transcript[refseq]['exons']))
+            for r in exon_ranges:
+                if r[0]==r[1]:
+                    transcripts.append('{}(exon {})'.format(refseq,r[0]))
+                else:
+                    transcripts.append('{}(exons {}-{})'.format(refseq,r[0],r[1]))
+        if transcript[refseq].has_key('introns'):
+            intron_ranges=list(ranges(transcript[refseq]['introns']))
+            for i in intron_ranges:
+                if i[0]==i[1]:
+                    transcripts.append('{}(intron {})'.format(refseq,i[0]))
+                else:
+                    transcripts.append('{}(introns {}-{})'.format(refseq,i[0],i[1]))
+    #Now that we have a list of exons and introns, create just one mapping of gene:refseq(exon/intron)
+    #We could clean each of these here
+    #         row['Gene'] =';'.join(str(x) for x in set(gene1))
+    #         row['Gene_Region']=';'.join(str(x) for x in set(region))
+    #         row['Transcripts']=';'.join(str(x) for x in set(transcripts))
+    #gene 1 is the gene name
+    #region/Gene_Region is 'Exonic' or 'Intronic'
+    #Transcripts is a list of formatted introns/exons Gene:RefSeq(intron #s), Gene:RefSeq(exon #s), 
+    return gene1, region, transcripts
