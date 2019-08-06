@@ -289,18 +289,23 @@ class Transcript(object):
         self.exons = []
         self.introns = []
 
+    def __lt__(self, other):
+        self_string = self.gene + self.accession
+        other_string = other.gene + other.accession
+        return self_string < other_string
+
         
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
 
-    # NOTE: lists are not sorted by position
+    # NOTE: lists are sorted by position gene name, not position on chromosome
     # NOTE: regions is useless and thus empty
-
-    gene_names, regions, transcript_list = [], [], []
+    
+    gene_list, region_list, transcript_list = [], [], []
     
     # create Transcript dictionary from chrm_data
     transcripts = {}
-    for _, _, data in chrm_data: 
+    for start, stop, data in chrm_data:
         gene = data['name2']
         accession = data['name']
 
@@ -310,24 +315,30 @@ def define_transcripts(chrm_data):
         t = transcripts[accession]
         
         if data.has_key('exonNum'):
+            #print(accession + ': E-' + data['exonNum'])
             t.exons.append(int(data['exonNum']))
 
         elif data.has_key('intronNum'):
+            #print(accession + ': I-' + data['intronNum'])
             t.introns.append(int(data['intronNum']))
 
-    # populate gene_names and transcript list
+    
+    # populate the output lists
     for t in transcripts.values():
-        gene_names.append(t.gene)
         refseq='{}:{}'.format(t.gene,t.accession)
 
+        # if t contains only a single exon
         if len(t.introns) == 0:
             transcript_annotation = '{}(exon {})'.format(refseq, str(t.exons[0]))
+            region_annotation = 'EXONIC'
 
+        # if t contains only a single intron
         elif len(t.exons) == 0:
             transcript_annotation = '{}(intron {})'.format(refseq, str(t.introns[0]))
+            region_annotation = 'INTRONIC'
 
         else:
-            # can I use first index & last index?
+            # can I use first index & last index instead of min & max?
             min_e, min_i = min(t.exons), min(t.introns)
             if min_e <= min_i:
                 head = 'exon ' + str(min_e)
@@ -341,11 +352,12 @@ def define_transcripts(chrm_data):
                 tail = 'intron ' + str(max_i)
 
             transcript_annotation = '{}({} - {})'.format(refseq, head, tail)
+            region_annotation - 'EXONIC-INTRONIC'
 
+        gene_list.append(t.gene)
+        region_list.append(region_annotation)
         transcript_list.append(transcript_annotation)
 
-    gene_names.sort()
-    transcript_list.sort()
-    return gene_names, regions, transcript_list
+    return sorted(set(gene_list)), sorted(set(region_list)), sorted(set(transcript_list))
 
 
