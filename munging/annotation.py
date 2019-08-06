@@ -297,9 +297,6 @@ class Transcript(object):
         
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
-
-    # NOTE: lists are sorted by position gene name, not position on chromosome
-    # NOTE: regions is useless and thus empty
     
     gene_list, region_list, transcript_list = [], [], []
     
