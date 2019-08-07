@@ -10,6 +10,8 @@ import csv
 import pandas as pd
 from munging.utils import Opener
 from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts
+from operator import itemgetter
+from natsort import natsorted
 
 def build_parser(parser):
     parser.add_argument('target_coverage',
@@ -89,6 +91,7 @@ def action(args):
             row['Transcripts']=';'.join(str(x) for x in set(transcripts))
             output.append(row)
             
+        output=natsorted(output,key=itemgetter('Position'))  #Sort on position 
         out_fieldnames=['Position','Gene','Gene_Region','Mean Coverage', 'Median Coverage','Transcripts']
         writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
         writer.writeheader()
