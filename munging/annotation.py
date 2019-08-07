@@ -349,7 +349,7 @@ def define_transcripts(chrm_data):
                 tail = 'intron ' + str(max_i)
 
             transcript_annotation = '{}({} - {})'.format(refseq, head, tail)
-            region_annotation - 'EXONIC-INTRONIC'
+            region_annotation = 'EXONIC-INTRONIC'
 
         gene_list.append(t.gene)
         region_list.append(region_annotation)
