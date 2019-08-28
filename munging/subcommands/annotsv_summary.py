@@ -20,6 +20,10 @@ def build_parser(parser):
                         help='Threshold for quality filter, 200 default')
     parser.add_argument('-s','--report_singletons',action='store_true',
                         help='Report singleton breakpoints. Results in many more output lines')
+    parser.add_argument('-c','--capture_file',
+                        help='Assay capture file. Allows annotations for on-target or off')
+    parser.add_argument('-f','--fusion_partners',action='store_true',
+                        help='Assay fusion partners file. Allows flagging of clinically-relevant gene fusions')                    
     parser.add_argument('-o', '--outfile',
                         help='Output file', default=sys.stdout,
                         type=argparse.FileType('w'))
@@ -155,6 +159,26 @@ def parse_repeats(data):
 
 def parse_singleton(event):
     return [event['Event1'], event['Event2'], event['Gene'], event['Gene name'], event['location'],'SINGLETON EVENT', event['NM'], event['QUAL'], 'SINGLETON EVENT;'+event['FILTER'], event['1000g_event'],event['1000g_max_AF'],event['Repeats'],'SINGLETON EVENT',event['DGV_GAIN_found|tested'],event['DGV_LOSS_found|tested']]
+
+def parse_event_type(event):
+    """Returns 'GENE_FUSION', 'INTRAGENE', or 'INTERGENIC' depending on contents of Gene1 and Gene2 columns"""
+    
+    # undo multi gene concatenation and remove 'Promoter' label
+    genes_1 = str(event['Gene1']).replace('[Promoter]','').split(';')
+    genes_2 = str(event['Gene2']).replace('[Promoter]','').split(';')
+
+    # if there is no overlap between the set of genes for Gene1 and Gene2, label GENE_FUSION
+    if not (set(genes_1) & set(genes_2)):
+        return 'GENE_FUSION'
+    # if both gene1 and gene2 are intergenic, label INTERGENIC
+    elif genes_1 == ['Intergenic'] and genes_2 == ['Intergenic']:
+        return 'INTERGENIC'
+    # otherwise, label INTRAGENIC
+    else:
+        return 'INTRAGENIC'
+
+def parse_capture_file(capture_file):
+    """Returns a list of genes intended for capture"""
 
 def smoosh_event_into_one_line(event_df):
     ''' Smooshes a multiline annotsv event into one line'''
@@ -314,9 +338,25 @@ def action(args):
             event_results_list.append(event_result)
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','Length', 'NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
+
+
+    output_df['Type'] = output_df.apply(parse_event_type, axis=1)
+
+    # if args.capture_file:
+    #     capture_list = pd.read_csv(args.capture_file)
+    #     output_df['Intended_For_Capture'] = output_df.apply(, capture=capture_list, axis=1)
+
+    # if args.fusion_partners:
+    #     fusion_partners_dict = parse_fusion_partners_file(args.fusion_partners)
+    #     output_df['Quiver_Fusions'] = output_df.apply(, fusion_partners=fusion_partners_dict, axis=1)
+
+
+    # filter out singletons unless otherwise requested
     if not args.report_singletons:
         output_df=output_df[(output_df['Event2'] !='SingleBreakEnd') & (output_df['location2'] !='SINGLETON EVENT')]
-    output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
+
+    # save output to file
+    output_df.to_csv(args.outfile, index=False, sep='\t')
 
 
     
