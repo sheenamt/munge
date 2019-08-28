@@ -177,8 +177,19 @@ def parse_event_type(event):
     else:
         return 'INTRAGENIC'
 
-def parse_capture_file(capture_file):
-    """Returns a list of genes intended for capture"""
+def parse_capture_intent(event, gene_set):
+    """returns YES or NO depending on whether contents of Gene1 or Gene2 are present in gene_list"""
+    
+    # undo multi gene concatenation and remove 'Promoter' label
+    genes_1 = str(event['Gene1']).replace('[Promoter]','').split(';')
+    genes_2 = str(event['Gene2']).replace('[Promoter]','').split(';')
+
+    # if there is overlap between the event's genes and the target gene list, label YES
+    if (set(genes_1 + genes_2) & gene_set):
+        return 'YES'
+    # otherwise, label NO
+    else:
+        return 'NO'
 
 def smoosh_event_into_one_line(event_df):
     ''' Smooshes a multiline annotsv event into one line'''
@@ -342,9 +353,10 @@ def action(args):
 
     output_df['Type'] = output_df.apply(parse_event_type, axis=1)
 
-    # if args.capture_file:
-    #     capture_list = pd.read_csv(args.capture_file)
-    #     output_df['Intended_For_Capture'] = output_df.apply(, capture=capture_list, axis=1)
+    if args.capture_file:
+        capture_df = pd.read_csv(args.capture_file, sep='\t', header=0)
+        capture_set = set(capture_df['Gene'])
+        output_df['Intended_For_Capture'] = output_df.apply(parse_capture_intent, gene_set=capture_set, axis=1)
 
     # if args.fusion_partners:
     #     fusion_partners_dict = parse_fusion_partners_file(args.fusion_partners)
