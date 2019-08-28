@@ -315,8 +315,6 @@ def action(args):
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','Length', 'NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
     if not args.report_singletons:
-
-        # delete all rows for which column 'Age' has value greater than 30 and Country is India 
         output_df=output_df[(output_df['Event2'] !='SingleBreakEnd') & (output_df['location2'] !='SINGLETON EVENT')]
     output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
 
