@@ -22,7 +22,7 @@ def build_parser(parser):
                         help='Report singleton breakpoints. Results in many more output lines')
     parser.add_argument('-c','--capture_file',
                         help='Assay capture file. Allows annotations for on-target or off')
-    parser.add_argument('-f','--fusion_partners',action='store_true',
+    parser.add_argument('-f','--fusion_partners',
                         help='Assay fusion partners file. Allows flagging of clinically-relevant gene fusions')                    
     parser.add_argument('-o', '--outfile',
                         help='Output file', default=sys.stdout,
@@ -160,12 +160,16 @@ def parse_repeats(data):
 def parse_singleton(event):
     return [event['Event1'], event['Event2'], event['Gene'], event['Gene name'], event['location'],'SINGLETON EVENT', event['NM'], event['QUAL'], 'SINGLETON EVENT;'+event['FILTER'], event['1000g_event'],event['1000g_max_AF'],event['Repeats'],'SINGLETON EVENT',event['DGV_GAIN_found|tested'],event['DGV_LOSS_found|tested']]
 
+def split_genes(gene_field):
+    """Undoes multi-gene concatenation and removes the 'Promoter' tag"""
+    return str(gene_field).replace('[Promoter]','').split(';')
+
 def parse_event_type(event):
     """Returns 'GENE_FUSION', 'INTRAGENE', or 'INTERGENIC' depending on contents of Gene1 and Gene2 columns"""
     
     # undo multi gene concatenation and remove 'Promoter' label
-    genes_1 = str(event['Gene1']).replace('[Promoter]','').split(';')
-    genes_2 = str(event['Gene2']).replace('[Promoter]','').split(';')
+    genes_1 = split_genes(event['Gene1'])
+    genes_2 = split_genes(event['Gene2'])
 
     # if there is no overlap between the set of genes for Gene1 and Gene2, label GENE_FUSION
     if not (set(genes_1) & set(genes_2)):
@@ -174,22 +178,60 @@ def parse_event_type(event):
     elif genes_1 == ['Intergenic'] and genes_2 == ['Intergenic']:
         return 'INTERGENIC'
     # otherwise, label INTRAGENIC
-    else:
-        return 'INTRAGENIC'
+    return 'INTRAGENIC'
 
 def parse_capture_intent(event, gene_set):
     """returns YES or NO depending on whether contents of Gene1 or Gene2 are present in gene_list"""
     
     # undo multi gene concatenation and remove 'Promoter' label
-    genes_1 = str(event['Gene1']).replace('[Promoter]','').split(';')
-    genes_2 = str(event['Gene2']).replace('[Promoter]','').split(';')
+    genes_1 = split_genes(event['Gene1'])
+    genes_2 = split_genes(event['Gene2'])
 
     # if there is overlap between the event's genes and the target gene list, label YES
     if (set(genes_1 + genes_2) & gene_set):
         return 'YES'
     # otherwise, label NO
-    else:
-        return 'NO'
+    return 'NO'
+
+def parse_fusion_partners_file(fusion_partners_file):
+    """
+    returns a dictionary where each key is a gene of interest and each value is a set of genes
+    whose fusions to key are of clinical signifcance
+    """
+    fp_df = pd.read_csv(fusion_partners_file, sep='\t', header=None, names=['target', 'partners'])
+    fp_dict = {}
+
+    for _, row in fp_df.iterrows():
+        target = row['target']
+        if pd.isna(row['partners']):
+            fp_dict[target] = set()
+        else:
+            fp_dict[target] = set(row['partners'].split(';'))
+        
+    return fp_dict
+
+def parse_clinical_fusions(event, fusion_partners):
+    """
+    returns 'YES' if event is a gene-fusion found in the fusion_partners dictionary.
+    otherwise returns no
+    """
+    if event['Type'] == 'GENE_FUSION':
+        genes_1 = set(split_genes(event['Gene1']))
+        genes_2 = set(split_genes(event['Gene2']))
+        keys = set(fusion_partners.keys())
+        # check every gene in genes_1 that is a key in fusion_partners
+        # if any gene from genes_2 is in a partners set, return 'YES'
+        for k1 in (keys & genes_1):
+            if (fusion_partners[k1] & genes_2):
+                return 'YES'
+
+        # check every gene in genes_2 that is a key in fusion_partners
+        # if any gene from genes_1 is in a partners set, return 'YES'
+        for k2 in (keys & genes_2):
+            if (fusion_partners[k2] & genes_1):
+                return 'YES'
+
+    return 'NO'
 
 def smoosh_event_into_one_line(event_df):
     ''' Smooshes a multiline annotsv event into one line'''
@@ -350,18 +392,19 @@ def action(args):
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','Length', 'NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
 
-
+    # add column for event 'Type'
     output_df['Type'] = output_df.apply(parse_event_type, axis=1)
 
+    # if requested, add column for capture intent
     if args.capture_file:
         capture_df = pd.read_csv(args.capture_file, sep='\t', header=0)
         capture_set = set(capture_df['Gene'])
         output_df['Intended_For_Capture'] = output_df.apply(parse_capture_intent, gene_set=capture_set, axis=1)
 
-    # if args.fusion_partners:
-    #     fusion_partners_dict = parse_fusion_partners_file(args.fusion_partners)
-    #     output_df['Quiver_Fusions'] = output_df.apply(, fusion_partners=fusion_partners_dict, axis=1)
-
+    # if requested, add column for clinically relevant fusions
+    if args.fusion_partners:
+        fp_dict = parse_fusion_partners_file(args.fusion_partners)
+        output_df['Quiver_Fusions'] = output_df.apply(parse_clinical_fusions, fusion_partners=fp_dict, axis=1)
 
     # filter out singletons unless otherwise requested
     if not args.report_singletons:
@@ -370,5 +413,3 @@ def action(args):
     # save output to file
     output_df.to_csv(args.outfile, index=False, sep='\t')
 
-
-    
