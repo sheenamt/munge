@@ -5,6 +5,7 @@ import logging
 import argparse
 import pandas as pd
 import sys
+import csv
 from munging.annotation import multi_split, chromosomes
 
 log = logging.getLogger(__name__)
@@ -213,7 +214,7 @@ def parse_fusion_partners_file(fusion_partners_file):
 def parse_clinical_fusions(event, fusion_partners):
     """
     returns 'YES' if event is a gene-fusion found in the fusion_partners dictionary.
-    otherwise returns no
+    otherwise returns 'NO'
     """
     if event['Type'] == 'GENE_FUSION':
         genes_1 = set(split_genes(event['Gene1']))
@@ -223,15 +224,19 @@ def parse_clinical_fusions(event, fusion_partners):
         # if any gene from genes_2 is in a partners set, return 'YES'
         for k1 in (keys & genes_1):
             if (fusion_partners[k1] & genes_2):
-                return 'YES'
+                return create_archer_hyperlink(k1, next(iter(fusion_partners[k1] & genes_2)))
 
         # check every gene in genes_2 that is a key in fusion_partners
         # if any gene from genes_1 is in a partners set, return 'YES'
         for k2 in (keys & genes_2):
             if (fusion_partners[k2] & genes_1):
-                return 'YES'
+                return create_archer_hyperlink(k2, next(iter(fusion_partners[k2] & genes_1)))
 
     return 'NO'
+
+def create_archer_hyperlink(gene1, gene2):
+    output = '=HYPERLINK("http://quiver.archerdx.com/results?query={0}%3A{1}", "{0}:{1}")'
+    return output.format(gene1, gene2)
 
 def smoosh_event_into_one_line(event_df):
     ''' Smooshes a multiline annotsv event into one line'''
@@ -411,5 +416,5 @@ def action(args):
         output_df=output_df[(output_df['Event2'] !='SingleBreakEnd') & (output_df['location2'] !='SINGLETON EVENT')]
 
     # save output to file
-    output_df.to_csv(args.outfile, index=False, sep='\t')
+    output_df.to_csv(args.outfile, index=False, sep='\t', quoting=csv.QUOTE_NONE)
 
