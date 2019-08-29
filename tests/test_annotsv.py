@@ -215,5 +215,64 @@ class TestAnnotSV(TestBase):
         expected_output=['chr7:98550671', 'chr7:98550704', 'TRRAP', 'TRRAP', 'intron37', 'SINGLETON EVENT', 'NM_003496', '215.25', 'SINGLETON EVENT;LOW_QUAL', '', '', 'MER4C/(TG)n[left];MER4C/(TG)n[right]', 'SINGLETON EVENT', '0|0', '0|0']
         self.assertEqual(sorted(output), sorted(expected_output))
 
+    def testParseType1(self):
+        expected_output=['FOO1','FOO2','GENE_FUSION']
+        data = pd.DataFrame({'Gene1':['FOO1'], 'Gene2':['FOO2']})
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
 
+    def testParseType2(self):
+        expected_output=['Intergenic','Intergenic','INTERGENIC']
+        data = pd.DataFrame({'Gene1':['Intergenic'], 'Gene2':['Intergenic']})
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
 
+    def testParseType3(self):
+        expected_output=['FOO1[Promoter]','FOO1','INTRAGENIC']
+        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO1']})
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+    
+    def testParseType4(self):
+        expected_output=['FOO1;FOO2','FOO2;FOO3','INTRAGENIC']
+        data = pd.DataFrame({'Gene1':['FOO1;FOO2'], 'Gene2':['FOO2;FOO3']})
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+    def testParseCaptureIntent1(self):
+        expected_output=['FOO1;FOO2','FOO2;FOO3','YES']
+        data = pd.DataFrame({'Gene1':['FOO1;FOO2'], 'Gene2':['FOO2;FOO3']})
+        gene_set = {'FOO1'}
+        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, gene_set=gene_set, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+    
+    def testParseCaptureIntent2(self):
+        expected_output=['FOO2','FOO3','NO']
+        data = pd.DataFrame({'Gene1':['FOO2'], 'Gene2':['FOO3']})
+        gene_set = {'FOO1'}
+        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, gene_set=gene_set, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+    
+    def testParseClinicalFusions1(self):
+        expected_output=['FOO1[Promoter]','FOO2;FOO3','GENE_FUSION', '=HYPERLINK("http://quiver.archerdx.com/results?query=FOO1%3AFOO3", "FOO1:FOO3")']
+        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO2;FOO3']})
+        fusion_partners = {'FOO1':{'FOO3', 'FOO4'}, 'FOO4':{'FOO1'}}
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        data['Quiver_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_partners, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+    def testParseClinicalFusions2(self):
+        expected_output=['FOO1[Promoter]','FOO2;FOO3','GENE_FUSION', 'NO']
+        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO2;FOO3']})
+        fusion_partners = {'FOO2':{'FOO3', 'FOO4'}}
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        data['Quiver_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_partners, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
