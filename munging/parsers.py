@@ -61,7 +61,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sor
                 reader = csv.DictReader(fname, delimiter='\t')
                 for row in reader:
                     variant = tuple(row[k] for k in variant_keys)
-                    specimens[variant][reads_pfx]=row['Variant_Reads']
+                    specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
                     annotation[variant] = row
 
     annotation_headers = ['Clinically_Flagged']
@@ -300,6 +300,7 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
         '1000g_AFR',
         'ADA_Alter_Splice',
         'RF_Alter_Splice',
+        'mutalyzer_errors'
 ]
 
     for sample in sort_order:
@@ -449,7 +450,19 @@ def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_ord
     """Parse the annotsv analysis file, give total counts of samples with site"""
 
     files = filter(filters.annotsv_analysis, files)
-    variant_keys = ['Event1', 'Event2', 'Gene1', 'Gene2', 'NM']
+    variant_keys = ['Event1', 'Event2', ]
+    annotation_headers = ['Gene1',
+                    'Gene2',
+                    'location1',
+                    'location2',
+                    'NM',
+                    '1000g_event',
+                    '1000g_max_AF',
+                    'Repeats1',
+                    'Repeats2',
+                    'DGV_GAIN_found|tested',
+                    'DGV_LOSS_found|tested']
+
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
         pfx_file = [s for s in files if sample in s.fname]
@@ -472,5 +485,5 @@ def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_ord
 
     #Add 'Count' to prefixes for correct dict zipping/printing    
     prefixes.append('Count')
-    fieldnames = variant_keys + prefixes
+    fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
