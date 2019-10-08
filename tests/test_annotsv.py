@@ -10,6 +10,7 @@ import unittest
 import logging
 import pandas as pd
 from munging.subcommands import annotsv_summary
+from intervaltree import Interval, IntervalTree
 
 from __init__ import TestBase
 import __init__ as config
@@ -33,6 +34,11 @@ class TestAnnotSV(TestBase):
         annotsv_df.fillna('', inplace=True)
         self.annotsv_df = annotsv_df
 
+        bed_file = path.join(annotsv_testfiles, 'small_bed.bed')
+        self.capture_trees = annotsv_summary.build_capture_trees(bed_file)
+
+        flagged_fusions_file = path.join(annotsv_testfiles, 'small_flagged.txt')
+        self.fusion_trees = annotsv_summary.parse_flagged_fusions_file(flagged_fusions_file)
 
     def testParseLength(self):
         '''Create leght if on same chrom,
@@ -68,18 +74,16 @@ class TestAnnotSV(TestBase):
         length=annotsv_summary.parse_length(event1,event2)
         self.assertEqual(length, 'CTX')
 
-
     def testParseQuality1(self):
         ''' Test quality parsing when all calls are above threshold
         '''
-
         annotsv_df=self.annotsv_df.copy()
         #filter all calls less than 200 quality
         annotsv_df=annotsv_summary.parse_quality(annotsv_df, quality=200)
         expected_quals=[366.85, 366.85, 366.85, 322.03, 322.03, 322.03, 322.03, 2268.1, 2268.1, 2268.1, 2268.1, 1002.51, 1002.51, 1002.51, 1002.51, 1184.9, 1184.9, 1184.9, 1184.9, 1109.12, 215.25, 215.25, 285.77, 285.77]
         quals=[x for x in annotsv_df['QUAL']]
         self.assertListEqual(sorted(quals), sorted(expected_quals))
-        
+
     def testParseQuality2(self):
         ''' Test removing calls that do not meet quality threshold
         '''
@@ -90,7 +94,6 @@ class TestAnnotSV(TestBase):
         quals=[x for x in annotsv_df['QUAL']]
         self.assertListEqual(sorted(quals), sorted(expected_quals))
 
-
     def testParseSVALT(self):
         '''Parse the ALT breakend format into regular chr#:POS,
         returning Event2'''
@@ -98,7 +101,6 @@ class TestAnnotSV(TestBase):
         #Make sure the input to the test hasn't changed
         df_alts=[x for x in self.annotsv_df['ALT']]
         self.assertListEqual(sorted(df_alts),sorted(expected_input_alts))
-
 
         #Make sure the function is working correctly
         event2_alt_df=self.annotsv_df.apply(annotsv_summary.parse_sv_alt, axis=1)
@@ -109,16 +111,13 @@ class TestAnnotSV(TestBase):
         
     def testParseSVEvent1(self):
         ''' Combine fields to make Event1 '''
-
         event1_df=self.annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1)
         expected_event1=['chr7:55248960', 'chr7:55248960', 'chr7:55249011', 'chr7:138541913', 'chr7:138541913', 'chr7:140490765', 'chr7:140490765', 'chrX:66766356', 'chrX:66766356', 'chrX:66766396', 'chrX:66766396', 'chr3:178921591', 'chr3:178921591', 'chr3:178921649', 'chr3:178921649', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr2:48028531', 'chr12:66451467', 'chr7:98550671', 'chr7:98550671', 'chr7:98550704', 'chr7:98550704']
         event1=[x for x in event1_df['Event1']]
         self.assertListEqual(sorted(event1), sorted(expected_event1))
 
-
     def testParseInfo(self):
         '''Get the EventID for each read '''
-
         #Make sure the function is working correctly
         eventIDs_df=self.annotsv_df.apply(annotsv_summary.parse_info, axis=1)
         expected_eventIDs=['gridss129_14', 'gridss129_14', 'gridss129_14', 'gridss133_319', 'gridss133_319', 'gridss133_319', 'gridss133_319','gridss137_4056', 'gridss137_4056', 'gridss137_4056', 'gridss137_4056', 'gridss295_7', 'gridss295_7', 'gridss295_7', 'gridss295_7', 'gridss67_8', 'gridss67_8', 'gridss67_8', 'gridss67_8', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153', 'gridss29_10153']
@@ -127,7 +126,6 @@ class TestAnnotSV(TestBase):
 
     def testParseGenePromoter(self):
          ''' Combine promoter and gene fields '''
-
          #Make sure the function is working correctly
          genes_df=self.annotsv_df.apply(annotsv_summary.parse_gene_promoter, axis=1)
          expected_genes=['EGFR/EGFR-AS1', 'EGFR', 'EGFR/EGFR-AS1', 'KIAA1549', 'KIAA1549', 'BRAF', 'BRAF', 'AR', 'AR', 'AR', 'AR', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'PIK3CA[Promoter]', 'MSH6', 'MSH6', 'MSH6', 'MSH6', '', 'TRRAP', 'TRRAP', 'TRRAP', 'TRRAP']
@@ -157,17 +155,14 @@ class TestAnnotSV(TestBase):
 
     def testParseRepeats(self):
         ''' Combine left and right repeat info into one column'''
-
         #Make sure the function is working correctly
         repeats_df=self.annotsv_df.apply(annotsv_summary.parse_repeats, axis=1)
         expected_repeats=['MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','(CGG)n[left];(CGG)n[right]','(CGG)n[left];(CGG)n[right]','AluJb[left];AluJb[right]','AluJb[left];AluJb[right]','(T)n/AluSx1[left];(T)n/AluSx1[right]','(TG)n[left];(TG)n[right]','MER4C/(TG)n[left];MER4C/(TG)n[right]']
         repeats=[x for x in repeats_df['Repeats'] if str(x) != 'nan' and str(x) !='']
         self.assertListEqual(sorted(repeats), sorted(expected_repeats))
 
-
     def testSmooshEventIntoOneLine(self):
         ''' Test Smooshing a multiline annotsv event into one line'''
-
         expected_result=['chr7:138541913','chr7:140490765','KIAA1549','BRAF','intron16-intron6','intron8-intron8', 1948852, 'NM_001354609;NM_001164665','322.03','LOW_QUAL','','','MLT2B1[left];MLT2B1[right]','AluSx[left];AluSx[right]','0|0','0|0']
         eventIDs_df=self.annotsv_df.apply(annotsv_summary.parse_sv_event1, axis=1).apply(annotsv_summary.parse_sv_alt, axis=1).apply(annotsv_summary.parse_gene_promoter,axis=1).apply(annotsv_summary.parse_dgv, axis=1).apply(annotsv_summary.parse_repeats,axis=1).apply(annotsv_summary.parse_info, axis=1)
         event='gridss137_4056'
@@ -177,7 +172,6 @@ class TestAnnotSV(TestBase):
 
     def testCollapseEvent(self):
         ''' Combine various column entries into one string each'''
-
         o_event='gridss137_4056o'
         input_o_data=self.annotsv_df.loc[(self.annotsv_df['ID']==o_event)]
         o_dict = annotsv_summary.collapse_event(input_o_data)
@@ -204,7 +198,6 @@ class TestAnnotSV(TestBase):
         expected_output=['chr7:98550671', 'chr7:98550704', 'TRRAP', 'TRRAP', 'intron37', 'SINGLETON EVENT', 'NM_003496', '215.25', 'SINGLETON EVENT;LOW_QUAL', '', '', 'MER4C/(TG)n[left];MER4C/(TG)n[right]', 'SINGLETON EVENT', '0|0', '0|0']
         self.assertEqual(sorted(output), sorted(expected_output))
 
-
     def testParseBreakEnd(self):
         """Test parsing of a singleton event"""
         annotsv_df=self.annotsv_df.copy()
@@ -216,63 +209,132 @@ class TestAnnotSV(TestBase):
         self.assertEqual(sorted(output), sorted(expected_output))
 
     def testParseType1(self):
-        expected_output=['FOO1','FOO2','GENE_FUSION']
-        data = pd.DataFrame({'Gene1':['FOO1'], 'Gene2':['FOO2']})
+        """Test parsing of GENE_FUSION SVs"""
+        expected_output=['FOO1','FOO2', 'chr1:1234567', 'GENE_FUSION']
+        data = pd.DataFrame({'Gene1':['FOO1'], 'Gene2':['FOO2'], 'Event2': ['chr1:1234567']})
         data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
         output = data.iloc[0].tolist()
         self.assertEqual(sorted(output), sorted(expected_output))
 
     def testParseType2(self):
-        expected_output=['Intergenic','Intergenic','INTERGENIC']
-        data = pd.DataFrame({'Gene1':['Intergenic'], 'Gene2':['Intergenic']})
+        """Test parsing of INTERGENIC SVs"""
+        expected_output=['Intergenic','Intergenic','chr1:1234567', 'INTERGENIC']
+        data = pd.DataFrame({'Gene1':['Intergenic'], 'Gene2':['Intergenic'], 'Event2': ['chr1:1234567']})
         data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
         output = data.iloc[0].tolist()
         self.assertEqual(sorted(output), sorted(expected_output))
 
     def testParseType3(self):
-        expected_output=['FOO1[Promoter]','FOO1','INTRAGENIC']
-        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO1']})
+        """Test parsing of INTRAGENIC SVs with Promoter"""
+        expected_output=['FOO1[Promoter]','FOO1', 'chr1:1234567', 'INTRAGENIC']
+        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO1'], 'Event2': ['chr1:1234567']})
         data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
         output = data.iloc[0].tolist()
         self.assertEqual(sorted(output), sorted(expected_output))
     
     def testParseType4(self):
-        expected_output=['FOO1;FOO2','FOO2;FOO3','INTRAGENIC']
-        data = pd.DataFrame({'Gene1':['FOO1;FOO2'], 'Gene2':['FOO2;FOO3']})
+        """Test parsing of INTRAGENIC with concatenated genes"""
+        expected_output=['FOO1;FOO2','FOO2;FOO3', 'chr1:1234567', 'INTRAGENIC']
+        data = pd.DataFrame({'Gene1':['FOO1;FOO2'], 'Gene2':['FOO2;FOO3'], 'Event2': ['chr1:1234567']})
         data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
         output = data.iloc[0].tolist()
         self.assertEqual(sorted(output), sorted(expected_output))
 
-    def testParseCaptureIntent1(self):
-        expected_output=['FOO1;FOO2','FOO2;FOO3','YES']
-        data = pd.DataFrame({'Gene1':['FOO1;FOO2'], 'Gene2':['FOO2;FOO3']})
-        gene_set = {'FOO1'}
-        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, gene_set=gene_set, axis=1)
-        output = data.iloc[0].tolist()
-        self.assertEqual(sorted(output), sorted(expected_output))
-    
-    def testParseCaptureIntent2(self):
-        expected_output=['FOO2','FOO3','NO']
-        data = pd.DataFrame({'Gene1':['FOO2'], 'Gene2':['FOO3']})
-        gene_set = {'FOO1'}
-        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, gene_set=gene_set, axis=1)
-        output = data.iloc[0].tolist()
-        self.assertEqual(sorted(output), sorted(expected_output))
-    
-    def testParseClinicalFusions1(self):
-        expected_output=['FOO1[Promoter]','FOO2;FOO3','GENE_FUSION', '=HYPERLINK("http://quiver.archerdx.com/results?query=FOO1%3AFOO3", "FOO1:FOO3")']
-        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO2;FOO3']})
-        fusion_partners = {'FOO1':{'FOO3', 'FOO4'}, 'FOO4':{'FOO1'}}
+    def testParseType5(self):
+        """Test parsing of SINGLETON SVs"""
+        expected_output=['FOO1','FOO1', 'SingleBreakEnd', 'SINGLETON']
+        data = pd.DataFrame({'Gene1':['FOO1'], 'Gene2':['FOO1'], 'Event2': ['SingleBreakEnd']})
         data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
-        data['Quiver_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_partners, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+    def testBuildCaptureTree(self):
+        """Test creation of collection of interval trees from BED file"""
+        capture_trees = self.capture_trees.copy()
+        self.assertEqual(len(capture_trees), 24)
+        self.assertEqual(len(capture_trees['2']), 156)
+        self.assertEqual(len(capture_trees['X']), 15)
+        with self.assertRaises(KeyError):
+          capture_trees['Z']
+        self.assertEqual(capture_trees['2'][21226164].pop()[2], 'APOB')
+        self.assertEqual(capture_trees['2'][21226200].pop()[2], 'APOB')
+        self.assertEqual(capture_trees['2'][21226284].pop()[2], 'APOB')
+        self.assertEqual(len(capture_trees['2'][24000000]), 0)
+
+    def testParseCaptureIntent1(self):
+        """Test capture intent parsing when Event1 is on-target and Event2 is off"""
+        capture_trees = self.capture_trees.copy()
+        expected_output=['chr2:21226164','chr2:10000000','YES']
+        data = pd.DataFrame({'Event1':['chr2:21226164'], 'Event2':['chr2:10000000']})
+        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, interval_trees=capture_trees, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+    def testParseCaptureIntent2(self):
+        """Test capture intent parsing when Event1 is off-target and Event2 is the last base in on-target interval"""
+        capture_trees = self.capture_trees.copy()
+        expected_output=['chr1:10000000','chr2:21226284','YES']
+        data = pd.DataFrame({'Event1':['chr1:10000000'], 'Event2':['chr2:21226284']})
+        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, interval_trees=capture_trees, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+    
+    def testParseCaptureIntent3(self):
+        """Test capture intent parsing when both events are off-target"""
+        capture_trees = self.capture_trees.copy()
+        expected_output=['chr2:21226163','chr2:21226285','NO']
+        data = pd.DataFrame({'Event1':['chr2:21226163'], 'Event2':['chr2:21226285']})
+        data['Intended_For_Capture'] = data.apply(annotsv_summary.parse_capture_intent, interval_trees=capture_trees, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+    def testParseFusionsFile(self):
+        """Test creation of collection of interval trees from flagged fusions file"""
+        fusion_trees = self.fusion_trees.copy()
+        self.assertEqual(len(fusion_trees), 24)
+        self.assertEqual(len(fusion_trees['chr2']), 2)
+        self.assertEqual(len(fusion_trees['chrX']), 0)
+        with self.assertRaises(KeyError):
+          fusion_trees['chrZ']
+
+        MSHA2 = fusion_trees['chr2'][47669646].pop()[2]
+        self.assertEqual(len(MSHA2), 1)
+        self.assertEqual(MSHA2['chr2'][38121356].pop()[2], 'BOLAND')
+        with self.assertRaises(KeyError):
+            MSHA2['chr7']
+
+        BRAF = fusion_trees['chr7'][140433812].pop()[2]
+        self.assertEqual(len(BRAF), 18)
+        self.assertEqual(BRAF['chr1'][52556388].pop()[2], 'Quiver:BRAF-BTF3L4')
+        with self.assertRaises(KeyError):
+            BRAF['chr8']
+
+    def testParseClinicalFusions1(self):
+        """Test detection of Boland fusion"""
+        fusion_trees = self.fusion_trees.copy()
+        expected_output=['chr2:47669500', 'MSHA2', 'chr2:38121000', 'Intergenic', 'GENE_FUSION', 'BOLAND']
+        data = pd.DataFrame({'Event1':['chr2:47669500'], 'Event2':['chr2:38121000'], 'Gene1':['MSHA2'], 'Gene2':['Intergenic']})
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        data['Flagged_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_trees, axis=1)
         output = data.iloc[0].tolist()
         self.assertEqual(sorted(output), sorted(expected_output))
 
     def testParseClinicalFusions2(self):
-        expected_output=['FOO1[Promoter]','FOO2;FOO3','GENE_FUSION', 'NO']
-        data = pd.DataFrame({'Gene1':['FOO1[Promoter]'], 'Gene2':['FOO2;FOO3']})
-        fusion_partners = {'FOO2':{'FOO3', 'FOO4'}}
+        """Test detection of Quiver fusion"""
+        fusion_trees = self.fusion_trees.copy()
+        expected_output=['chr7:140433812', 'BRAF', 'chr3:11314009', 'ATG7', 'GENE_FUSION', '=HYPERLINK("http://quiver.archerdx.com/results?query=BRAF%3AATG7", "Quiver:BRAF-ATG7")']
+        data = pd.DataFrame({'Event1':['chr7:140433812'], 'Event2':['chr3:11314009'], 'Gene1':['BRAF'], 'Gene2':['ATG7']})
         data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
-        data['Quiver_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_partners, axis=1)
+        data['Flagged_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_trees, axis=1)
+        output = data.iloc[0].tolist()
+        self.assertEqual(sorted(output), sorted(expected_output))
+
+    def testParseClinicalFusions3(self):
+        """Test when not a flagged fusion"""
+        fusion_trees = self.fusion_trees.copy()
+        expected_output=['chr1:10000000', 'FOO1', 'chr2:10000000', 'FOO2', 'GENE_FUSION', 'NO']
+        data = pd.DataFrame({'Event1':['chr1:10000000'], 'Event2':['chr2:10000000'], 'Gene1':['FOO1'], 'Gene2':['FOO2']})
+        data['Type'] = data.apply(annotsv_summary.parse_event_type, axis=1)
+        data['Flagged_Fusions'] = data.apply(annotsv_summary.parse_clinical_fusions, fusion_partners=fusion_trees, axis=1)
         output = data.iloc[0].tolist()
         self.assertEqual(sorted(output), sorted(expected_output))
