@@ -125,8 +125,8 @@ class TestParsers(TestBase):
         files = ifilter(filters.any_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
-        self.assertListEqual(prefixes,['0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants'])
-        self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants'])
+        self.assertListEqual(prefixes,['0228T_Variants|Total', '5437_NA12878_Variants|Total', '6037_NA12878_Variants|Total'])
+        self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants|Total', '5437_NA12878_Variants|Total', '6037_NA12878_Variants|Total'])
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testHSParser(self):

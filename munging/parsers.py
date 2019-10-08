@@ -55,7 +55,7 @@ def parse_clin_flagged(files, specimens, annotation, prefixes, variant_keys, sor
             pfx_file = pfx_file[0]
             pfx = munge_pfx(pfx_file.fname)
             #Create a smaller version of this really long string
-            reads_pfx=pfx['mini-pfx']+'_Variants'
+            reads_pfx=pfx['mini-pfx']+'_Variants|Total'
             prefixes.append(reads_pfx)
             with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
                 reader = csv.DictReader(fname, delimiter='\t')
