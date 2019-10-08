@@ -450,7 +450,7 @@ def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_ord
     """Parse the annotsv analysis file, give total counts of samples with site"""
 
     files = filter(filters.annotsv_analysis, files)
-    variant_keys = ['Event1', 'Event2', ]
+    variant_keys = ['Event1', 'Event2']
     annotation_headers = ['Gene1',
                     'Gene2',
                     'location1',
