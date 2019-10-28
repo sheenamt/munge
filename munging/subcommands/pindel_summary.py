@@ -124,9 +124,7 @@ def action(args):
             rows = reader.T.to_dict().values()
 
             for row in rows:
-                print('row:', row)
                 row['Size'], row['Event_Type'],row['End']=parse_event(row)
-                print(row['Size'], row['Event_Type'],row['End'])
                 if row['Size'] in range(-10,10):
                     continue
                 #only normal chr are process, GL is ignored
