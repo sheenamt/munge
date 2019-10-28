@@ -92,6 +92,12 @@ def annotsv_analysis(pth):
     """
     return pth.fname.split('.')[-2] in set (['SV_Analysis'])
 
+def breakdancer_analysis(pth):
+    """
+    True only for pfx.Breakdancer_Analysis.{txt,csv}
+    """
+    return pth.fname.split('.')[-2] in set (['Breakdancer_Analysis'])
+
 def polyhunter_analysis(pth):
     """
     True only for pfx.Genotype_Analysis.{txt,csv}

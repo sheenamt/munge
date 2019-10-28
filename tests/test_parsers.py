@@ -55,8 +55,8 @@ class TestParsers(TestBase):
                                           'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 
                                           'UW_Freq', 'UW_Count', 'UW_DEC_p',
                                           '1000g_ALL', 'EVS_esp6500_ALL', '1000g_AMR', 'EVS_esp6500_AA', '1000g_EUR',
-                                          'EVS_esp6500_EU', '1000g_SAS','1000g_EAS', '1000g_AFR', 'ADA_Alter_Splice', 'RF_Alter_Splice', 
-                                          '5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
+                                          'EVS_esp6500_EU', '1000g_SAS','1000g_EAS', '1000g_AFR', 'ADA_Alter_Splice', 'RF_Alter_Splice',
+                                          'mutalyzer_errors', '5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testCNVGeneParser(self):
@@ -125,8 +125,8 @@ class TestParsers(TestBase):
         files = ifilter(filters.any_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
-        self.assertListEqual(prefixes,['0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants'])
-        self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants', '5437_NA12878_Variants', '6037_NA12878_Variants'])
+        self.assertListEqual(prefixes,['0228T_Variants|Total', '5437_NA12878_Variants|Total', '6037_NA12878_Variants|Total'])
+        self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '0228T_Variants|Total', '5437_NA12878_Variants|Total', '6037_NA12878_Variants|Total'])
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testHSParser(self):
@@ -229,6 +229,20 @@ class TestParsers(TestBase):
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T', '5437_NA12878', '6037_NA12878','Count'])
-        self.assertListEqual(fieldnames, ['Event1','Event2','Gene1','Gene2','NM','0228T', '5437_NA12878', '6037_NA12878','Count'])
-        self.assertListEqual(variant_keys, ['Event1','Event2','Gene1','Gene2','NM'])
+        self.assertListEqual(fieldnames, ['Event1','Event2','Gene1','Gene2', 'location1', 'location2', 'NM', '1000g_event', '1000g_max_AF', 'Repeats1', 'Repeats2', 'DGV_GAIN_found|tested', 'DGV_LOSS_found|tested', '0228T', '5437_NA12878', '6037_NA12878','Count'])
+        self.assertListEqual(variant_keys, ['Event1','Event2'])
         self.assertEqual(len(specimens), 19)
+
+    def testBreakDancerParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
+        analysis_type='parsers.parse_breakdancer'
+        files = ifilter(filters.any_analysis, walker(testfiles))  
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(prefixes,['0228T', 'Count'])
+        self.assertListEqual(fieldnames, ['Event_1', 'Event_2', 'Type', 'Size', 'Gene_1', 'Gene_2', '0228T', 'Count'])
+        self.assertListEqual(variant_keys, ['Event_1', 'Event_2'])
