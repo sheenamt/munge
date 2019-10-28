@@ -251,14 +251,17 @@ class TestAnnotSV(TestBase):
     def testBuildCaptureTree(self):
         """Test creation of collection of interval trees from BED file"""
         capture_trees = self.capture_trees.copy()
+        # check for correct number of chromosomes and intervals
         self.assertEqual(len(capture_trees), 24)
         self.assertEqual(len(capture_trees['2']), 156)
         self.assertEqual(len(capture_trees['X']), 15)
         with self.assertRaises(KeyError):
           capture_trees['Z']
+        # check first, intermediate, and last position in APOB track
         self.assertEqual(capture_trees['2'][21226164].pop()[2], 'APOB')
         self.assertEqual(capture_trees['2'][21226200].pop()[2], 'APOB')
         self.assertEqual(capture_trees['2'][21226284].pop()[2], 'APOB')
+        # check that a region not intended for capture returns no intervals
         self.assertEqual(len(capture_trees['2'][24000000]), 0)
 
     def testParseCaptureIntent1(self):
@@ -291,18 +294,19 @@ class TestAnnotSV(TestBase):
     def testParseFusionsFile(self):
         """Test creation of collection of interval trees from flagged fusions file"""
         fusion_trees = self.fusion_trees.copy()
+        # check for correct number of chromosomes and intervals
         self.assertEqual(len(fusion_trees), 24)
         self.assertEqual(len(fusion_trees['chr2']), 2)
         self.assertEqual(len(fusion_trees['chrX']), 0)
         with self.assertRaises(KeyError):
           fusion_trees['chrZ']
-
+        # check for correct parsing of the Boland inversion
         MSHA2 = fusion_trees['chr2'][47669646].pop()[2]
         self.assertEqual(len(MSHA2), 1)
         self.assertEqual(MSHA2['chr2'][38121356].pop()[2], 'BOLAND')
         with self.assertRaises(KeyError):
             MSHA2['chr7']
-
+        # check for correct parsing of Quiver entry BRAF-BTF3L4
         BRAF = fusion_trees['chr7'][140433812].pop()[2]
         self.assertEqual(len(BRAF), 18)
         self.assertEqual(BRAF['chr1'][52556388].pop()[2], 'Quiver:BRAF-BTF3L4')
