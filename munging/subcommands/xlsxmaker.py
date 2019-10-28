@@ -52,6 +52,13 @@ def process_files(infiles, tab, filetype):
                 #48_A03_BROv7_HA0186_NA12878_Quality_Analysis
                 elif sheet_name[-2] == 'Quality':
                     sheet_name = '1_QC_Metrics'
+                #Gene/Exon is either coverage kit or CNV, can't be both
+                #NA12878-HP998-HHv2.Coverage_Gene
+                elif sheet_name[-3]=='Coverage':
+                    if sheet_name[-2]=='Gene':
+                        sheet_name = '2_QC_by_Gene'
+                    elif sheet_name[-2]=='Exon':
+                        sheet_name = '3_QC_by_Exon'
                 #48_A03_BROv7_HA0186_NA12878_CNV_QC_[Exon/Gene]_Analysis
                 elif sheet_name[-3] == 'QC':
                     if sheet_name[-2] == 'Gene':
