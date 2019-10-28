@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 # encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
 # ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
 # 'chrX'). `chromosomes` maps all three to the numeric representation.
-chrnums = range(1, 23) + ['X', 'Y']
+chrnums = range(1, 23) + ['X', 'Y', 'MT']
 chromosomes = {'chr{}'.format(c): c for c in chrnums}
 chromosomes.update({str(c): c for c in chrnums})
 chromosomes.update({c: c for c in chrnums})

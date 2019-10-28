@@ -435,3 +435,32 @@ def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_ord
     prefixes.append('Count')
     fieldnames = variant_keys + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+def parse_amplicon(files, specimens, annotation, prefixes, variant_keys, sort_order):
+    """Parse the annotsv analysis file, give total counts of samples with site"""
+
+    files = filter(filters.amplicon_analysis, files)
+    variant_keys = ['Position', 'Probe']
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            prefixes.append(pfx['mini-pfx'])
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][pfx['mini-pfx']] = row['MeanCoverage']
+                    annotation[variant] = row
+
+    #Update the specimen dict for this variant, count samples present
+    for key, value in specimens.iteritems():
+        specimens[key]['Count']=len(value)
+
+#    #Add 'Count' to prefixes for correct dict zipping/printing    
+#    prefixes.append('Count')
+    fieldnames = variant_keys + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys            
