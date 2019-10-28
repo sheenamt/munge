@@ -105,6 +105,12 @@ def amplicon_coverage(pth):
     """
     return bool(re.search(r'AmpliconCoverage_M1', pth.fname))    
 
+def amplicon_analysis(pth):
+    """
+    True only for pfx.Amplicon_Analysis.{txt,csv}
+    """
+    return pth.fname.split('.')[-2] in set (['Amplicon_Analysis'])
+
 
 
 def maskable(pth):
