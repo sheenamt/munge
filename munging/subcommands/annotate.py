@@ -14,7 +14,7 @@ def build_parser(parser):
     parser.add_argument('input_file', default=None,
                         help='Explicitly specify input file of variants in Annovar format')
     parser.add_argument('--machine',
-                        choices=['H', 'N', 'M'],
+                        choices=['HISEQ', 'NEXTSEQ', 'MISEQ'],
                         help='Machine type for internal frequencies')
     parser.add_argument('--assay',
                         help='Assay code for interal frequencies')
@@ -61,8 +61,9 @@ def action(args):
     AnnotInfo.__new__.__defaults__ = ('-filter','', args.library_dir)
 
     #if info given for interal frequencies, name that file
-    machine=args.machine
-    assay=args.assay.split('v')[0]
+    machine=args.machine.lower()
+    assay=args.assay.lower()
+
     internal_freq_file = '_'.join(['hg19',machine,assay])
     internal_cadd_file = '_'.join(['hg19','CADD',assay])
 
@@ -102,7 +103,6 @@ def action(args):
                         variants_file, 
                         a.library_dir]
         cmd = filter(None, annovar_cmd)
-
         subprocess.check_call(cmd)
         if a.anno_type=='--genericdbfile':
             generic_file = os.path.join(os.path.dirname(args.out_dir),file_pfx+'.hg19_generic_dropped')

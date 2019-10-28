@@ -181,7 +181,7 @@ class TestGenotyper(TestBase):
         expected = os.path.join(genotyper_testfiles, 'Genotyper_Analysis.txt')
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "simple-genotyper.csv")
-        cmd=["munge", "genotyper_analyzer", clin_flagged, readcount_output, simplecsv]
+        cmd=["./munge", "genotyper_analyzer", clin_flagged, readcount_output, simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 

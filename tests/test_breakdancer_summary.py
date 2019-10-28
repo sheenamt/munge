@@ -43,6 +43,6 @@ class TestBreakdancerSummary(TestBase):
         ctx=os.path.join(breakdancer_testfiles, 'BD.ctx')
         expected_output=os.path.join(breakdancer_testfiles, 'expected_output.txt')
         testing_output=os.path.join(breakdancer_testfiles, 'testing_output.txt')
-        cmd=["munge", "breakdancer_summary", self.refgene, ctx, '-o', testing_output]
+        cmd=["./munge", "breakdancer_summary", self.refgene, ctx, '-o', testing_output]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(expected_output, testing_output))

@@ -76,7 +76,7 @@ class TestPindelSummary(TestBase):
                 if file.endswith(".vcf"):
                     pindel_vcfs.append(os.path.join(root, file))
 
-        cmd=["munge", "pindel_summary",self.refgene]+ [x for x in pindel_vcfs] +[ '-o',simpletsv ]
+        cmd=["./munge", "pindel_summary",self.refgene]+ [x for x in pindel_vcfs] +[ '-o',simpletsv ]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(expected_output, simpletsv))
 

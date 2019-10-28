@@ -32,7 +32,7 @@ class TestMonoSeqParser(TestBase):
         outdir = self.mkoutdir()
         simplecsv = path.join(outdir, "simple-monoseq.csv")
         expected =  monoseq_output
-        cmd=["munge", "parse_monoseq", monoseq_input, path.join(self.monoseq_testfiles, 'CFTR.xml'), simplecsv]
+        cmd=["./munge", "parse_monoseq", monoseq_input, path.join(self.monoseq_testfiles, 'CFTR.xml'), simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 
@@ -41,6 +41,6 @@ class TestMonoSeqParser(TestBase):
         simplecsv = path.join(outdir, "simple-monoseq-top-level.csv")
         monoseq_output = path.join(self.analysis_testfiles, 'GEN0110-GLTv1.Combined_PolyHunter.txt')
         expected =  monoseq_output
-        cmd=["munge", "parse_monoseq_top_level", self.analysis_testfiles, self.manifest, '-o', simplecsv]
+        cmd=["./munge", "parse_monoseq_top_level", self.analysis_testfiles, self.manifest, '-o', simplecsv]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
