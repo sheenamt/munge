@@ -49,6 +49,11 @@ def set_gene_event(start_pos, chrm, genes):
 def action(args):
     genes = GenomeIntervalTree.from_table(args.refgene, parser=UCSCTable.REF_GENE, mode='tx')
 
+    #try to match chr string in reference file and input data
+    chrm=False
+    if 'chr' in genes.keys()[0]:
+        chrm = True
+
     # read in only the columns we care about, because real data can be too large sometimes
     headers=['#Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
     reader = pandas.read_csv(args.bd_file, comment='#', delimiter='\t',header=None,usecols=[0,1,3,4,6,7,9], names=headers)
@@ -57,9 +62,14 @@ def action(args):
     output = []
     for row in rows:
         # each segment is assigned to a gene or exon if either the
+        #only normal chr are process, GL amd MT are ignored
         try:
-            chr1 = 'chr'+str(chromosomes[row['#Chr1']])
-            chr2 = 'chr'+str(chromosomes[row['Chr2']])
+            if chrm:
+                chr1 = 'chr'+str(chromosomes[row['#Chr1']])
+                chr2 = 'chr'+str(chromosomes[row['Chr2']])
+            else:
+                chr1 = str(chromosomes[row['#Chr1']])
+                chr2 = str(chromosomes[row['Chr2']])
         except KeyError:
             print('chrm not being processed: {} or {}'.format(row['#Chr1'], row['Chr2']))
             continue

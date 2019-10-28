@@ -10,6 +10,8 @@ import csv
 import pandas as pd
 from munging.utils import Opener
 from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts
+from operator import itemgetter
+from natsort import natsorted
 
 def build_parser(parser):
     parser.add_argument('target_coverage',
@@ -21,10 +23,12 @@ def build_parser(parser):
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
 
+
 def action(args):
     #read in refgene into interval tree
     #Create interval tree of introns and exons,  grouped by chr
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
+
 
     #try to match chr string in reference file and input data
     chrm=False
@@ -36,86 +40,60 @@ def action(args):
     #read in bedfile
     with open(args.target_coverage, 'rU')  as f:
         headers=['CHROM','START','END','GENE','1_BASED_POSITION','READS']
-        reader = pd.read_csv(f, comment='#', delimiter='\t',header=None,usecols=[0,1,4,5],names=headers)
-        reader['POS']=reader['START']+(reader['1_BASED_POSITION']-1)
+        df = pd.read_csv(f, comment='#', delimiter='\t',header=None,usecols=[0,1,4,5],names=headers)
+        df['POS']=df['START']+(df['1_BASED_POSITION']-1)
+
+        #remove all rows that pass the thresholds
+        failing_bases = df[df['READS']<=args.threshold]
         
-        #parse into intervals not meeting coverage threshold
-        failing_bases=reader[reader['READS']<=args.threshold]
-        df = reader
-        df['tag'] = df['READS']<=args.threshold
-
-        # first row is a True preceded by a False
-        fst = df.index[df['tag'] & ~ df['tag'].shift(1).fillna(False)]
-        # last row is a True followed by a False
-        lst = df.index[df['tag'] & ~ df['tag'].shift(-1).fillna(False)]
-
-        # create list of first and last in interval
-        pr = [(i, j) for i, j in zip(fst, lst)] # if j > i + 4]
         
-        #Empty dict for adding data that will need annotations
-        #parse original datafram into intervals 
-        data=pd.DataFrame(columns=['CHROM','START','END','Mean Coverage'])
-        for i, j in pr:
-            new_df=df.loc[i:j]
-            mean_data = int(new_df['READS'].mean())
-            chrom=new_df.iloc[0]['CHROM']
-            start=new_df.iloc[0]['POS']
-            end=new_df.iloc[-1]['POS']
-            data=data.append({'CHROM':str(chrom),'START':str(start),'END':str(end),'Mean Coverage':mean_data}, ignore_index=True)
-                    
-    data=data.drop_duplicates()
-    #Convert to a dictionary for processing clearly
-    rows = data.T.to_dict().values()
+        #Match the chrm annotation of the exons file
+        #Now, groupy by START, mean READS, and label interval with first and last POS
+        data=failing_bases.groupby(['CHROM','START'],as_index=False).agg({'READS':['mean','median'],
+                                                                          'POS':['min','max']})
+        if chrm:
+            data.loc[:,'CHROM']='chr'+data['CHROM'].astype(str)
+        else:
+            data.loc[:,'CHROM']=data['CHROM'].astype(str)
 
-    # #annotate failing intervals
+        #NOW, ANNOTATE:
 
-    for row in rows:
-        #only normal chr are process, GL amd MT are ignored
-        try:
-            if chrm:
-                chr1 = 'chr'+str(chromosomes[row['CHROM']])
+        #Convert to a dictionary for processing clearly
+        rows = data.T.to_dict().values()
+        
+        for row in rows:
+            chrm=row[('CHROM','')]
+            start=int(row[('POS','min')])
+            end=int(row[('POS','max')])
+            
+            #This is a snp
+            if start==end:
+                chrm_exons=exons[chrm].search(start)
+                row['Position'] = '{}:{}'.format(chrm, start)
             else:
-                chr1 = str(chromosomes[row['CHROM']])
-        except KeyError:
-            continue
-        #Setup the variables to be returned
-        gene1, region, transcripts=[],[],[]
-        # each segment is assigned to a gene if either the
-        # start or end coordinate falls within the feature boundaries.
-        snp=False
-        if int(row['START']) == int(row['END']) :
-            snp=True
-            chrm_exons=exons[chr1].search(int(row['START']))
-        else:
-            chrm_exons=exons[chr1].search(int(row['START']), int(row['END']))
-            chrm_start=exons[chr1].search(int(row['START']))
-            chrm_stop=exons[chr1].search(int(row['END']))
+                chrm_exons=exons[chrm].search(start,end)
+                row['Position'] = '{}:{}-{}'.format(chrm, start, end)
+                
+            #now we either have an interval or we don't
+            if chrm_exons:
+                gene1, region, transcripts = define_transcripts(chrm_exons)
 
-        #Usual case: both start and stop are in a coding region
-        if chrm_exons:
-            gene1, region, transcripts=define_transcripts(chrm_exons)
-        # #But if start isn't in coding, but stop is, currently an error
-        elif chrm_stop and not chrm_start:
-            print 'hit this case'
-            sys.exit()
-            gene1, region, transcripts=define_transcripts(chrom_stop)
-        #Otherwise if neither start nor stop are in coding, label everything as intergenic
-        else:
-            gene1=['Intergenic',]
-            region=['Intergenic',]
-            transcripts=[]
 
-        row['Gene'] =';'.join(str(x) for x in set(gene1))
-        row['Gene_Region']=';'.join(str(x) for x in set(region))
-        row['Transcripts']=';'.join(str(x) for x in set(transcripts))
+            else:
+                gene1 = ['Intergenic']
+                region = ['Intergenic']
+                transcripts = []
 
-        if snp:
-            row['Position']=str(chr1)+':'+str(row['START'])
-        else:
-            row['Position']=str(chr1)+':'+str(row['START'])+'-'+str(row['END'])
-        output.append(row)
-
-    out_fieldnames=['Position','Gene','Gene_Region','Transcripts','Mean Coverage']
-    writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
-    writer.writeheader()
-    writer.writerows(output) 
+            row['Mean Coverage'] = row[('READS','mean')]
+            row['Median Coverage'] = row[('READS','median')]
+            row['Gene'] =';'.join(str(x) for x in set(gene1))
+            row['Gene_Region']=';'.join(str(x) for x in set(region))
+            row['Transcripts']=';'.join(str(x) for x in set(transcripts))
+            output.append(row)
+            
+        output=natsorted(output,key=itemgetter('Position'))  #Sort on position 
+        out_fieldnames=['Position','Gene','Gene_Region','Mean Coverage', 'Median Coverage','Transcripts']
+        writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
+        writer.writeheader()
+        writer.writerows(output) 
+                

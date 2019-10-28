@@ -112,10 +112,10 @@ def add_links(Reader, sheet, fname):
         for colx, value in enumerate(row):
             if colx == 0 and not value == 'gendb_link':
                 if len(value) < 198:
-                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","gendb_link")'.format(value))
+                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://gendb.labmed.uw.edu/genetics_db/search?variant_id={}","gendb_link")'.format(value))
             elif colx == 15 and not value == 'Faves_Y/N':
                 if len(value) < 198:
-                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://kaos.labmed.uw.edu/var_clin/fav/?variant_id={}&pfx={}&ref_reads={}&var_reads={}","mark_fav")'.format(variant_id, f_short_name, ref_reads, var_reads))
+                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://control.labmed.uw.edu/var_clin/fav/?variant_id={}&pfx={}&ref_reads={}&var_reads={}","mark_fav")'.format(variant_id, f_short_name, ref_reads, var_reads))
 
             else:
                 sheet.write(rowx, colx, float_if_possible(value))

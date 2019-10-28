@@ -14,7 +14,8 @@ from operator import itemgetter
 import logging
 import pandas
 from munging.utils import Opener
-from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts
+from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts,multi_split
+import itertools
 
 csv.field_size_limit(10000000)
 log = logging.getLogger(__name__)
@@ -45,21 +46,56 @@ def parse_event(data):
         end=int(info['END'])
     return size,svtype, end
 
+def ranges(i):
+#    print('i:', i)
+    for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
+        b = list(b)
+        yield b[0][1], b[-1][1]
+
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
-    gene1, region, transcripts=[],[],[]
+    gene1, region, transcript,transcripts=[],[],{},[]
     for start, stop, data in chrm_data: 
         gene1.append(data['name2'])
+        refseq='{}:{}'.format(data['name2'],data['name'])
         if 'exonNum' in data.keys():
             region.append('Exonic')
-            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
-            transcripts.append(transcript)
+            if transcript.has_key(refseq):
+                if transcript[refseq].has_key('exons'):
+                    transcript[refseq]['exons'].append(int(data['exonNum']))
+                else:
+                    transcript[refseq].update({'exons':[int(data['exonNum'])]})
+            else:
+                transcript[refseq]={'exons':[int(data['exonNum'])]}
+            transcript[refseq]['exons'].sort()
         if 'intronNum' in data.keys():
             region.append('Intronic')
-            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
-            transcripts.append(transcript)
-    return gene1, region, sorted(transcripts)
+            if transcript.has_key(refseq):
+                if transcript[refseq].has_key('introns'):
+                    transcript[refseq]['introns'].append(int(data['intronNum']))
+                else:
+                    transcript[refseq].update({'introns':[int(data['intronNum'])]})
+            else:
+                transcript[refseq]={'introns':[int(data['intronNum'])]}
+            transcript[refseq]['introns'].sort()
 
+    for refseq in transcript:
+        if transcript[refseq].has_key('exons'):
+            exon_ranges=list(ranges(transcript[refseq]['exons']))
+            for r in exon_ranges:
+                if r[0]==r[1]:
+                    transcripts.append('{}(exon {})'.format(refseq,r[0]))
+                else:
+                    transcripts.append('{}(exons {}-{})'.format(refseq,r[0],r[1]))
+        if transcript[refseq].has_key('introns'):
+            intron_ranges=list(ranges(transcript[refseq]['introns']))
+            for i in intron_ranges:
+                if i[0]==i[1]:
+                    transcripts.append('{}(intron {})'.format(refseq,i[0]))
+                else:
+                    transcripts.append('{}(introns {}-{})'.format(refseq,i[0],i[1]))
+    return gene1, region, transcripts
+    
 def action(args):
     #Create interval tree of introns and exons,  grouped by chr
     exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
@@ -114,11 +150,9 @@ def action(args):
                     gene1=['Intergenic',]
                     region=['Intergenic',]
                     transcripts=[]
-
                 row['Gene'] =';'.join(str(x) for x in set(gene1))
                 row['Gene_Region']=';'.join(str(x) for x in set(region))
-                row['Transcripts']=';'.join(str(x) for x in set(transcripts))
-
+                row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
                 row['Reads']=int(row['READS'].split(',')[-1])
 

@@ -12,7 +12,7 @@ from urllib import urlopen
 from StringIO import StringIO as BytesIO
 import zlib
 from collections import defaultdict
-from intervaltree import Interval, IntervalTree
+import itertools
 
 pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|MONC|UNK|TESTDATA)', re.IGNORECASE)
 pfx_pattern_old = re.compile('^(OPX|LMG|LMED|CON)', re.IGNORECASE)
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 # encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
 # ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
 # 'chrX'). `chromosomes` maps all three to the numeric representation.
-chrnums = range(1, 23) + ['X', 'Y']
+chrnums = range(1, 23) + ['X', 'Y', 'MT']
 chromosomes = {'chr{}'.format(c): c for c in chrnums}
 chromosomes.update({str(c): c for c in chrnums})
 chromosomes.update({c: c for c in chrnums})
@@ -274,19 +274,87 @@ class GenomeIntervalTree(defaultdict):
         t = defaultdict.__reduce__(self)
         return (t[0], ()) + t[2:]
 
+def ranges(i):
+    for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
+        b = list(b)
+        yield b[0][1], b[-1][1]
 
 
+class Transcript(object):
+    """Helper class to encapsulate transcript data"""
+    
+    def __init__(self, gene, accession):
+        self.gene = gene
+        self.accession = accession
+        self.exons = []
+        self.introns = []
+
+    def __lt__(self, other):
+        self_string = self.gene + self.accession
+        other_string = other.gene + other.accession
+        return self_string < other_string
+
+        
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
-    gene1, region, transcripts=[],[],[]
-    for start, stop, data in chrm_data: 
-        gene1.append(data['name2'])
-        if 'exonNum' in data.keys():
-            region.append('Exonic')
-            transcript='{}:{}(exon {})'.format(data['name2'],data['name'],data['exonNum'])
-            transcripts.append(transcript)
-        if 'intronNum' in data.keys():
-            region.append('Intronic')
-            transcript='{}:{}(intron {})'.format(data['name2'],data['name'],data['intronNum'])
-            transcripts.append(transcript)
-    return gene1, region, sorted(transcripts)
+    
+    gene_list, region_list, transcript_list = [], [], []
+    
+    # create Transcript dictionary from chrm_data
+    transcripts = {}
+    for start, stop, data in chrm_data:
+        gene = data['name2']
+        accession = data['name']
+
+        if not transcripts.has_key(accession):
+            transcripts[accession] = Transcript(gene, accession)
+
+        t = transcripts[accession]
+        
+        if data.has_key('exonNum'):
+            #print(accession + ': E-' + data['exonNum'])
+            t.exons.append(int(data['exonNum']))
+
+        elif data.has_key('intronNum'):
+            #print(accession + ': I-' + data['intronNum'])
+            t.introns.append(int(data['intronNum']))
+
+    
+    # populate the output lists
+    for t in transcripts.values():
+        refseq='{}:{}'.format(t.gene,t.accession)
+
+        # if t contains only a single exon
+        if len(t.introns) == 0:
+            transcript_annotation = '{}(exon {})'.format(refseq, str(t.exons[0]))
+            region_annotation = 'EXONIC'
+
+        # if t contains only a single intron
+        elif len(t.exons) == 0:
+            transcript_annotation = '{}(intron {})'.format(refseq, str(t.introns[0]))
+            region_annotation = 'INTRONIC'
+
+        else:
+            # can I use first index & last index instead of min & max?
+            min_e, min_i = min(t.exons), min(t.introns)
+            if min_e <= min_i:
+                head = 'exon ' + str(min_e)
+            else:
+                head = 'intron ' + str(min_i)
+
+            max_e, max_i = max(t.exons), max(t.introns)
+            if max_e > max_i:
+                tail = 'exon ' + str(max_e)
+            else:
+                tail = 'intron ' + str(max_i)
+
+            transcript_annotation = '{}({} - {})'.format(refseq, head, tail)
+            region_annotation = 'EXONIC-INTRONIC'
+
+        gene_list.append(t.gene)
+        region_list.append(region_annotation)
+        transcript_list.append(transcript_annotation)
+
+    return sorted(set(gene_list)), sorted(set(region_list)), sorted(set(transcript_list))
+
+
