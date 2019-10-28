@@ -456,11 +456,5 @@ def parse_amplicon(files, specimens, annotation, prefixes, variant_keys, sort_or
                     specimens[variant][pfx['mini-pfx']] = row['MeanCoverage']
                     annotation[variant] = row
 
-    #Update the specimen dict for this variant, count samples present
-    for key, value in specimens.iteritems():
-        specimens[key]['Count']=len(value)
-
-#    #Add 'Count' to prefixes for correct dict zipping/printing    
-#    prefixes.append('Count')
     fieldnames = variant_keys + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
