@@ -155,6 +155,9 @@ def action(args):
                 row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
                 row['Reads']=int(row['READS'].split(',')[-1])
+                
+                #show absolute value for size
+                row['Size']=abs(row['Size'])
 
                 output.append(row)
 
