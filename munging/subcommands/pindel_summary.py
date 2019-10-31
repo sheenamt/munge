@@ -40,8 +40,8 @@ def parse_event(data):
     else:
         svtype=info['SVTYPE']
     #Pindel reports insertions wrong by not setting the end position correctly. It may do it with other data, so test based on reported size rather than svtype
-    if abs(size)>1 and data['POS'] == info['END']:
-        end=int(info['END'])+size
+    if abs(size)>1 and int(data['POS']) == int(info['END']):
+        end=int(info['END'])+1
     else:
         end=int(info['END'])
     return size,svtype, end
@@ -155,6 +155,9 @@ def action(args):
                 row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
                 row['Reads']=int(row['READS'].split(',')[-1])
+                
+                #show absolute value for size
+                row['Size']=abs(row['Size'])
 
                 output.append(row)
 
