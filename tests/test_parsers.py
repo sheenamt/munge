@@ -249,7 +249,7 @@ class TestParsers(TestBase):
         #Should heave 753 entries for hhv3, the only assay running this parser
         self.assertEqual(len(specimens), 753)
 
-def testBreakDancerParser(self):
+    def testBreakDancerParser(self):
         specimens = defaultdict(dict)
         annotation = {} 
         prefixes = []
