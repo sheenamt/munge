@@ -38,7 +38,7 @@ class TestPindelSummary(TestBase):
         ''' Return the length and type of event, corrects end position if necessary '''
         #Test when start==stop but size > 1 (which only size >1 should ever hit this parser
         expected_output0=(-32, 'DEL',1808032)
-        expected_output1=(5, 'INS', 89690957)
+        expected_output1=(5, 'INS', 89690953)
         expected_output2=(-16,'DEL',7579659)
         #test that RPL svtype becomes DEL
         self.assertEqual(pindel_summary.parse_event(self.data[0]), expected_output0)
