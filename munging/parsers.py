@@ -136,7 +136,7 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
                         frac = '0'
                     specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
                     specimens[variant][vaf_pfx]=frac
-                    if int(row['Valid_Reads']) >= 100:
+                    if int(row['Valid_Reads']) >= 50:
                         if float(frac) > 0.70:
                             specimens[variant][status_pfx]='HOMO'
                         elif float(frac) <= 0.10:
