@@ -166,7 +166,10 @@ def action(args):
                     row['bwamemReads']=int(row['bwamemREADS'].split(',')[-1])
                 else:
                     row['Reads']=int(row['READS'].split(',')[-1])
-
+                row['Reads']=int(row['READS'].split(',')[-1])
+                
+                #show absolute value for size
+                row['Size']=abs(row['Size'])
                 output.append(row)
 
     if args.multi_reads:
