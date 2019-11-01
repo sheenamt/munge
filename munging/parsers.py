@@ -119,7 +119,9 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
             #Create a smaller version of this really long string
             reads_pfx=pfx['mini-pfx']+'_Variants|Total'
             status_pfx=pfx['mini-pfx']+'_Status'
+            vaf_pfx=pfx['mini-pfx']+'_VAF'
             prefixes.append(reads_pfx)
+            prefixes.append(vaf_pfx)
             prefixes.append(status_pfx)
             with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
                 reader = csv.DictReader(fname, delimiter='\t')
@@ -133,6 +135,7 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
                     except ZeroDivisionError:
                         frac = '0'
                     specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                    specimens[variant][vaf_pfx]=frac
                     if int(row['Valid_Reads']) >= 100:
                         if float(frac) > 0.70:
                             specimens[variant][status_pfx]='HOMO'
