@@ -79,12 +79,8 @@ def action(args):
 
         #discard those between -101 and 101
         if int(row['Size']) not in range(-101,101):
-            #display absolute value for size
-            row['Size'] = abs(int(row['Size']))
-            
             if row['Type']=='CTX':
                 row['Size']='N/A'
-
             output.append(row)
 
     output.sort(key=itemgetter('Event_1'))
