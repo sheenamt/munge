@@ -43,7 +43,7 @@ def parse_event(data):
         svtype=info['SVTYPE']
     #Pindel reports insertions wrong by not setting the end position correctly. It may do it with other data, so test based on reported size rather than svtype
     if abs(size)>1 and int(data['POS']) == int(info['END']):
-        end=int(info['END'])+size
+        end=int(info['END'])+1
     else:
         end=int(info['END'])
     return size,svtype, end
@@ -166,10 +166,10 @@ def action(args):
                     row['bwamemReads']=int(row['bwamemREADS'].split(',')[-1])
                 else:
                     row['Reads']=int(row['READS'].split(',')[-1])
-
+                
+                #show absolute value for size
+                row['Size']=abs(row['Size'])
                 output.append(row)
-
-
 
     if args.multi_reads:
         output.sort(key=itemgetter('bwamemReads'), reverse=True)  #Sort on reads
