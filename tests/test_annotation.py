@@ -112,17 +112,44 @@ class TestAnnotation(TestBase):
     def testGenomeIntervalTree(self):
         data=IntervalTree()
         exons=GenomeIntervalTree.from_table(open(self.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
+
+        #642     NM_000546       chr17   -       7571719 7590868 7572926 7579912 11      7571719,7573926,7576852,7577018,7577498,7578176,7578370,7579311,7579699,7579838,7590694,        7573008,7574033,7576926,7577155,7577608,7578289,7578554,7579590,7579721,7579940,7590868,
         for start,end,data in exons['chr17'].search(int(7577100)):
             if data['name']=='NM_000546':
                 rev_exon=data
-
         for start,end,data in exons['chr17'].search(int(7577700)):
             if data['name']=='NM_000546':
                 rev_intron=data
+
         #TP53:NM_000546, reverse strand, position 7577100 is in exon8,position 7577100 is in intron6
         self.assertEqual(rev_exon['exonNum'],'8')
         self.assertEqual(rev_intron['intronNum'],'6')
+
+        ##3' UTR is  7590868-7579912
+        for start,end,data in exons['chr17'].search(int(7571719)):
+            if data['name']=='NM_000546':
+                rev_3_utr_start=data
+
+        for start,end,data in exons['chr17'].search(int(7572926)):
+            if data['name']=='NM_000546':
+                rev_3_utr_stop=data
+
+        #5' UTR is 7571719-7572926 
+        for start,end,data in exons['chr17'].search(int(7590868)):
+            if data['name']=='NM_000546':
+                rev_5_utr_start=data
+
+        for start,end,data in exons['chr17'].search(int(7579912)):
+            if data['name']=='NM_000546':
+                rev_5_utr_stop=data
+ 
+        #TP53:NM_000546, reverse strand, 3' UTR is 7571719-7572926, 5' UTR is 7590868-7579912
+        self.assertEqual(rev_3_utr_start['UTR'],'3')
+        self.assertEqual(rev_3_utr_stop['UTR'],'3')
+        self.assertEqual(rev_5_utr_start['UTR'],'5')
+        self.assertEqual(rev_5_utr_stop['UTR'],'5')
         
+
 
         for start,end,data in exons['chrX'].search(int(66763880)):
             if data['name']=='NM_000044':
@@ -134,3 +161,33 @@ class TestAnnotation(TestBase):
         self.assertEqual(forward_exon['exonNum'],'1')
         self.assertEqual(forward_intron['intronNum'],'7')
 
+        
+        #3' UTR is 66950461-66943683
+        for start,end,data in exons['chrX'].search(int(66950461)):
+            if data['name']=='NM_000044':
+                utr_3_start=data
+
+        #Test 3' UTR
+        for start,end,data in exons['chrX'].search(int(66943683)):
+            if data['name']=='NM_000044':
+                utr_3_stop=data
+
+        #5' UTR - 66763873-66764988
+        for start,end,data in exons['chrX'].search(int(66763873)):
+            if data['name']=='NM_000044':
+                utr_5_start=data
+
+        # Test 5' UTR
+        for start,end,data in exons['chrX'].search(int(66764988)):
+            if data['name']=='NM_000044':
+                utr_5_stop=data
+
+        self.assertEqual(utr_3_start['UTR'],'3')
+        self.assertEqual(utr_3_stop['UTR'],'3')
+        self.assertEqual(utr_5_start['UTR'],'5')
+        self.assertEqual(utr_5_stop['UTR'],'5')
+  
+        # #Test 0 based vs 1 based entry for start and stop
+        # # Test first exon and last exon to make sure we are calling correctly the difference between UTR and exon
+        # #1-10 UTR, 11-20 is exon1:
+        # #10 == UTR, 11=exon1, 20=exon1, 21=intron1
