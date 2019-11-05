@@ -158,23 +158,53 @@ class IntervalMakers(object):
         for i in range(exon_count):
             exon_d = d.copy()
             if strand == '+':
-                exon_d['exonNum']=str(i+1)
+                exon_d['exonNum']=str(i+1).zfill(2)
             elif strand == '-':
-                exon_d['exonNum']=str(exon_count-i)
-            #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
-            yield Interval(int(exStarts[i]), int(exEnds[i])+1, exon_d)
+                exon_d['exonNum']=str(exon_count-i).zfill(2)
+
+            # separate the UTRs from the first and last exon
+            if i == 0:
+                utr_d = d.copy()
+                cds_start = int(d['cdsStart'])
+                if strand == '-':   # last exon & 3' UTR
+                    utr_d['UTR'] = '3'
+                elif strand == '+': # first exon & 5' UTR
+                    utr_d['UTR'] = '5'
+                
+                #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
+                yield Interval(cds_start, int(exEnds[i]) + 1, exon_d)
+                #Since interval trees are not inclusive of upper limit, do not increment cds_start
+                yield Interval(int(exStarts[i]), cds_start, utr_d)
+
+            elif i == exon_count - 1:
+                utr_d = d.copy()
+                cds_end = int(d['cdsEnd'])
+                if strand == '-':   # first exon & 5' UTR
+                    utr_d['UTR'] = '5'
+                elif strand == '+': # last exon & 3' UTR
+                    utr_d['UTR'] = '3'
+                
+                #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
+                yield Interval(int(exStarts[i]), cds_end + 1, exon_d)
+                #Since interval trees are not inclusive of upper limit, add one to the UTR end boundary
+                yield Interval(cds_end + 1, int(exEnds[i]) + 1, utr_d)
+
+            # if not the first or last exon, add interval as normal
+            else:
+                #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
+                yield Interval(int(exStarts[i]), int(exEnds[i])+1, exon_d)
 
             #Setup the intron info
             if i < intron_count:
             #Since interval trees are not inclsive of upper limit, add one to the intron start boundary and not to the end boundary
                 intron_start=int(exEnds[i])+1
                 intron_end=int(exStarts[i+1])
-                new_d=d.copy()
-                if new_d['strand']=='-':
-                    new_d['intronNum']=str(intron_count - i)
-                elif new_d['strand']=='+':
-                    new_d['intronNum']=str(i+1)
-                yield Interval(intron_start, intron_end, new_d)
+                intron_d=d.copy()
+                if strand == '-':
+                    intron_d['intronNum']=str(intron_count - i).zfill(2)
+                elif strand == '+':
+                    intron_d['intronNum']=str(i+1).zfill(2)
+                yield Interval(intron_start, intron_end, intron_d)
 
 def _fix(interval):
     '''
