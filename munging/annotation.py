@@ -150,61 +150,70 @@ class IntervalMakers(object):
 
     @staticmethod
     def EXONS(d):
-        exStarts = d['exonStarts'].split(b',')
-        exEnds = d['exonEnds'].split(b',')
-        intron_count=int(d['exonCount'])-1
+        exon_starts = d['exonStarts'].split(b',')
+        exon_ends = d['exonEnds'].split(b',')
         exon_count=int(d['exonCount'])
         strand = d['strand']
+        tx_start = int(d['txStart'])
+        tx_end = int(d['txEnd'])
+        cds_start = int(d['cdsStart'])
+        cds_end = int(d['cdsEnd'])
+
+        # add the UTRs
+        utr5 = d.copy()
+        utr5['UTR'] = '5'
+        utr3 = d.copy()
+        utr3['UTR'] = '3'
+
+        if strand == '+':
+            yield Interval(tx_start, cds_start, utr5)
+            yield Interval(cds_end + 1, tx_end + 1, utr3)
+        
+        elif strand == '-':
+            yield Interval(cds_end + 1, tx_end + 1, utr5)
+            yield Interval(tx_start, cds_start, utr3) 
+
+        # add the exons
         for i in range(exon_count):
+            exon_start = int(exon_starts[i])
+            exon_end = int(exon_ends[i])
+
+            # do not create interval if this exon is entirely encompassed by a UTR
+            if exon_end < cds_start or exon_start > cds_end:
+                continue
+
+            # if the utr overlaps this exon, adjust the boundaries
+            exon_start = max(exon_start, cds_start)
+            exon_end = min(exon_end, cds_end)
+
+            # add the exon number to the dictionary
             exon_d = d.copy()
             if strand == '+':
-                exon_d['exonNum']=str(i+1).zfill(2)
+                exon_d['exonNum']=str(i + 1).zfill(2)
             elif strand == '-':
-                exon_d['exonNum']=str(exon_count-i).zfill(2)
+                exon_d['exonNum']=str(exon_count - i).zfill(2)
 
-            # separate the UTRs from the first and last exon
-            if i == 0:
-                utr_d = d.copy()
-                cds_start = int(d['cdsStart'])
-                if strand == '-':   # last exon & 3' UTR
-                    utr_d['UTR'] = '3'
-                elif strand == '+': # first exon & 5' UTR
-                    utr_d['UTR'] = '5'
-                
-                #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
-                yield Interval(cds_start, int(exEnds[i]) + 1, exon_d)
-                #Since interval trees are not inclusive of upper limit, do not increment cds_start
-                yield Interval(int(exStarts[i]), cds_start, utr_d)
+            #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
+            yield Interval(exon_start, exon_end+1, exon_d)
 
-            elif i == exon_count - 1:
-                utr_d = d.copy()
-                cds_end = int(d['cdsEnd'])
-                if strand == '-':   # first exon & 5' UTR
-                    utr_d['UTR'] = '5'
-                elif strand == '+': # last exon & 3' UTR
-                    utr_d['UTR'] = '3'
-                
-                #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
-                yield Interval(int(exStarts[i]), cds_end + 1, exon_d)
-                #Since interval trees are not inclusive of upper limit, add one to the UTR end boundary
-                yield Interval(cds_end + 1, int(exEnds[i]) + 1, utr_d)
+        # add the introns
+        for i in range(exon_count - 1):
+            intron_start = int(exon_ends[i]) + 1
+            intron_end = int(exon_starts[i + 1]) - 1
 
-            # if not the first or last exon, add interval as normal
-            else:
-                #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
-                yield Interval(int(exStarts[i]), int(exEnds[i])+1, exon_d)
+            # do not create interval if this intron is entirely encompassed by a UTR
+            if intron_end < cds_start or intron_start > cds_end:
+                continue
 
-            #Setup the intron info
-            if i < intron_count:
-            #Since interval trees are not inclsive of upper limit, add one to the intron start boundary and not to the end boundary
-                intron_start=int(exEnds[i])+1
-                intron_end=int(exStarts[i+1])
-                intron_d=d.copy()
-                if strand == '-':
-                    intron_d['intronNum']=str(intron_count - i).zfill(2)
-                elif strand == '+':
-                    intron_d['intronNum']=str(i+1).zfill(2)
-                yield Interval(intron_start, intron_end, intron_d)
+            # add the intron number to the dictionary
+            intron_d=d.copy()
+            if strand == '+':
+                intron_d['intronNum']=str(i + 1).zfill(2)
+            elif strand == '-':
+                intron_d['intronNum']=str(exon_count - 1 - i).zfill(2)
+            
+            #Since interval trees are not inclusive of upper limit, add one to the intron end boundary
+            yield Interval(intron_start, intron_end + 1, intron_d)
 
 def _fix(interval):
     '''
@@ -326,14 +335,12 @@ class Transcript(object):
         return self_string < other_string
 
     def get_type(self):
-        annotations = []
-        if self.utrs: # if transcript contains a UTR
-            annotations.append('UTR')
         if self.exons: # if transcript contains an exon
-            annotations.append('EXONIC')
+            return 'EXONIC'
+        if self.utrs: # if transcript contains a UTR
+            return 'UTR'
         if self.introns: # if transcript contains an intron
-            annotations.append('INTRONIC')
-        return '-'.join(annotations)
+            return 'INTRONIC'
 
     def get_annotation(self):
         refseq='{}:{}'.format(self.gene, self.accession)
@@ -343,16 +350,16 @@ class Transcript(object):
         # if annotation only spans one region type
         if len(self.exons) + len(self.introns) + len(self.utrs) == 1:
             if self.exons:
-                return '{}(exon {})'.format(refseq, str(self.exons[0]))
+                return '{}(exon {})'.format(refseq, str(self.exons[0]).zfill(2))
             elif self.introns:
-                return '{}(intron {})'.format(refseq, str(self.introns[0]))
+                return '{}(intron {})'.format(refseq, str(self.introns[0]).zfill(2))
             elif self.utrs:
-                return "{}({}' UTR)".format(refseq, self.utrs[0])
+                return '{}(UTR)'.format(refseq)
         # otherwise the annotation spans multiple types
         else:
             # find the 5' annotation
             if '5' in self.utrs:
-                head = "5' UTR"
+                head = 'UTR'
             elif self.introns and min(self.introns) <  min(self.exons):
                 head = 'intron ' + str(min(self.introns)).zfill(2)
             else:
@@ -360,7 +367,7 @@ class Transcript(object):
 
             # find the 3' annotation
             if '3' in self.utrs:
-                tail = "3' UTR"
+                tail = 'UTR'
             elif self.introns and max(self.introns) >= max(self.exons):
                 tail = 'intron ' + str(max(self.introns)).zfill(2)
             else:
@@ -404,5 +411,3 @@ def define_transcripts(chrm_data):
         transcript_list.append(t.get_annotation())
 
     return sorted(set(gene_list)), sorted(set(region_list)), sorted(set(transcript_list))
-
-
