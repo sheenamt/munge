@@ -137,27 +137,21 @@ def action(args):
                     continue
 
                 #Setup the variables to be returned
-                gene1, region, transcripts=[],[],[]
+                gene1, region1, transcripts1=['Intergenic'],['Intergenic'],[]
+                gene2, region2, transcripts2=['Intergenic'],['Intergenic'],[]
                 # each segment is assigned to a gene if either the
                 # start or end coordinate falls within the feature boundaries.
-                chrm_exons=exons[chr1].search(int(row['POS']), int(row['End']))
                 chrm_start=exons[chr1].search(int(row['POS']))
                 chrm_stop=exons[chr1].search(int(row['End']))
 
-                #Usual case: both start and stop are in a coding region
-                if chrm_exons:
-                    gene1, region, transcripts=define_transcripts(chrm_exons)
-                # #But if start isn't in coding, but stop is, currently an error
-                elif chrm_stop and not chrm_start:
-                    print 'hit this case'
-                    sys.exit()
-                    gene1, region, transcripts=define_transcripts(chrom_stop)
-                #Otherwise if neither start nor stop are in coding, label everything as intergenic
-                else:
-                    gene1=['Intergenic',]
-                    region=['Intergenic',]
-                    transcripts=[]
-                row['Gene'] =';'.join(str(x) for x in set(gene1))
+                if chrm_start:
+                    gene1, region1, transcripts1=define_transcripts(chrm_start)
+                if chrm_stop:
+                    gene2, region2, transcripts2=define_transcripts(chrm_stop)
+                gene=gene1+gene2
+                region=region1+region2
+                transcripts=transcripts1+transcripts2
+                row['Gene'] =';'.join(str(x) for x in set(gene))
                 row['Gene_Region']=';'.join(str(x) for x in set(region))
                 row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
