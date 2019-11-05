@@ -338,6 +338,8 @@ class Transcript(object):
     def get_annotation(self):
         refseq='{}:{}'.format(self.gene, self.accession)
 
+        #print(refseq, self.utrs, self.exons, self.introns)
+
         # if annotation only spans one region type
         if len(self.exons) + len(self.introns) + len(self.utrs) == 1:
             if self.exons:
@@ -351,18 +353,18 @@ class Transcript(object):
             # find the 5' annotation
             if '5' in self.utrs:
                 head = "5' UTR"
-            elif self.introns and min(introns) <  min(exons):
-                head = 'intron ' + str(min(introns)).zfill(2)
+            elif self.introns and min(self.introns) <  min(self.exons):
+                head = 'intron ' + str(min(self.introns)).zfill(2)
             else:
-                head = 'exon ' + str(min(exons)).zfill(2)
+                head = 'exon ' + str(min(self.exons)).zfill(2)
 
             # find the 3' annotation
             if '3' in self.utrs:
                 tail = "3' UTR"
-            elif self.introns and max(introns) >= max(exons):
-                tail = 'intron ' + str(max(introns)).zfill(2)
+            elif self.introns and max(self.introns) >= max(self.exons):
+                tail = 'intron ' + str(max(self.introns)).zfill(2)
             else:
-                tail = 'exon ' + str(max(exons)).zfill(2)
+                tail = 'exon ' + str(max(self.exons)).zfill(2)
 
             return "{}({} - {})".format(refseq, head, tail)
 
@@ -392,6 +394,7 @@ def define_transcripts(chrm_data):
             t.introns.append(int(data['intronNum']))
 
         if data.has_key('UTR'):
+            #print(accession + ': U-' + data['UTR'])
             t.utrs.append(data['UTR'])
     
     # populate the output lists
