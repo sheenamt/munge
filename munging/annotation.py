@@ -339,13 +339,13 @@ class Transcript(object):
         refseq='{}:{}'.format(self.gene, self.accession)
 
         # if annotation only spans one region type
-        if len(self.exons) + len(self.introns) + len(self.utrs) = 1:
+        if len(self.exons) + len(self.introns) + len(self.utrs) == 1:
             if self.exons:
                 return '{}(exon {})'.format(refseq, str(self.exons[0]))
             elif self.introns:
                 return '{}(intron {})'.format(refseq, str(self.introns[0]))
             elif self.utrs:
-                return "{}({}' UTR)".format(refseq, self.utrs[0]))
+                return "{}({}' UTR)".format(refseq, self.utrs[0])
         # otherwise the annotation spans multiple types
         else:
             # find the 5' annotation
