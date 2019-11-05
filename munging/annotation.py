@@ -318,11 +318,53 @@ class Transcript(object):
         self.accession = accession
         self.exons = []
         self.introns = []
+        self.utrs = []
 
     def __lt__(self, other):
         self_string = self.gene + self.accession
         other_string = other.gene + other.accession
         return self_string < other_string
+
+    def get_type(self):
+        annotations = []
+        if self.utrs: # if transcript contains a UTR
+            annotations.append('UTR')
+        if self.exons: # if transcript contains an exon
+            annotations.append('EXONIC')
+        if self.introns: # if transcript contains an intron
+            annotations.append('INTRONIC')
+        return '-'.join(annotations)
+
+    def get_annotation(self):
+        refseq='{}:{}'.format(self.gene, self.accession)
+
+        # if annotation only spans one region type
+        if len(self.exons) + len(self.introns) + len(self.utrs) = 1:
+            if self.exons:
+                return '{}(exon {})'.format(refseq, str(self.exons[0]))
+            elif self.introns:
+                return '{}(intron {})'.format(refseq, str(self.introns[0]))
+            elif self.utrs:
+                return "{}({}' UTR)".format(refseq, self.utrs[0]))
+        # otherwise the annotation spans multiple types
+        else:
+            # find the 5' annotation
+            if '5' in self.utrs:
+                head = "5' UTR"
+            elif self.introns and min(introns) <  min(exons):
+                head = 'intron ' + str(min(introns)).zfill(2)
+            else:
+                head = 'exon ' + str(min(exons)).zfill(2)
+
+            # find the 3' annotation
+            if '3' in self.utrs:
+                tail = "3' UTR"
+            elif self.introns and max(introns) >= max(exons):
+                tail = 'intron ' + str(max(introns)).zfill(2)
+            else:
+                tail = 'exon ' + str(max(exons)).zfill(2)
+
+            return "{}({} - {})".format(refseq, head, tail)
 
         
 def define_transcripts(chrm_data):
@@ -345,45 +387,18 @@ def define_transcripts(chrm_data):
             #print(accession + ': E-' + data['exonNum'])
             t.exons.append(int(data['exonNum']))
 
-        elif data.has_key('intronNum'):
+        if data.has_key('intronNum'):
             #print(accession + ': I-' + data['intronNum'])
             t.introns.append(int(data['intronNum']))
 
+        if data.has_key('UTR'):
+            t.utrs.append(data['UTR'])
     
     # populate the output lists
     for t in transcripts.values():
-        refseq='{}:{}'.format(t.gene,t.accession)
-
-        # if t contains only a single exon
-        if len(t.introns) == 0:
-            transcript_annotation = '{}(exon {})'.format(refseq, str(t.exons[0]))
-            region_annotation = 'EXONIC'
-
-        # if t contains only a single intron
-        elif len(t.exons) == 0:
-            transcript_annotation = '{}(intron {})'.format(refseq, str(t.introns[0]))
-            region_annotation = 'INTRONIC'
-
-        else:
-            # can I use first index & last index instead of min & max?
-            min_e, min_i = min(t.exons), min(t.introns)
-            if min_e <= min_i:
-                head = 'exon ' + str(min_e)
-            else:
-                head = 'intron ' + str(min_i)
-
-            max_e, max_i = max(t.exons), max(t.introns)
-            if max_e > max_i:
-                tail = 'exon ' + str(max_e)
-            else:
-                tail = 'intron ' + str(max_i)
-
-            transcript_annotation = '{}({} - {})'.format(refseq, head, tail)
-            region_annotation = 'EXONIC-INTRONIC'
-
         gene_list.append(t.gene)
-        region_list.append(region_annotation)
-        transcript_list.append(transcript_annotation)
+        region_list.append(t.get_type())
+        transcript_list.append(t.get_annotation())
 
     return sorted(set(gene_list)), sorted(set(region_list)), sorted(set(transcript_list))
 
