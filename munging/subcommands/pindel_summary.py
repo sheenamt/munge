@@ -52,50 +52,6 @@ def ranges(i):
     for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
         b = list(b)
         yield b[0][1], b[-1][1]
-
-# def define_transcripts(chrm_data):
-#     """Given the interval, set the gene, region and transcripts"""
-#     gene1, region, transcript,transcripts=[],[],{},[]
-#     for start, stop, data in chrm_data: 
-#         gene1.append(data['name2'])
-#         refseq='{}:{}'.format(data['name2'],data['name'])
-#         if 'exonNum' in data.keys():
-#             region.append('Exonic')
-#             if transcript.has_key(refseq):
-#                 if transcript[refseq].has_key('exons'):
-#                     transcript[refseq]['exons'].append(int(data['exonNum']))
-#                 else:
-#                     transcript[refseq].update({'exons':[int(data['exonNum'])]})
-#             else:
-#                 transcript[refseq]={'exons':[int(data['exonNum'])]}
-#             transcript[refseq]['exons'].sort()
-#         if 'intronNum' in data.keys():
-#             region.append('Intronic')
-#             if transcript.has_key(refseq):
-#                 if transcript[refseq].has_key('introns'):
-#                     transcript[refseq]['introns'].append(int(data['intronNum']))
-#                 else:
-#                     transcript[refseq].update({'introns':[int(data['intronNum'])]})
-#             else:
-#                 transcript[refseq]={'introns':[int(data['intronNum'])]}
-#             transcript[refseq]['introns'].sort()
-
-#     for refseq in transcript:
-#         if transcript[refseq].has_key('exons'):
-#             exon_ranges=list(ranges(transcript[refseq]['exons']))
-#             for r in exon_ranges:
-#                 if r[0]==r[1]:
-#                     transcripts.append('{}(exon {})'.format(refseq,r[0]))
-#                 else:
-#                     transcripts.append('{}(exons {}-{})'.format(refseq,r[0],r[1]))
-#         if transcript[refseq].has_key('introns'):
-#             intron_ranges=list(ranges(transcript[refseq]['introns']))
-#             for i in intron_ranges:
-#                 if i[0]==i[1]:
-#                     transcripts.append('{}(intron {})'.format(refseq,i[0]))
-#                 else:
-#                     transcripts.append('{}(introns {}-{})'.format(refseq,i[0],i[1]))
-#     return gene1, region, transcripts
     
 def action(args):
     #Create interval tree of introns and exons,  grouped by chr
@@ -125,6 +81,7 @@ def action(args):
 
             for row in rows:
                 row['Size'], row['Event_Type'],row['End']=parse_event(row)
+                # do not include small insertion/deletion calls from Pindel
                 if row['Size'] in range(-10,10):
                     continue
                 #only normal chr are process, GL is ignored
@@ -137,24 +94,36 @@ def action(args):
                     continue
 
                 #Setup the variables to be returned
-                gene1, region1, transcripts1=['Intergenic'],['Intergenic'],[]
-                gene2, region2, transcripts2=['Intergenic'],['Intergenic'],[]
+                gene1, transcripts1=['Intergenic'], []
+                gene2, transcripts2=['Intergenic'], []
+                region = 'Intergenic'
                 # each segment is assigned to a gene if either the
                 # start or end coordinate falls within the feature boundaries.
-                chrm_start=exons[chr1].search(int(row['POS']))
-                chrm_stop=exons[chr1].search(int(row['End']))
+                start_intervals = exons[chr1].search(int(row['POS']))
+                end_intervals = exons[chr1].search(int(row['End']))
+                spanning_intervals = exons[chr1].search(int(row['POS']), int(row['End']) + 1)
 
-                if chrm_start:
-                    gene1, region1, transcripts1=define_transcripts(chrm_start)
-                if chrm_stop:
-                    gene2, region2, transcripts2=define_transcripts(chrm_stop)
+                if start_intervals:
+                    gene1, _, transcripts1 = define_transcripts(start_intervals)
+                if end_intervals:
+                    gene2, _, transcripts2 = define_transcripts(end_intervals)
+                if spanning_intervals:
+                    _, regions, _ = define_transcripts(spanning_intervals)
+                    if 'EXONIC' in regions:
+                        region = 'EXONIC'
+                    elif 'UTR' in regions:
+                        region = 'UTR'
+                    elif 'INTRONIC' in regions:
+                        region = 'INTRONIC'
+
                 gene=gene1+gene2
-                region=region1+region2
                 transcripts=transcripts1+transcripts2
+
                 row['Gene'] =';'.join(str(x) for x in set(gene))
-                row['Gene_Region']=';'.join(str(x) for x in set(region))
+                row['Gene_Region'] = region
                 row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
                 row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
+                
                 if args.multi_reads:
                     row['bbmergedReads']=int(row['bbmergedREADS'].split(',')[-1])
                     row['bwamemReads']=int(row['bwamemREADS'].split(',')[-1])
