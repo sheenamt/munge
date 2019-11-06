@@ -41,12 +41,13 @@ def parse_event(data):
         svtype='DEL'
     else:
         svtype=info['SVTYPE']
-    #Pindel reports insertions wrong by not setting the end position correctly. It may do it with other data, so test based on reported size rather than svtype
-    if abs(size)>1 and int(data['POS']) == int(info['END']):
-        end=int(info['END'])+1
-    else:
-        end=int(info['END'])
-    return size,svtype, end
+    # To maintain consistency with the old Perl annotations, add 1 to the end
+    # This means insertions will be listed with consecutive breakends (e.g. 16:68771418-68771419)
+    # Deletions and tandem duplications will be listed with breakends separated by a number
+    # of positions equal to the size of the event (e.g. 16:817016-817032 for a size 15 deletion)
+    # In all cases, the breakends represent the UNAFFECTED nucleotides closest to the variation
+    end=int(info['END']) + 1
+    return size, svtype, end
 
 def ranges(i):
     for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
