@@ -22,7 +22,7 @@ def build_parser(parser):
 def action(args):
 
     output = []
-    headers=['chrom','start','stop', 'Probe', 'strand', 'mean']
+    headers=['chrom','start','stop', 'Probe','mean']
     reader = pandas.read_csv(args.perprobecoverage, comment='#', delimiter='\t',header=None,usecols=[0,1,2,3,5], names=headers)
     
     rows = reader.T.to_dict().values()
