@@ -36,9 +36,9 @@ class TestPindelSummary(TestBase):
         #Test when start==stop but size > 1 (which only size >1 should ever hit this parser
         #Parse event returns negative value for DEL, but pindel_summary script converts this to abs for output.
         #Abs conversion is tested in the testPindelSummary test
-        expected_output0=(-32, 'DEL',1808032)
+        expected_output0=(-32, 'DEL',1808033)
         expected_output1=(5, 'INS', 89690953)
-        expected_output2=(-16,'DEL',7579659)
+        expected_output2=(-16,'DEL',7579660)
         #test that RPL svtype becomes DEL
         self.assertEqual(pindel_summary.parse_event(self.data[0]), expected_output0)
         #Test that if start==stop, but size > 1, the stop is recalculated
