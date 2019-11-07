@@ -335,17 +335,23 @@ class Transcript(object):
         return self_string < other_string
 
     def get_type(self):
+        """
+        Returns the most significant region type for the Transcript ['EXONIC', 'UTR', 'INTRON']
+        """
         if self.exons: # if transcript contains an exon
             return 'EXONIC'
         if self.utrs: # if transcript contains a UTR
             return 'UTR'
         if self.introns: # if transcript contains an intron
             return 'INTRONIC'
+        
+        raise RuntimeError('An empty Transcript has no type')
 
     def get_annotation(self):
+        """
+        Returns a string represention of the Transcript in the form <Gene>:<Accession>(<start>-<stop>)
+        """
         refseq='{}:{}'.format(self.gene, self.accession)
-
-        #print(refseq, self.utrs, self.exons, self.introns)
 
         # if annotation only spans one region type
         if len(self.exons) + len(self.introns) + len(self.utrs) == 1:
