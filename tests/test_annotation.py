@@ -126,7 +126,7 @@ class TestAnnotation(TestBase):
         expected1=(['AR'], ['EXONIC'], ['AR:NM_000044(exon 02 - intron 03)', 'AR:NM_001011645(exon 02 - intron 03)'])
         self.assertEqual(define_transcripts(ar_exon2_intronic3), expected1)
         #exon 2, intron 3
-#        expected1=
+
         #Test Exonic region, when exonic and intronic and UTR
         ar_utr_exon2_intronic3=self.exons['chrX'].search(int(66764987), int(66905970))
         expected3=(['AR'], ['EXONIC'], ['AR:NM_000044(UTR - intron 03)', 'AR:NM_001011645(UTR - intron 03)'])
@@ -137,15 +137,37 @@ class TestAnnotation(TestBase):
         expected4=(['AR'], ['INTRONIC'], ['AR:NM_000044(intron 03)', 'AR:NM_001011645(intron 03)'])
         self.assertEqual(define_transcripts(ar_intronic), expected4)
 
-        #Test UTR 
-        hras_utr=self.exons['chr11'].search(int(534850), int(535450))
+        """ if strand == '+':
+            yield Interval(tx_start, cds_start, utr5)
+            yield Interval(cds_end + 1, tx_end + 1, utr3)
+        
+        elif strand == '-':
+            yield Interval(cds_end + 1, tx_end + 1, utr5)
+            yield Interval(tx_start, cds_start, utr3) """
+
+        #Test 5 UTR on - 
+        #txStart (532241) and cdsStart (532635)
+        hras_utr=self.exons['chr11'].search(int(532241), int(532635))
         expected5=(['HRAS'],['UTR'],['HRAS:NM_005343(UTR)'])
         self.assertEqual(define_transcripts(hras_utr),expected5)
+        
+        #Test 3 UTR on - 
+        #cdsEnd(534322) and txEnd (535567) 
+        hras_3_utr=self.exons['chr11'].search(int(534323), int(535567))
+        expected6=(['HRAS'],['UTR'],['HRAS:NM_005343(UTR)'])
+        self.assertEqual(define_transcripts(hras_3_utr),expected6)
 
-        #Test when utr goes inot exon 2
+    
+        #Test UTR on +
+        #txStart (66763873) and cdsStart (66764988)
+        ar_utr=self.exons['chrX'].search(int(66763873), int(66764988))
+        expected7=(['AR'],['UTR'],['AR:NM_000044(UTR)'])
+        self.assertEqual(define_transcripts(ar_utr),expected7)
+
+        #Test when utr goes into exon 2
         hras_utr_exon2=self.exons['chr11'].search(int(534300), int(535450))
-        expected6=(['HRAS'],['EXONIC'],['HRAS:NM_005343(UTR - exon 02)'])
-        self.assertEqual(define_transcripts(hras_utr_exon2),expected6)
+        expected8=(['HRAS'],['EXONIC'],['HRAS:NM_005343(UTR - exon 02)'])
+        self.assertEqual(define_transcripts(hras_utr_exon2),expected8)
 
     def testGenomeIntervalTreeReverse(self):
         data=IntervalTree()
