@@ -1,17 +1,11 @@
 """
 Test the subcommand scripts
 """
-import os
 from os import path
 import unittest
 import logging
-import pprint
-import csv
-import sys
-import json
 import subprocess
 import filecmp
-from munging.subcommands import probe_coverage
 
 from __init__ import TestBase
 import __init__ as config
