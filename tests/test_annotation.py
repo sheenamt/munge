@@ -18,6 +18,7 @@ from munging.annotation import _fix
 from munging.annotation import GenomeIntervalTree
 from munging.annotation import UCSCTable
 from munging.annotation import IntervalMakers
+from munging.annotation import define_transcripts
 
 
 from __init__ import TestBase
@@ -29,6 +30,7 @@ class TestAnnotation(TestBase):
     def setUp(self):
         self.outdir = self.mkoutdir()
         self.refgene = os.path.join(config.datadir, 'pindel', 'refgene_test.txt')
+        self.exons=GenomeIntervalTree.from_table(open(self.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
 
     def testGetLocation01(self):
         """
@@ -109,28 +111,79 @@ class TestAnnotation(TestBase):
         self.assertEqual(_fix(ok_interval), correct_interval_ok)
         self.assertEqual(_fix(bkwds_interval), correct_interval_bkwds)
 
-    def testGenomeIntervalTree(self):
-        data=IntervalTree()
-        exons=GenomeIntervalTree.from_table(open(self.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
-        for start,end,data in exons['chr17'].search(int(7577100)):
+    def testDefineTranscripts(self):
+        """Given the interval, set the gene, region and transcripts"""
+        #Test Exonic region, when only exonic (66905851 is exon3 start, 1based, 66905968 is exon3 end 1based )
+        ar_exon3=self.exons['chrX'].search(int(66905851),int(66905969))
+        expected0=(['AR'], ['EXONIC'], ['AR:NM_000044(exon 03)', 'AR:NM_001011645(exon 03)'])
+        self.assertEqual(define_transcripts(ar_exon3),expected0)
+
+
+        #Test Exonic region, when exonic and intronic (exon2 + intron3)
+        ar_exon2_intronic3=self.exons['chrX'].search(int(66863100), int(66905970))
+        expected1=(['AR'], ['EXONIC'], ['AR:NM_000044(exon 02 - intron 03)', 'AR:NM_001011645(exon 02 - intron 03)'])
+        self.assertEqual(define_transcripts(ar_exon2_intronic3), expected1)
+        #exon 2, intron 3
+
+        #Test Exonic region, when exonic and intronic and UTR
+        ar_utr_exon2_intronic3=self.exons['chrX'].search(int(66764987), int(66905970))
+        expected3=(['AR'], ['EXONIC'], ['AR:NM_000044(UTR - intron 03)', 'AR:NM_001011645(UTR - intron 03)'])
+        self.assertEqual(define_transcripts(ar_utr_exon2_intronic3), expected3)
+
+        ##Test intronic
+        ar_intronic=self.exons['chrX'].search(int(66905970), int(66905975))
+        expected4=(['AR'], ['INTRONIC'], ['AR:NM_000044(intron 03)', 'AR:NM_001011645(intron 03)'])
+        self.assertEqual(define_transcripts(ar_intronic), expected4)
+
+        #Test 5 UTR on - 
+        #txStart (532241) and cdsStart (532635)
+        hras_utr=self.exons['chr11'].search(int(532241), int(532635))
+        expected5=(['HRAS'],['UTR'],['HRAS:NM_005343(UTR)'])
+        self.assertEqual(define_transcripts(hras_utr),expected5)
+        
+        #Test 3 UTR on - 
+        #cdsEnd(534322) and txEnd (535567) 
+        hras_3_utr=self.exons['chr11'].search(int(534323), int(535568))
+        expected6=(['HRAS'],['UTR'],['HRAS:NM_005343(UTR)'])
+        self.assertEqual(define_transcripts(hras_3_utr),expected6)
+
+        #Test UTR on +
+        #txStart (66763873) and cdsStart (66764988)
+        ar_utr=self.exons['chrX'].search(int(66763873), int(66764988))
+        expected7=(['AR'],['UTR'],['AR:NM_000044(UTR)'])
+        self.assertEqual(define_transcripts(ar_utr),expected7)
+
+        #Test when utr goes into exon 2
+        hras_utr_exon2=self.exons['chr11'].search(int(534300), int(535450))
+        expected8=(['HRAS'],['EXONIC'],['HRAS:NM_005343(UTR - exon 02)'])
+        self.assertEqual(define_transcripts(hras_utr_exon2),expected8)
+
+    def testGenomeIntervalTreeReverse(self):
+        for start,end,data in self.exons['chr17'].search(int(7577100)):
             if data['name']=='NM_000546':
                 rev_exon=data
-
-        for start,end,data in exons['chr17'].search(int(7577700)):
+        for start,end,data in self.exons['chr17'].search(int(7577700)):
             if data['name']=='NM_000546':
                 rev_intron=data
+
         #TP53:NM_000546, reverse strand, position 7577100 is in exon8,position 7577100 is in intron6
-        self.assertEqual(rev_exon['exonNum'],'8')
-        self.assertEqual(rev_intron['intronNum'],'6')
-        
+        self.assertEqual(rev_exon['exonNum'],'08')
+        self.assertEqual(rev_intron['intronNum'],'06')
 
-        for start,end,data in exons['chrX'].search(int(66763880)):
+    def testGenomeIntervalTreeForward(self):
+        forward_exon=[]
+        forward_intron=[]
+        for start,end,data in self.exons['chrX'].search(int(66764988)):
             if data['name']=='NM_000044':
-                forward_exon=data
-        for start,end,data in exons['chrX'].search(int(66942830)):
+                forward_exon.append(data)
+        for start,end,data in self.exons['chrX'].search(int(66942830)):
             if data['name']=='NM_000044':
-                forward_intron=data
+                forward_intron.append(data)
         #AR:NM_000044, forward strand, position 66763880  is in exon1,position 66942830 is in intron7
-        self.assertEqual(forward_exon['exonNum'],'1')
-        self.assertEqual(forward_intron['intronNum'],'7')
+        #Assert only 1 line of data is found
+        self.assertEqual(len(forward_exon),1)
+        self.assertEqual(len(forward_intron),1)
+        self.assertEqual(forward_exon[0]['exonNum'],'01')
+        self.assertEqual(forward_intron[0]['intronNum'],'07')
 
+ 

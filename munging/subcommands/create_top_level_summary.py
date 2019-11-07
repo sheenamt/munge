@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 def build_parser(parser):
     parser.add_argument('type', 
-                        choices=['pindel','snp','indel','cnv_exon','cnv_gene','quality','msi_flagged','clin_flagged','hotspot_flagged', 'glt_flagged', 'annotsv', 'breakdancer'],
+                        choices=['pindel','snp','indel','cnv_exon','cnv_gene','quality','msi_flagged','clin_flagged','hotspot_flagged', 'glt_flagged', 'annotsv', 'amplicon', 'breakdancer'],
                         help='Type of output summary to create')
     parser.add_argument('path',
                         help='Path to analysis files')

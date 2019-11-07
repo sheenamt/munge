@@ -176,7 +176,7 @@ chr7:55248998	-	TGGCCAGCG	EGFR exon 20 insertion Lack of Response to TKIs (seen 
 chr7:55249005	G	T	EGFR p.S768I probably sensitizes to TKIs	24	23	0
 chr7:55249071	C	T	EGFR T790M resistance to TKIs	50	50	0
 chr7:55259515	T	G	EGFR L858R sensitizes to TKIs	80	80	0
-chr7:55259524	T	A	EGFR L861Q probably sensitizes to TKIs	78	78	0
+chr7:55259524	T	A	EGFR L861Q probably sensitizes to TKIs	48	48	0
 chr7:6045549	C	A	PMS2 p.S46I known pathogenic germline variant	243	243	0
 chr8:90983442-90983446	TTTGT	-	Slavic founder allele >2 fold risk for breast cancer.  Correct HGVS: NM_002485.4:c.657_661del p.(Lys219Asnfs*16)	56	56	0
 chr8:90983460	G	A	NBN p.R215W germline.  This variant should go on a report because some groups report as pathogenic and associated with increased breast cancer risk.  We feel it is likely benign based on similar frequency in cases and controls. 	53	53	0
