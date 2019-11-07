@@ -114,7 +114,7 @@ class TestAnnotation(TestBase):
     def testDefineTranscripts(self):
         """Given the interval, set the gene, region and transcripts"""
         #Test Exonic region, when only exonic (66905851 is exon3 start, 1based, 66905968 is exon3 end 1based )
-        ar_exon3=self.exons['chrX'].search(int(66905851),int(66905968))
+        ar_exon3=self.exons['chrX'].search(int(66905851),int(66905969))
         expected0=(['AR'], ['EXONIC'], ['AR:NM_000044(exon 03)', 'AR:NM_001011645(exon 03)'])
         self.assertEqual(define_transcripts(ar_exon3),expected0)
 
@@ -159,7 +159,6 @@ class TestAnnotation(TestBase):
         self.assertEqual(define_transcripts(hras_utr_exon2),expected8)
 
     def testGenomeIntervalTreeReverse(self):
-        data=IntervalTree()
         for start,end,data in self.exons['chr17'].search(int(7577100)):
             if data['name']=='NM_000546':
                 rev_exon=data
@@ -172,7 +171,6 @@ class TestAnnotation(TestBase):
         self.assertEqual(rev_intron['intronNum'],'06')
 
     def testGenomeIntervalTreeForward(self):
-        data=IntervalTree()
         forward_exon=[]
         forward_intron=[]
         for start,end,data in self.exons['chrX'].search(int(66764988)):
@@ -188,115 +186,4 @@ class TestAnnotation(TestBase):
         self.assertEqual(forward_exon[0]['exonNum'],'01')
         self.assertEqual(forward_intron[0]['intronNum'],'07')
 
-    def testRev5UTRstart(self):
-        data=IntervalTree()
-        rev_5_utr_start=[]
-        for start,end,data in self.exons['chr17'].search(int(7571720)):
-            if data['name']=='NM_000546':
-                rev_5_utr_start.append(data.keys())
-        self.assertEqual(len(rev_5_utr_start),1)        
-        self.assertIn('UTR',rev_5_utr_start[0])
-
-    def testRev5UTRstop(self):
-        data=IntervalTree()
-        rev_5_utr_stop=[]
-        for start,end,data in self.exons['chr17'].search(int(7572925)):
-            if data['name']=='NM_000546':
-                rev_5_utr_stop.append(data.keys())
-        self.assertEqual(len(rev_5_utr_stop),1)        
-        self.assertIn('UTR',rev_5_utr_stop[0])
-
-    def testRev3UTRstart(self):
-        data=IntervalTree()
-        ##3' UTR is  7579912-7590868
-        rev_3_utr_start=[]
-        for start,end,data in self.exons['chr17'].search(int(7579913)):
-            if data['name']=='NM_000546':
-                rev_3_utr_start.append(data.keys())
-        self.assertEqual(len(rev_3_utr_start),1)
-        self.assertIn('UTR',rev_3_utr_start[0])
-
-    def testRev3UTRstart(self):
-        data=IntervalTree()
-        rev_3_utr_stop=[]
-        for start,end,data in self.exons['chr17'].search(int(7590868)):
-            if data['name']=='NM_000546':
-                rev_3_utr_stop.append(data.keys())
-        self.assertEqual(len(rev_3_utr_stop),1)
-        self.assertIn('UTR',rev_3_utr_stop[0])
-        
-    def test3UTRstart(self):         
-        data=IntervalTree()
-        utr_3_start=[]
-        #3' UTR is 66950461-66943683
-        for start,end,data in self.exons['chrX'].search(int(66950461)):
-            if data['name']=='NM_000044':
-                utr_3_start.append(data.keys())
-        self.assertEqual(len(utr_3_start),1)
-        self.assertIn('UTR',utr_3_start[0])
-
-    def test3UTRstop(self):
-        data=IntervalTree()
-        #Test 3' UTR
-        utr_3_stop=[]
-        for start,end,data in self.exons['chrX'].search(int(66943684)):
-            if data['name']=='NM_000044':
-                utr_3_stop.append(data.keys())
-        self.assertEqual(len(utr_3_stop),1)
-        self.assertIn('UTR',utr_3_stop[0])
-
-    def test5UTRstart(self):        
-        data=IntervalTree()
-        utr_5_start=[]
-        #5' UTR - 66763873-66764988
-        for start,end,data in self.exons['chrX'].search(int(66763873)):
-            if data['name']=='NM_000044':
-                utr_5_start.append(data.keys())
-        self.assertEqual(len(utr_5_start),1)
-        self.assertIn('UTR',utr_5_start[0])
-
-    def test5UTRstop(self):        
-        data=IntervalTree()
-        # Test 5' UTR
-        utr_5_stop=[]
-        for start,end,data in self.exons['chrX'].search(int(66764987)):
-            if data['name']=='NM_000044':
-                utr_5_stop.append(data.keys())
-        self.assertEqual(len(utr_5_stop),1)
-        self.assertIn('UTR',utr_5_stop[0])
-
-
-    def testHRAS(self):
-        data=IntervalTree()
-        # Test UTR
-        utr=[]
-        for start,end,data in self.exons['chr11'].search(int(532242)):
-            if data['name']=='NM_005343':
-                utr.append(data.keys())
-        self.assertEqual(len(utr),1)
-        self.assertIn('UTR',utr[0])
-
-        data=IntervalTree()
-        # Test exon2
-        exon2=[]
-        for start,end,data in self.exons['chr11'].search(int(532750)):
-            if data['name']=='NM_005343':
-                exon2.append(data)
-        self.assertEqual(len(exon2),1)
-        self.assertEqual(exon2[0]['exonNum'],'05')
-
-        # Test intron
-        intron=[]
-        for start,end,data in self.exons['chr11'].search(int(533000)):
-            if data['name']=='NM_005343':
-                intron.append(data)
-        self.assertEqual(len(intron),1)
-        self.assertEqual(intron[0]['intronNum'],'04')
-
-        # Test UTR
-        utr2=[]
-        for start,end,data in self.exons['chr11'].search(int(532630)):
-            if data['name']=='NM_005343':
-                utr2.append(data.keys())
-        self.assertEqual(len(utr2), 1)
-        self.assertIn('UTR',utr2[0])
+ 
