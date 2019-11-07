@@ -113,8 +113,6 @@ class TestAnnotation(TestBase):
 
     def testDefineTranscripts(self):
         """Given the interval, set the gene, region and transcripts"""
-        data=IntervalTree()
-
         #Test Exonic region, when only exonic (66905851 is exon3 start, 1based, 66905968 is exon3 end 1based )
         ar_exon3=self.exons['chrX'].search(int(66905851),int(66905968))
         expected0=(['AR'], ['EXONIC'], ['AR:NM_000044(exon 03)', 'AR:NM_001011645(exon 03)'])
@@ -137,14 +135,6 @@ class TestAnnotation(TestBase):
         expected4=(['AR'], ['INTRONIC'], ['AR:NM_000044(intron 03)', 'AR:NM_001011645(intron 03)'])
         self.assertEqual(define_transcripts(ar_intronic), expected4)
 
-        """ if strand == '+':
-            yield Interval(tx_start, cds_start, utr5)
-            yield Interval(cds_end + 1, tx_end + 1, utr3)
-        
-        elif strand == '-':
-            yield Interval(cds_end + 1, tx_end + 1, utr5)
-            yield Interval(tx_start, cds_start, utr3) """
-
         #Test 5 UTR on - 
         #txStart (532241) and cdsStart (532635)
         hras_utr=self.exons['chr11'].search(int(532241), int(532635))
@@ -153,11 +143,10 @@ class TestAnnotation(TestBase):
         
         #Test 3 UTR on - 
         #cdsEnd(534322) and txEnd (535567) 
-        hras_3_utr=self.exons['chr11'].search(int(534323), int(535567))
+        hras_3_utr=self.exons['chr11'].search(int(534323), int(535568))
         expected6=(['HRAS'],['UTR'],['HRAS:NM_005343(UTR)'])
         self.assertEqual(define_transcripts(hras_3_utr),expected6)
 
-    
         #Test UTR on +
         #txStart (66763873) and cdsStart (66764988)
         ar_utr=self.exons['chrX'].search(int(66763873), int(66764988))
