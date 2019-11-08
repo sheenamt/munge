@@ -266,3 +266,17 @@ class TestParsers(TestBase):
         self.assertListEqual(prefixes,['0228T', '6037_NA12878','Count'])
         self.assertListEqual(fieldnames, ['Event_1', 'Event_2', 'Type', 'Size', 'Gene_1', 'Gene_2', '0228T', '6037_NA12878','Count'])
         self.assertListEqual(variant_keys, ['Event_1', 'Event_2'])
+
+    def testCoverageKitParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        sort_order=['NA12878-HP998-HHv3','OCIAML3-HP998-HHv3']
+        analysis_type='parsers.parse_coveragekit'
+        files = ifilter(filters.exon_coverage_analysis, walker(testfiles))  
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(prefixes,['NA12878-HP998-HHv3_AveCoverage','OCIAML3-HP998-HHv3_AveCoverage'])
+        self.assertListEqual(fieldnames, ['RegionID', 'Position','NA12878-HP998-HHv3_AveCoverage','OCIAML3-HP998-HHv3_AveCoverage'])
+        self.assertListEqual(variant_keys, ['RegionID', 'Position'])
