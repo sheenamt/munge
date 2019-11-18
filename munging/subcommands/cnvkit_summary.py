@@ -52,7 +52,7 @@ def action(args):
         chrm = True
 
     #Skip the header lines, read in only the columns we need because some unnecessary columns can be millions of characters long
-    headers=['Chr','OriStCoordinate','end','Gene','Depth','Adjusted.Mean.of.LogRatio','Weight']
+    headers=['Chr','OriStCoordinate','end','Gene','Adjusted.Mean.of.LogRatio','Depth','Weight']
     reader = csv.DictReader(args.cnvkit_cnr, delimiter='\t')
     #Reset the headers to the names we want (changing capitalization)
     reader.fieldnames=headers
