@@ -6,3 +6,4 @@ suds==0.4
 xlwt==0.7.5
 plotly>=2.7.0
 intervaltree==2.1.0
+matplotlib>=2.2.4
