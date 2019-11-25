@@ -7,7 +7,7 @@ import os
 import pandas as pd
 # needed to avoid Xwindows backend when using python 2.7 (which will cause an error)
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')   # must call before importing pyplot with python 2.7
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
@@ -15,7 +15,7 @@ from natsort import natsorted
 
 
 def build_parser(parser):
-    parser.add_argument('CNV_data',
+    parser.add_argument('cnv_data',
                         help='Path to the CNV_plottable.tsv file')
     parser.add_argument('outfile', 
                         help='Path to out file')
@@ -24,7 +24,7 @@ def build_parser(parser):
     parser.add_argument('-w', '--window_size', type=int, default=20, 
                         help='Window size for rolling median (default: %(default)s)')
     parser.add_argument('--title', type=str, 
-                        help='Title (default: infer from CNV_data file name)')
+                        help='Title (default: infer from cnv_data file name)')
 
 def load_cnv_data(file_path, window_size):
     column_data_types = {'log2' : 'float64',
@@ -56,6 +56,8 @@ def flag_genes(df, min_log_ratio):
     """
     flagged_genes = {}
     for gene in df['gene'].unique():
+        if gene == 'intergenic':
+            continue
         df_gene = df[df['gene']==gene]
         # find the max median and its index, and flag gene if condition met
         max_idx = df_gene['rolling_median'].idxmax()
@@ -248,11 +250,11 @@ def plot_gene(pdf, df_gene):
 
 def action(args):
     # load the data
-    df = load_cnv_data(args.CNV_data, args.window_size)
+    df = load_cnv_data(args.cnv_data, args.window_size)
 
     # infer title for main plot if needed
     if not args.title:
-        args.title = extract_plot_title(args.CNV_data)
+        args.title = extract_plot_title(args.cnv_data)
 
     # create plots and save to pdf-formatted outfile
     with PdfPages(args.outfile) as pdf:
@@ -260,5 +262,7 @@ def action(args):
         plot_main(pdf, df, args.title, args.min_log_ratio)
 
         for gene in df['gene'].unique():
+            if gene == 'intergenic':
+                continue
             gene_df = df[df['gene']==gene]
             plot_gene(pdf, gene_df)
