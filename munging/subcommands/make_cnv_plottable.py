@@ -1,6 +1,6 @@
 """
-Munges the output of different CNV callers into a common .tsv output that is
-usable by the plot_cnv subcommand.
+Munges the output of different CNV callers into a common, annotated .tsv output
+that is usable by the plot_cnv subcommand.
 """
 
 import argparse
@@ -19,9 +19,7 @@ def build_parser(parser):
                         help='Path to the out file (default <prefix>.<package>.CNV_plottable.tsv)')
 
 def parse_contra_file(file_name):
-    """
-    ADD A DOCSTRNG
-    """
+    """Converts a Contra CNATable file to a standard pandas DataFrame for use in plotting."""
     df_raw = pd.read_csv(file_name, sep='\t', header=0, dtype=str)
     df_plot = pd.DataFrame()
     df_plot['log2'] = df_raw['Adjusted.Mean.of.LogRatio']
@@ -31,10 +29,9 @@ def parse_contra_file(file_name):
     return df_plot
 
 def parse_cnvkit_file(file_name):
-    """
-    ADD A DOCSTRING
-    """
+    """Converts a CNVkit .cnr file to a standard pandas DataFrame for use in plotting."""
     df_raw = pd.read_csv(file_name, sep='\t', header=0, dtype=str)
+    # Don't add the antitarget intervals to the plottable df
     df_targets = df_raw[df_raw['gene'] != 'Antitarget']
     df_plot = pd.DataFrame()
     df_plot['log2'] = df_targets['log2']
@@ -45,20 +42,26 @@ def parse_cnvkit_file(file_name):
 
 def add_annotations(df, genome_tree):
     """
-    ADD A DOCSTRING
+    Adds gene, transcript, and exon number annotations to the standard, plottable
+    DataFrame df using the data contained within GenomeIntervalTree genome_tree.
     """
     for i, row in df.iterrows():
         chrom = row['chr']
         start = int(row['start_pos'])
+        # searching an interval tree is not inclusive of the endpoint, so increment by one
         end = int(row['end_pos']) + 1
         transcript_list = genome_tree[chrom][start:end]
         if transcript_list:
+            # use only the first (and hopefully only) transcript for adding annotations
             t = transcript_list.pop()[2]
             df.at[i, 'gene'] = t.gene
             df.at[i, 'transcript'] = t.id
+            # label exons, including those that fall within a UTR
             exons = t.get_exons(start, end, report_utr=False)
             if exons:
+                # use only the first (and hopefully only) exon number for each interval
                 df.at[i, 'exon'] = str(exons[0])
+        # if no hits from the genome tree, annotate as intergenic
         else:
             df.at[i, 'gene'] = 'intergenic'
 
@@ -76,7 +79,7 @@ def action(args):
     gt = GenomeIntervalTree.from_table(args.refgene)
     add_annotations(df, gt)
 
-    # set the out file path
+    # set the outfile path
     if args.outfile:
         out_path = args.file
     else:
