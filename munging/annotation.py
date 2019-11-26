@@ -1,5 +1,6 @@
 import os
 import csv
+import pandas as pd
 from collections import namedtuple, defaultdict
 from operator import itemgetter
 import pprint
@@ -11,7 +12,6 @@ from __init__ import __version__
 from urllib import urlopen
 from StringIO import StringIO as BytesIO
 import zlib
-from collections import defaultdict
 import itertools
 
 pfx_pattern = re.compile('(OPX|BRO|MRW|INT|EPI|IMM|IMD|MONC|UNK|TESTDATA)', re.IGNORECASE)
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 # encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
 # ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
 # 'chrX'). `chromosomes` maps all three to the numeric representation.
-chrnums = range(1, 23) + ['X', 'Y', 'MT']
+chrnums = [str(i) for i in range(1, 23)] + ['X', 'Y', 'MT']
 chromosomes = {'chr{}'.format(c): c for c in chrnums}
 chromosomes.update({str(c): c for c in chrnums})
 chromosomes.update({c: c for c in chrnums})
@@ -37,7 +37,6 @@ def get_location(chr, start, stop, **kwargs):
     else:
         chr_loc = 'chr%s:%s-%s' % (chr, start, stop)
     return chr_loc
-
 
 def multi_split(source, splitlist):
     """
@@ -59,7 +58,6 @@ def multi_split(source, splitlist):
                     output[-1] = output[-1] + char
     return output
 
-
 def split_chr_loc(d):
 
     """
@@ -74,7 +72,6 @@ def split_chr_loc(d):
     chrm = output[0].strip()
     start = output[1].strip()
     return chrm, start, end
-
 
 def split_string_in_two(data):
     """
@@ -92,7 +89,6 @@ def split_string_in_two(data):
             freq=output[0]
             count=output[1]
     return freq, count
-
 
 def build_variant_id(data):
     """
@@ -115,7 +111,6 @@ def pfx_ok(pfx, pattern=pfx_pattern):
     """
     return False if pfx is None else bool(pattern.search(pfx))
 
-
 def fix_pfx(pfx):
     """Normalize pfx (for example, to be used in a database search), but
     only if it looks like a real prefix.
@@ -128,105 +123,39 @@ def fix_pfx(pfx):
             return pfx.replace('-', '').strip()
     return pfx.strip()
 
+def ranges(i):
+    for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
+        b = list(b)
+        yield b[0][1], b[-1][1]
 
 class UCSCTable(object):
     '''A container class for the parsing functions, used in GenomeIntervalTree.from_table``.'''
-    REF_GENE_FIELDS = ['bin', 'name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds', 'score', 'name2', 'cdsStartStat', 'cdsEndStat', 'exonFrames']
-    @staticmethod
-    def REF_GENE(line):
-        return dict(zip(UCSCTable.REF_GENE_FIELDS, line.split(b'\t')))
+    URL = 'http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz'
+    REF_GENE_FIELDS = ['bin',
+                      'name',
+                      'chrom',
+                      'strand',
+                      'txStart',
+                      'txEnd',
+                      'cdsStart',
+                      'cdsEnd',
+                      'exonCount',
+                      'exonStarts',
+                      'exonEnds',
+                      'score',
+                      'name2',
+                      'cdsStartStat',
+                      'cdsEndStat',
+                      'exonFrames']
 
-class IntervalMakers(object):
-    '''A container class for interval-making functions, used in GenomeIntervalTree.from_table and GenomeIntervalTree.from_bed.'''
+    def __init__(self, fileobj=None, decompress=None):
+        if fileobj is None:
+            data = urlopen(URL).read()
+            if (decompress is None and URL.endswith('.gz')) or decompress:
+                data = zlib.decompress(data, 16+zlib.MAX_WBITS)
+            fileobj = BytesIO(data)
 
-
-    @staticmethod
-    def TX(d):
-        return [Interval(int(d['txStart']), int(d['txEnd']), d)]
-
-    @staticmethod
-    def CDS(d):
-        return [Interval(int(d['cdsStart']), int(d['cdsEnd']), d)]
-
-    @staticmethod
-    def EXONS(d):
-        exon_starts = d['exonStarts'].split(b',')
-        exon_ends = d['exonEnds'].split(b',')
-        exon_count=int(d['exonCount'])
-        strand = d['strand']
-        tx_start = int(d['txStart'])
-        tx_end = int(d['txEnd'])
-        cds_start = int(d['cdsStart'])
-        cds_end = int(d['cdsEnd'])
-
-        # add the UTRs
-        utr5 = d.copy()
-        utr5['UTR'] = '5'
-        utr3 = d.copy()
-        utr3['UTR'] = '3'
-
-        if strand == '+':
-            yield Interval(tx_start, cds_start, utr5)
-            yield Interval(cds_end + 1, tx_end + 1, utr3)
-        
-        elif strand == '-':
-            yield Interval(cds_end + 1, tx_end + 1, utr5)
-            yield Interval(tx_start, cds_start, utr3) 
-
-        # add the exons
-        for i in range(exon_count):
-            exon_start = int(exon_starts[i])
-            exon_end = int(exon_ends[i])
-
-            # do not create interval if this exon is entirely encompassed by a UTR
-            if exon_end < cds_start or exon_start > cds_end:
-                continue
-
-            # if the utr overlaps this exon, adjust the boundaries
-            exon_start = max(exon_start, cds_start)
-            exon_end = min(exon_end, cds_end)
-
-            # add the exon number to the dictionary
-            exon_d = d.copy()
-            if strand == '+':
-                exon_d['exonNum']=str(i + 1).zfill(2)
-            elif strand == '-':
-                exon_d['exonNum']=str(exon_count - i).zfill(2)
-
-            #Since interval trees are not inclusive of upper limit, add one to the exon end boundary
-            yield Interval(exon_start, exon_end+1, exon_d)
-
-        # add the introns
-        for i in range(exon_count - 1):
-            intron_start = int(exon_ends[i]) + 1
-            intron_end = int(exon_starts[i + 1]) - 1
-
-            # do not create interval if this intron is entirely encompassed by a UTR
-            if intron_end < cds_start or intron_start > cds_end:
-                continue
-
-            # add the intron number to the dictionary
-            intron_d=d.copy()
-            if strand == '+':
-                intron_d['intronNum']=str(i + 1).zfill(2)
-            elif strand == '-':
-                intron_d['intronNum']=str(exon_count - 1 - i).zfill(2)
-            
-            #Since interval trees are not inclusive of upper limit, add one to the intron end boundary
-            yield Interval(intron_start, intron_end + 1, intron_d)
-
-def _fix(interval):
-    '''
-    Helper function for ``GenomeIntervalTree.from_bed and ``.from_table``.
-
-    Data tables may contain intervals with begin >= end. Such intervals lead to infinite recursions and
-    other unpleasant behaviour, so something has to be done about them. We 'fix' them by simply setting end = begin+1.
-    '''
-    if interval.begin >= interval.end:
-        log.info("Interval with reversed coordinates (begin >= end) detected when reading data. Interval was automatically fixed to point interval [begin, begin+1).")
-        return Interval(interval.begin, interval.begin+1, interval.data)
-    else:
-        return interval
+        self.data = pd.read_csv(fileobj, sep='\t', header=None, comment='#', names=UCSCTable.REF_GENE_FIELDS)    
 
 class GenomeIntervalTree(defaultdict):
     '''
@@ -237,15 +166,25 @@ class GenomeIntervalTree(defaultdict):
     def __init__(self):
         super(GenomeIntervalTree, self).__init__(IntervalTree)
 
-    def addi(self, chrom, begin, end, data=None):
-        self[chrom].addi(begin, end, data)
+    def addi(self, data):
+        """
+        ADD A DOCSTRING
+        """
+        t = Transcript(data)
+        chrom = t.chrom
+        begin = t.tx_start
+        end = t.tx_end
+        self[chrom].addi(begin, end, t)
 
     def __len__(self):
         return sum([len(tree) for tree in self.values()])
 
+    def __reduce__(self):
+        t = defaultdict.__reduce__(self)
+        return (t[0], ()) + t[2:]
+
     @staticmethod
-    def from_table(fileobj=None, url='http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz',
-                    parser=UCSCTable.REF_GENE, mode='tx', decompress=None):
+    def from_table(fileobj=None, decompress=None):
         '''
         Index the rows of UCSC tables into a ``GenomeIntervalTree`` 
 
@@ -271,117 +210,206 @@ class GenomeIntervalTree(defaultdict):
         If decompress is None, data is decompressed if the url ends with .gz, otherwise decompress = True forces decompression.
 
         '''
-        #Read in data from URL if file not provided
-        if fileobj is None:
-            data = urlopen(url).read()
-            if (decompress is None and url.endswith('.gz')) or decompress:
-                data = zlib.decompress(data, 16+zlib.MAX_WBITS)
-            fileobj = BytesIO(data)
-
-        interval_lists = defaultdict(list)
-
-        #Setup the interval type
-        if mode == 'tx':
-            interval_maker = IntervalMakers.TX
-        elif mode == 'cds':
-            interval_maker = IntervalMakers.CDS
-        elif mode == 'exons':
-            interval_maker = IntervalMakers.EXONS
-        elif getattr(mode, __call__, None) is None:
-            raise Exception("Parameter `mode` may only be 'tx', 'cds', 'exons' or a callable")
-        else:
-            interval_maker = mode
-
-        #Parse the genome data
-        for ln in fileobj:
-            if not isinstance(ln, bytes):
-                ln = ln.encode()
-            if ln.startswith('#'):
-                continue
-            ln = ln.strip()
-            d = parser(ln)
-            for interval in interval_maker(d):
-                interval_lists[d['chrom']].append(_fix(interval))
-                
-        # Now convert interval lists into trees
         gtree = GenomeIntervalTree()
-        for chrom, lst in getattr(interval_lists, 'iteritems', interval_lists.items)():
-            gtree[chrom] = IntervalTree(lst)
+        table = UCSCTable(fileobj=fileobj, decompress=decompress)
+
+        for _, row in table.data.iterrows():
+            gtree.addi(row)
+                
         return gtree
-        
-    def __reduce__(self):
-        t = defaultdict.__reduce__(self)
-        return (t[0], ()) + t[2:]
-
-def ranges(i):
-    for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
-        b = list(b)
-        yield b[0][1], b[-1][1]
-
 
 class Transcript(object):
-    """Helper class to encapsulate transcript data"""
-    
-    def __init__(self, gene, accession):
-        self.gene = gene
-        self.accession = accession
-        self.exons = []
-        self.introns = []
-        self.utrs = []
+    """
+    ADD CLASS DOCUMENTATION
+
+    ALL COORDINATES ARE 0-BASED
+    UCSC downloaded tables use 0-based start and 1-based end for some incomprehensible reason
+    see http://genome.ucsc.edu/FAQ/FAQtracks#tracks1
+    """
+
+    @staticmethod
+    def _interval_to_str(interval):
+        """
+        ADD A DOCSTRING
+        """
+        data = interval[2]
+        if data[0] == 'UTR':
+            return 'UTR'
+        elif data[0] == 'EXON':
+            return "exon {}".format(str(data[1]).zfill(2))
+        elif data[0] == 'INTRON':
+            return "intron {}".format(str(data[1]).zfill(2))
+        else:
+            raise ValueError("An interval must be 'EXON', 'INTRON', or 'UTR'.")
+
+    def __init__(self, data):
+        """
+        ADD A DOCSTRING
+        """
+        # populate fields from data
+        self.gene = data['name2']
+        self.id = data['name']
+        self.chrom = data['chrom']
+        if 'chr' in self.chrom:
+            self.chrom = self.chrom.replace('chr', '')
+        self.strand = data['strand']
+        if self.strand not in ['+', '-']:
+            raise ValueError("A transcript must be on the '+' or '-' strand")
+        self.tx_start = int(data['txStart'])
+        self.tx_end = int(data['txEnd']) - 1    # convert end to 0-based, inclusive coordinate
+        self.cd_start = int(data['cdsStart'])
+        self.cd_end = int(data['cdsEnd']) - 1   # convert end to 0-based, inclusive coordinate
+        self.exon_count = int(data['exonCount'])
+        # these comma separated entries end with a comma
+        # so drop the last entry from the str.split() array
+        self.exon_starts = [ int(i) for i in data['exonStarts'].split(',')[0:-1] ]
+        self.exon_ends = [ int(i) - 1 for i in data['exonEnds'].split(',')[0:-1] ]  # convert end to 0-based, inclusive coordinate
+        self.exon_frames = [ int(i) for i in data['exonFrames'].split(',')[0:-1] ]
+
+        # create IntervalTree for exons, introns, and UTRs
+        self.tree_with_utrs = IntervalTree()
+        # create IntervalTree without UTRs
+        self.tree_no_utrs = IntervalTree()
+
+        # add the UTRs
+        # define 5' or 3' based on strand
+        if self.strand == '+':
+            first_utr = 5
+            second_utr = 3
+        else:
+            first_utr = 3
+            second_utr = 5
+
+        # handle edge cases where there is no UTR
+        if self.tx_start < self.cd_start:
+            self.tree_with_utrs[self.tx_start : self.cd_start] = ('UTR', first_utr)
+        if self.tx_end > self.cd_end:
+            self.tree_with_utrs[self.cd_end + 1 : self.tx_end + 1] = ('UTR', second_utr)
+
+        # add the exons
+        for i in range(self.exon_count):
+            exon_start = self.exon_starts[i]
+            exon_end = self.exon_ends[i]
+
+            # define exon number based on strand
+            if self.strand == '+':
+                exon_num = i + 1
+            else:
+                exon_num = self.exon_count - i
+            
+            # since interval trees are not inclusive of upper limit, add one to the exon end boundary
+            self.tree_no_utrs[exon_start : exon_end + 1] = ('EXON', exon_num)
+
+            # if the exon is entirely encompassed by a UTR, don't add it to the UTR tree
+            if exon_end < self.cd_start or exon_start > self.cd_end:
+                    continue
+            # if the exon is split by a UTR, adjust its boundary
+            start = max(exon_start, self.cd_start)
+            end = min(exon_end, self.cd_end)
+            self.tree_with_utrs[start : end + 1] = ('EXON', exon_num)
+
+        # add the introns
+        for i in range(self.exon_count - 1):
+            intron_start = self.exon_ends[i] + 1
+            intron_end = self.exon_starts[i + 1] - 1
+
+            if self.strand == '+':
+                intron_num = i + 1
+            else:
+                intron_num = self.exon_count - 1 - i
+                
+            self.tree_no_utrs[intron_start : intron_end + 1] = ('INTRON', intron_num)
+
+            # if the intron is entirely encompassed by a UTR, don't add it to the UTR tree
+            if intron_end < self.cd_start or intron_start > self.cd_end:
+                    continue
+            
+            self.tree_with_utrs[intron_start : intron_end + 1] = ('INTRON', intron_num)
+
+    def __str__(self):
+        """
+        ADD A DOCSTRING
+        """
+        return "{}:{}".format(self.gene, self.id)
 
     def __lt__(self, other):
-        self_string = self.gene + self.accession
-        other_string = other.gene + other.accession
-        return self_string < other_string
+        # change to compare by chr:pos?
+        """
+        ADD A DOCSTRING
+        """
+        return str(self) < str(other)
 
-    def get_type(self):
-        """
-        Returns the most significant region type for the Transcript ['EXONIC', 'UTR', 'INTRON']
-        """
-        if self.exons: # if transcript contains an exon
-            return 'EXONIC'
-        if self.utrs: # if transcript contains a UTR
-            return 'UTR'
-        if self.introns: # if transcript contains an intron
-            return 'INTRONIC'
-        
-        raise RuntimeError('An empty Transcript has no type')
+    def __len__(self):
+        return self.tx_end - self.tx_start + 1
 
-    def get_annotation(self):
+    def get_annotation(self, start, stop=None, report_utr=True):
+        # consider idiot proofing for when start == stop
         """
-        Returns a string represention of the Transcript in the form <Gene>:<Accession>(<start>-<stop>)
+        ADD A DOCSTRING
         """
-        refseq='{}:{}'.format(self.gene, self.accession)
-
-        # if annotation only spans one region type
-        if len(self.exons) + len(self.introns) + len(self.utrs) == 1:
-            if self.exons:
-                return '{}(exon {})'.format(refseq, str(self.exons[0]).zfill(2))
-            elif self.introns:
-                return '{}(intron {})'.format(refseq, str(self.introns[0]).zfill(2))
-            elif self.utrs:
-                return '{}(UTR)'.format(refseq)
-        # otherwise the annotation spans multiple types
+        if not stop:
+            stop = start + 1
+        if report_utr:
+            intervals = sorted(self.tree_with_utrs[start:stop])
         else:
-            # find the 5' annotation
-            if '5' in self.utrs:
-                head = 'UTR'
-            elif self.introns and min(self.introns) <  min(self.exons):
-                head = 'intron ' + str(min(self.introns)).zfill(2)
+            intervals = sorted(self.tree_no_utrs[start:stop])
+
+        # if [start,stop] doesn't overlap with the Transcript, return an empty string
+        if len(intervals) == 0:
+            return ''
+
+        # otherwise, return <gene>:<id><suffix>
+        prefix = str(self)
+
+        # if the search space covers a single interval, suffix is of form (exon 02)
+        if len(intervals) == 1:
+            single = intervals[0]
+            suffix = "({})".format(Transcript._interval_to_str(single))
+        # otherwise suffix is of form (exon 02 - intron 09)
+        else:
+            if self.strand == '+':
+                first = intervals[0]
+                last = intervals[-1]
             else:
-                head = 'exon ' + str(min(self.exons)).zfill(2)
+                first = intervals[-1]
+                last = intervals[0]
 
-            # find the 3' annotation
-            if '3' in self.utrs:
-                tail = 'UTR'
-            elif self.introns and max(self.introns) >= max(self.exons):
-                tail = 'intron ' + str(max(self.introns)).zfill(2)
-            else:
-                tail = 'exon ' + str(max(self.exons)).zfill(2)
+            suffix = ":({} - {})".format(Transcript._interval_to_str(first), Transcript._interval_to_str(last))
 
-            return "{}({} - {})".format(refseq, head, tail)
+        return prefix + suffix
 
-        
+    def get_exons(self, start, stop=None, report_utr=True):
+        # consider idiot proofing for when start == stop
+        """
+        ADD A DOCSTRING
+        """
+        if not stop:
+            stop = start + 1
+        if report_utr:
+            intervals = self.tree_with_utrs[start:stop]
+        else:
+            intervals = self.tree_no_utrs[start:stop]
+
+        # return a list of every exon number in the query space
+        exons = [i[2][1] for i in intervals if i[2][0] == 'EXON']
+        return sorted(exons)
+
+    def get_region_types(self, start, stop=None, report_utr=True):
+        # consider idiot proofing for when start == stop
+        """
+        ADD A DOCSTRING
+        """
+        if not stop:
+            stop = start + 1
+        if report_utr:
+            intervals = self.tree_with_utrs[start:stop]
+        else:
+            intervals = self.tree_no_utrs[start:stop]
+
+        # return a list of every unique region type in query space
+        region_types = set(i[2][0] for i in intervals)
+        return sorted(list(region_types))
+
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
     
@@ -417,3 +445,4 @@ def define_transcripts(chrm_data):
         transcript_list.append(t.get_annotation())
 
     return sorted(set(gene_list)), sorted(set(region_list)), sorted(set(transcript_list))
+
