@@ -218,6 +218,93 @@ class GenomeIntervalTree(defaultdict):
                 
         return gtree
 
+class SubTranscript(object):
+    """Superclass for Exon, Intron, and UTR"""
+    def __init__(self, number, start, end):
+        self.number = number
+        self.start = start
+        self.end = end
+
+    def __lt__(self, other):
+        # DOCUMENT ME BETTER, ALWAYS 5' UTR < exon 1 < intron 1 < 3' UTR
+        if isinstance(self, UTR):
+            if self.number == 5:
+                return True
+            else:   # it's 3'
+                return False
+        
+        elif isinstance(other, UTR):
+            if other.number == 3:
+                return True
+            else:   # it's 5'
+                return False
+
+        elif isinstance(other, SubTranscript):
+            if self.number == other.number:
+                if isinstance(self, Exon):
+                    return True
+                else:
+                    return False 
+            else:
+                return self.number < other.number
+        else:
+            raise TypeError("Cannot compare a SubTranscript to a {}".format(other.type))
+
+class Exon(SubTranscript):
+    """Helper class to encapsulate an Exon"""
+    def __init__(self, number, start, end, frame, cd_start=None, cd_end=None):
+        super(Exon, self).__init__(number, start, end)
+        self.frame = frame
+        self.cd_start = cd_start
+        self.cd_end = cd_end
+
+    def __str__(self):
+        return "exon {}".format(str(self.number).zfill(2))
+
+    def is_coding(self, start, stop=None):
+        # DOCUMENT ME
+        if not stop:
+            stop = start + 1
+
+        # if cd_start or cd_end were not initialiazed, the entire exon fell within a UTR and is non-coding
+        if (not self.cd_start) or (not self.cd_end): 
+            return False
+        # if no part of [start, stop) falls within [cd_start, cd_end], then return as non-coding
+        elif start > self.cd_end or stop <= self.cd_start:
+            return False
+        # otherwise return as coding
+        else:
+            return True
+
+
+class Intron(SubTranscript):
+    """
+    Helper class to encapsulate an Intron
+    """
+    def __init__(self, number, start, end):
+        super(Intron, self).__init__(number, start, end)
+
+    def is_coding(self, start, stop=None):
+        return False
+
+    def __str__(self):
+        return "intron {}".format(str(self.number).zfill(2))
+
+
+class UTR(SubTranscript):
+    """
+    Helper class to encapsulate a UTR
+    """
+    def __init__(self, number, start, end):
+        super(UTR, self).__init__(number, start, end)
+    
+    def is_coding(self, start, stop=None):
+        return False
+
+    def __str__(self):
+        return "UTR"
+
+
 class Transcript(object):
     """
     ADD CLASS DOCUMENTATION
@@ -262,14 +349,12 @@ class Transcript(object):
         self.exon_count = int(data['exonCount'])
         # these comma separated entries end with a comma
         # so drop the last entry from the str.split() array
-        self.exon_starts = [ int(i) for i in data['exonStarts'].split(',')[0:-1] ]
-        self.exon_ends = [ int(i) - 1 for i in data['exonEnds'].split(',')[0:-1] ]  # convert end to 0-based, inclusive coordinate
-        self.exon_frames = [ int(i) for i in data['exonFrames'].split(',')[0:-1] ]
+        self.exon_starts = [ int(x) for x in data['exonStarts'].split(',')[0:-1] ]
+        self.exon_ends = [ int(x) - 1 for x in data['exonEnds'].split(',')[0:-1] ]  # convert end to 0-based, inclusive coordinate
+        self.exon_frames = [ int(x) for x in data['exonFrames'].split(',')[0:-1] ]
 
-        # create IntervalTree for exons, introns, and UTRs
-        self.tree_with_utrs = IntervalTree()
-        # create IntervalTree without UTRs
-        self.tree_no_utrs = IntervalTree()
+        # create IntervalTree
+        self.tree = IntervalTree()
 
         # add the UTRs
         # define 5' or 3' based on strand
@@ -280,33 +365,33 @@ class Transcript(object):
             first_utr = 3
             second_utr = 5
 
-        # handle edge cases where there is no UTR
+        # exclude the edge cases where there is no UTR
         if self.tx_start < self.cd_start:
-            self.tree_with_utrs[self.tx_start : self.cd_start] = ('UTR', first_utr)
+            self.tree[self.tx_start : self.cd_start] = UTR(first_utr, self.tx_start, self.cd_start - 1)
         if self.tx_end > self.cd_end:
-            self.tree_with_utrs[self.cd_end + 1 : self.tx_end + 1] = ('UTR', second_utr)
+            self.tree[self.cd_end + 1 : self.tx_end + 1] = UTR(second_utr, self.cd_end + 1, self.tx_end)
 
         # add the exons
         for i in range(self.exon_count):
             exon_start = self.exon_starts[i]
             exon_end = self.exon_ends[i]
+            exon_frame = self.exon_frames[i]
 
             # define exon number based on strand
             if self.strand == '+':
                 exon_num = i + 1
             else:
                 exon_num = self.exon_count - i
-            
-            # since interval trees are not inclusive of upper limit, add one to the exon end boundary
-            self.tree_no_utrs[exon_start : exon_end + 1] = ('EXON', exon_num)
 
-            # if the exon is entirely encompassed by a UTR, don't add it to the UTR tree
-            if exon_end < self.cd_start or exon_start > self.cd_end:
-                    continue
             # if the exon is split by a UTR, adjust its boundary
             start = max(exon_start, self.cd_start)
             end = min(exon_end, self.cd_end)
-            self.tree_with_utrs[start : end + 1] = ('EXON', exon_num)
+
+            # since interval trees are not inclusive of upper limit, add one to the exon end boundary
+            if start > exon_end or end < exon_start:
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame)
+            else:
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame, cd_start=start, cd_end=end)
 
         # add the introns
         for i in range(self.exon_count - 1):
@@ -318,13 +403,7 @@ class Transcript(object):
             else:
                 intron_num = self.exon_count - 1 - i
                 
-            self.tree_no_utrs[intron_start : intron_end + 1] = ('INTRON', intron_num)
-
-            # if the intron is entirely encompassed by a UTR, don't add it to the UTR tree
-            if intron_end < self.cd_start or intron_start > self.cd_end:
-                    continue
-            
-            self.tree_with_utrs[intron_start : intron_end + 1] = ('INTRON', intron_num)
+            self.tree[intron_start : intron_end + 1] = Intron(intron_num, intron_start, intron_end)
 
     def __str__(self):
         """
@@ -342,6 +421,17 @@ class Transcript(object):
     def __len__(self):
         return self.tx_end - self.tx_start + 1
 
+    def _remove_utr_ons(self, subtranscripts, start, stop):
+        new_list = []
+        for s in subtranscripts:
+            if isinstance(s, UTR):
+                new_list.append(s)
+            elif isinstance(s, Exon) and s.is_coding(start, stop):
+                new_list.append(s)
+            elif isinstance(s, Intron) and s.end >= self.cd_start and s.start <= self.cd_end:
+                new_list.append(s)
+        return new_list
+
     def get_annotation(self, start, stop=None, report_utr=True):
         # consider idiot proofing for when start == stop
         """
@@ -349,32 +439,33 @@ class Transcript(object):
         """
         if not stop:
             stop = start + 1
+    
+        intervals = self.tree[start:stop]
+        subtranscripts = [ x[2] for x in intervals ]
+
+        # if reporting UTR, remove introns and exons that are entrirely encompassed by the UTR within [start, stop)
         if report_utr:
-            intervals = sorted(self.tree_with_utrs[start:stop])
+            subtranscripts = sorted(self._remove_utr_ons(subtranscripts, start, stop))
+        # if not reporting UTR, remove UTRs from subtranscripts
         else:
-            intervals = sorted(self.tree_no_utrs[start:stop])
+            subtranscripts = sorted([ x for x in subtranscripts if not isinstance(x, UTR)])
 
         # if [start,stop] doesn't overlap with the Transcript, return an empty string
-        if len(intervals) == 0:
+        if len(subtranscripts) == 0:
             return ''
 
         # otherwise, return <gene>:<id><suffix>
         prefix = str(self)
 
         # if the search space covers a single interval, suffix is of form (exon 02)
-        if len(intervals) == 1:
-            single = intervals[0]
-            suffix = "({})".format(Transcript._interval_to_str(single))
+        if len(subtranscripts) == 1:
+            single = subtranscripts[0]
+            suffix = "({})".format(str(single))
         # otherwise suffix is of form (exon 02 - intron 09)
         else:
-            if self.strand == '+':
-                first = intervals[0]
-                last = intervals[-1]
-            else:
-                first = intervals[-1]
-                last = intervals[0]
-
-            suffix = ":({} - {})".format(Transcript._interval_to_str(first), Transcript._interval_to_str(last))
+            first = subtranscripts[0]
+            last = subtranscripts[-1]
+            suffix = ":({} - {})".format(str(first), str(last))
 
         return prefix + suffix
 
@@ -385,14 +476,25 @@ class Transcript(object):
         """
         if not stop:
             stop = start + 1
+      
+        intervals = self.tree[start:stop]
+        exons = [ x[2] for x in intervals if isinstance(x[2], Exon) ]
+        
         if report_utr:
-            intervals = self.tree_with_utrs[start:stop]
-        else:
-            intervals = self.tree_no_utrs[start:stop]
+            exons = [ x for x in exons if x.is_coding(start, stop)]
 
-        # return a list of every exon number in the query space
-        exons = [i[2][1] for i in intervals if i[2][0] == 'EXON']
         return sorted(exons)
+
+    def get_exon_numbers(self, start, stop=None, report_utr=True):
+        """
+        ADD A DOCSTRING
+        """
+        if not stop:
+            stop = start + 1
+      
+        exons = self.get_exons(start, stop, report_utr)
+        exon_numbers = [ str(x.number).zfill(2) for x in exons ]
+        return sorted(exon_numbers)
 
     def get_region_types(self, start, stop=None, report_utr=True):
         # consider idiot proofing for when start == stop
@@ -401,13 +503,29 @@ class Transcript(object):
         """
         if not stop:
             stop = start + 1
+
+        intervals = self.tree[start:stop]
+        subtranscripts = [ x[2] for x in intervals ]
+
+        # if reporting UTR, remove introns and exons that are entrirely encompassed by the UTR within [start, stop)
         if report_utr:
-            intervals = self.tree_with_utrs[start:stop]
+            subtranscripts = sorted(self._remove_utr_ons(subtranscripts, start, stop))
+        # if not reporting UTR, remove UTRs from subtranscripts
         else:
-            intervals = self.tree_no_utrs[start:stop]
+            subtranscripts = sorted([ x for x in subtranscripts if not isinstance(x, UTR) ])
 
         # return a list of every unique region type in query space
-        region_types = set(i[2][0] for i in intervals)
+        region_types = set()
+        for s in subtranscripts:
+            if isinstance(s, UTR):
+                region_types.add('UTR')
+            elif isinstance(s, Exon):
+                region_types.add('EXON')
+            elif isinstance(s, Intron):
+                region_types.add('INTRON')
+            else:
+                raise TypeError("A SubTranscript must be of type Exon, Intron, or UTR")
+
         return sorted(list(region_types))
 
 def define_transcripts(chrm_data):
