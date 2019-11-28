@@ -1,17 +1,22 @@
 """
-ADD DOCUMENTATION
+Creates annotated plots of adjusted log2 ratios from CNV callers and saves the
+plots to a PDf.
 """
 
 import argparse
 import os
+import sys
 import pandas as pd
+import numpy as np
 # needed to avoid Xwindows backend when using python 2.7 (which will cause an error)
 import matplotlib
 matplotlib.use('Agg')   # must call before importing pyplot with python 2.7
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.patches as patches
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.gridspec import GridSpec
 from natsort import natsorted
+from munging.annotation import UCSCTable, Transcript
 
 
 def build_parser(parser):
@@ -23,6 +28,8 @@ def build_parser(parser):
                         help='Minimum abs(log ratio) for printing gene names (default: %(default)s)')
     parser.add_argument('-w', '--window_size', type=int, default=20, 
                         help='Window size for rolling median (default: %(default)s)')
+    parser.add_argument('-r', '--refgene',
+                        help='Path to the transcript-filtered USCS RefSeq table file (used to add IGV-like figures to gene-level plots)')
     parser.add_argument('--title', type=str, 
                         help='Title (default: infer from cnv_data file name)')
 
@@ -56,6 +63,7 @@ def flag_genes(df, min_log_ratio):
     """
     flagged_genes = {}
     for gene in df['gene'].unique():
+        # don't flag intergenic entries
         if gene == 'intergenic':
             continue
         df_gene = df[df['gene']==gene]
@@ -160,15 +168,25 @@ def plot_main(pdf, df, title, min_log_ratio):
 
     plt.close()
 
-def plot_gene(pdf, df_gene):
+def plot_gene(pdf, df_gene, transcript=None):
     """
     Saves to pdf a plot of every log2 in df_gene, colored and labeled by exon
     """
-    fig, ax =  plt.subplots(figsize=(11, 8.5))
+    fig = plt.figure(figsize=(11, 8.5))
+
+    if transcript is None:
+        ax = fig.add_subplot(1,1,1)
+
+    else:
+        gs = GridSpec(2, 1, height_ratios=[0.95, 0.05])
+        ax = fig.add_subplot(gs[0])
+        igv = fig.add_subplot(gs[1], sharex=ax)
+        igv.set_ylim((0, 1))
+        igv.axis('off')
     
     # set plot scale
     Y_SCALE = 2
-    plt.ylim((-1 * Y_SCALE, Y_SCALE))
+    ax.set_ylim((-1 * Y_SCALE, Y_SCALE))
 
     # plot non-exonic entries
     df_introns = df_gene[pd.isnull(df_gene['exon'])]
@@ -189,8 +207,10 @@ def plot_gene(pdf, df_gene):
     max_offset_steps = 3
 
     # plot exonic entries
-    exons = df_gene['exon'].dropna().unique()
-    for i, exon in enumerate(exons):
+    covered_exons = df_gene['exon'].dropna().unique()
+    exon_positions = []
+    exon_vectors = []
+    for i, exon in enumerate(covered_exons):
         # plot entries for exon
         df_exon = df_gene[df_gene['exon'] == exon]
         s = ax.scatter(df_exon['mean_pos'], df_exon['log2'], label=exon, marker='o', s=6)
@@ -198,27 +218,71 @@ def plot_gene(pdf, df_gene):
         color = s.get_facecolor()[0] 
         label_x = df_exon['mean_pos'].mean()
         label_y = gene_median + offset_factor * (max_label_offset - offset_step_size * (i % max_offset_steps))
-        a = plt.annotate(exon, (label_x, label_y), fontsize=10, color=color)
+        a = ax.annotate(exon, (label_x, label_y), fontsize=10, color=color)
         exon_labels.append(a)
+        # add exon data for box and whiskers plot
+        exon_positions.append(df_exon['mean_pos'].median())
+        exon_vectors.append(df_exon['log2'])
+    
+    # plot exon to IGV
+    if transcript is not None:
+        exons = transcript.get_exons(report_utr=False)
+        igv.hlines(0.5, transcript.tx_start, transcript.tx_end, color='b')
+        rectangles = []
+        for e in exons:
+            if e.cd_start is None or e.cd_end is None:
+                # make a small box for whole exon
+                length = e.end - e.start + 1
+                r = patches.Rectangle((e.start, 0.375), width=length, height=0.25, color='b')
+                rectangles.append(r)
+                continue
+            if e.cd_start > e.start:
+                # make a small box for non-coding at start
+                length = e.cd_start - e.start + 1
+                r = patches.Rectangle((e.start, 0.375), width=length, height=0.25, color='b')
+                rectangles.append(r)
+            if e.cd_end < e.end:
+                # make a small box for non-coding at end
+                length = e.end - e.cd_end + 1
+                r = patches.Rectangle((e.cd_end, 0.375), width=length, height=0.25, color='b')
+                rectangles.append(r)
+
+            # make a large box for coding region of exon
+            length = e.cd_end - e.cd_start + 1
+            r = patches.Rectangle((e.cd_start, 0.25), width=length, height=0.5, color='b')
+            rectangles.append(r)
+
+        for r in rectangles:
+            igv.add_patch(r)
+        
 
     # set plot ticks and tick labels
-    plt.tick_params(right=True, top=True)
+    ax.tick_params(right=True, top=True)
     plt.xticks(fontsize=10)
-    plt.locator_params(axis='x', nbins=4)
-    plt.ticklabel_format(axis='x', style='plain', useOffset=False)
+    ax.locator_params(axis='x', nbins=4)
+    ax.ticklabel_format(axis='x', style='plain', useOffset=False)
     plt.yticks(fontsize=10)
-    plt.locator_params(axis='y', nbins=4)
+    ax.locator_params(axis='y', nbins=4)
+
+    # add a box and whiskers around each exon
+    # ax.boxplot(exon_vectors,
+    #            positions=exon_positions,
+    #            manage_xticks=False,
+    #            showmeans=True,
+    #            meanline=False,
+    #            meanprops=dict(marker='+', markersize=8, markeredgecolor='black'),
+    #            showfliers=False)
     
     # add horizontal lines
-    plt.grid(axis='y', which='major', linestyle='solid', linewidth=1)
+    ax.grid(axis='y', which='major', linestyle='solid', linewidth=1)
 
     # label axes
-    plt.xlabel('Position', fontsize=12)
-    plt.ylabel('Adjusted Mean of Log Ratio', fontsize=12)
+    ax.set_xlabel('Position', fontsize=12)
+    ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
 
     # set title
     title_parts = df_gene.iloc[0][['chr', 'gene', 'transcript']]
-    plt.title("Chromosome {}: {}:{}".format(*title_parts))
+    ax.set_title("Chromosome {}: {}:{}".format(*title_parts))
     
     # save main figure
     pdf.savefig()
@@ -227,8 +291,8 @@ def plot_gene(pdf, df_gene):
     min_log = df_gene['log2'].min()
     max_log = df_gene['log2'].max()
     if min_log < -1 * Y_SCALE or max_log > Y_SCALE:
-        plt.ylim((min_log - 0.1, max_log + 0.1))
-        plt.title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
+        ax.set_ylim((min_log - 0.1, max_log + 0.1))
+        ax.set_title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
 
         # move exon labels to account for new scale
         y_mid = (max_log + min_log) / 2
@@ -252,6 +316,14 @@ def action(args):
     # load the data
     df = load_cnv_data(args.cnv_data, args.window_size)
 
+    # if refgene is supplied, create Transcripts
+    transcripts = {}
+    if args.refgene:
+        df_ref = UCSCTable(args.refgene).data
+        for _, row in df_ref.iterrows():
+            gene = row['name2']
+            transcripts[gene] = Transcript(row)
+
     # infer title for main plot if needed
     if not args.title:
         args.title = extract_plot_title(args.cnv_data)
@@ -262,7 +334,13 @@ def action(args):
         plot_main(pdf, df, args.title, args.min_log_ratio)
 
         for gene in df['gene'].unique():
+            # don't create a subplot for 'intergenic'
             if gene == 'intergenic':
                 continue
+            print(gene)
             gene_df = df[df['gene']==gene]
-            plot_gene(pdf, gene_df)
+            if transcripts.has_key(gene):
+                transcript = transcripts[gene]
+            else:
+                transcript = None
+            plot_gene(pdf, gene_df, transcript=transcript)
