@@ -14,7 +14,7 @@ def build_parser(parser):
     parser.add_argument('package', choices=['contra', 'cnvkit'],
                         help='Software package used to create the CNV_data')
     parser.add_argument('-r', '--refgene',
-                        help='Path to the transcript-filtered USCS RefSeq table file (used for annotation)')
+                        help='Path to the transcript-filtered UCSC RefGene table file (used for annotation)')
     parser.add_argument('-o', '--outfile', 
                         help='Path to the out file (default <prefix>.<package>.CNV_plottable.tsv)')
 
@@ -44,6 +44,10 @@ def add_annotations(df, genome_tree):
     """
     Adds gene, transcript, and exon number annotations to the standard, plottable
     DataFrame df using the data contained within GenomeIntervalTree genome_tree.
+
+    Note: If more than one transcript is found in the genome_tree, annotates with only
+    the information from the first transcript found. If row in df covers more than
+    one exon in that transcript, labels with only the lowest exon number from that set.
     """
     for i, row in df.iterrows():
         chrom = row['chr']
@@ -60,7 +64,7 @@ def add_annotations(df, genome_tree):
             exons = t.get_exons(start, end, report_utr=False)
             if exons:
                 # use only the first (and hopefully only) exon number for each interval
-                df.at[i, 'exon'] = str(exons[0])
+                df.at[i, 'exon'] = str(exons[0].number)
         # if no hits from the genome tree, annotate as intergenic
         else:
             df.at[i, 'gene'] = 'intergenic'
