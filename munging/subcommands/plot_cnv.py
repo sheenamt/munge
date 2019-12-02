@@ -219,7 +219,7 @@ def plot_gene(pdf, df_gene, transcript=None):
         exon_labels.append(a)
         # add exon data for box and whiskers plot
         exon_positions.append(df_exon['mean_pos'].median())
-        exon_vectors.append(df_exon['log2'])
+        exon_vectors.append(df_exon['log2'].values)
     
     # create the igv subplot
     if transcript is not None:
@@ -259,7 +259,6 @@ def plot_gene(pdf, df_gene, transcript=None):
     median_props = dict(linestyle='-', linewidth=3, color='black')
     ax.boxplot(exon_vectors,
                positions=exon_positions,
-               labels=covered_exons,
                manage_xticks=False,
                widths=box_width,
                autorange=True,
@@ -268,7 +267,8 @@ def plot_gene(pdf, df_gene, transcript=None):
     
     # set plot limits, ticks, and tick labels
     x_pad = int((max_x - min_x) * 0.04)
-    ax.set_xlim(min_x - x_pad, max_x + x_pad)
+    if x_pad > 0:
+        ax.set_xlim(min_x - x_pad, max_x + x_pad)
     ax.set_ylim((-1 * __YSCALE__, __YSCALE__))
     ax.locator_params(axis='both', nbins=4)
     ax.tick_params(right=True, top=True, labelsize=10)
@@ -345,4 +345,5 @@ def action(args):
                 transcript = transcripts[gene]
             else:
                 transcript = None
+            
             plot_gene(pdf, gene_df, transcript=transcript)
