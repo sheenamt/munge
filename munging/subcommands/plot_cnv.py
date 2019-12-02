@@ -18,6 +18,8 @@ from matplotlib.gridspec import GridSpec
 from natsort import natsorted
 from munging.annotation import UCSCTable, Transcript
 
+# global parameter for the preferred limits to the y-axis [-2, 2]
+__YSCALE__ = 2
 
 def build_parser(parser):
     parser.add_argument('cnv_data',
@@ -34,6 +36,7 @@ def build_parser(parser):
                         help='Title (default: infer from cnv_data file name)')
 
 def load_cnv_data(file_path, window_size):
+    """Returns a DataFrame loaded from file path, adding columns for mean position and rolling median based on window size"""
     column_data_types = {'log2' : 'float64',
                          'chr' : 'str',
                          'start_pos' : 'int64',
@@ -84,10 +87,6 @@ def flag_genes(df, min_log_ratio):
 def plot_main(pdf, df, title, min_log_ratio):
     """Saves to the pdf a plot of every point across all chromosomes present in df, flagging genes above min_log_ratio"""
     fig, ax =  plt.subplots(figsize=(11, 8.5))
-    
-    # set plot scale
-    Y_SCALE = 2
-    plt.ylim((-1 * Y_SCALE, Y_SCALE))
 
     # plot entries left to right from chrom 1 to chrom X
     chromosomes = natsorted(df['chr'].unique())
@@ -108,17 +107,18 @@ def plot_main(pdf, df, title, min_log_ratio):
     shifted_labels = {}
     for gene, coord in flagged_genes.items():
         label_shifted = False
-        if coord[1] > Y_SCALE:
-            coord = (coord[0], 0.97 * Y_SCALE)
+        if coord[1] > __YSCALE__:
+            coord = (coord[0], 0.97 * __YSCALE__)
             label_shifted = True
-        elif coord[1] < -1 * Y_SCALE:
-            coord = (coord[0], -0.99 * Y_SCALE)
+        elif coord[1] < -1 * __YSCALE__:
+            coord = (coord[0], -0.99 * __YSCALE__)
             label_shifted = True        
         a = plt.annotate(gene, coord, fontsize=8)
         if label_shifted:
             shifted_labels[gene] = a
 
-    # set plot ticks and tick labels
+    # set plot limits, ticks, and tick labels
+    plt.ylim((-1 * __YSCALE__, __YSCALE__))
     plt.tick_params(right=True, top=True)
     plt.xticks(x_tick_values, chromosomes, fontsize=8)
     plt.yticks(fontsize=10)
@@ -147,21 +147,19 @@ def plot_main(pdf, df, title, min_log_ratio):
                loc='center left')
     
     # save main figure
+    fig.tight_layout()
     pdf.savefig()
 
     # if logs2 were cutoff by [-2,2] plot, add second plot covering full range
     min_log = df['log2'].min()
     max_log = df['log2'].max()
-    if min_log < -1 * Y_SCALE or max_log > Y_SCALE:
+    if min_log < -1 * __YSCALE__ or max_log > __YSCALE__:
         plt.ylim((min_log - 0.1, max_log + 0.1))
         plt.title(title + ' (Plot 2)')
-        #ax.yaxis.set_major_locator(AutoLocator())
 
         # move labels that were shifted in original plot
         for gene, label in shifted_labels.items():
             label.set_y(flagged_genes[gene][1])
-            #label.remove()
-            #plt.annotate(gene, flagged_genes[gene], fontsize=8)
 
         # save second figure
         pdf.savefig()
@@ -171,6 +169,9 @@ def plot_main(pdf, df, title, min_log_ratio):
 def plot_gene(pdf, df_gene, transcript=None):
     """
     Saves to pdf a plot of every log2 in df_gene, colored and labeled by exon
+
+    If a Transcript object is provided for transcript, also creates an IGV-like representation of
+    the gene at the bottom of the plot.
     """
     fig = plt.figure(figsize=(11, 8.5))
 
@@ -184,10 +185,6 @@ def plot_gene(pdf, df_gene, transcript=None):
         igv.set_ylim((0, 1))
         igv.axis('off')
     
-    # set plot scale
-    Y_SCALE = 2
-    ax.set_ylim((-1 * Y_SCALE, Y_SCALE))
-
     # plot non-exonic entries
     df_introns = df_gene[pd.isnull(df_gene['exon'])]
     ax.scatter(df_introns['mean_pos'], df_introns['log2'], marker='o', color='black', alpha=0.7, s=3)
@@ -224,7 +221,7 @@ def plot_gene(pdf, df_gene, transcript=None):
         exon_positions.append(df_exon['mean_pos'].median())
         exon_vectors.append(df_exon['log2'])
     
-    # plot exon to IGV
+    # create the igv subplot
     if transcript is not None:
         exons = transcript.get_exons(report_utr=False)
         igv.hlines(0.5, transcript.tx_start, transcript.tx_end, color='b')
@@ -254,25 +251,29 @@ def plot_gene(pdf, df_gene, transcript=None):
 
         for r in rectangles:
             igv.add_patch(r)
-        
-
-    # set plot ticks and tick labels
-    ax.tick_params(right=True, top=True)
-    plt.xticks(fontsize=10)
-    ax.locator_params(axis='x', nbins=4)
-    ax.ticklabel_format(axis='x', style='plain', useOffset=False)
-    plt.yticks(fontsize=10)
-    ax.locator_params(axis='y', nbins=4)
 
     # add a box and whiskers around each exon
-    # ax.boxplot(exon_vectors,
-    #            positions=exon_positions,
-    #            manage_xticks=False,
-    #            showmeans=True,
-    #            meanline=False,
-    #            meanprops=dict(marker='+', markersize=8, markeredgecolor='black'),
-    #            showfliers=False)
+    min_x = df_gene['mean_pos'].min()
+    max_x = df_gene['mean_pos'].max()
+    box_width = (max_x - min_x) / 80
+    median_props = dict(linestyle='-', linewidth=3, color='black')
+    ax.boxplot(exon_vectors,
+               positions=exon_positions,
+               labels=covered_exons,
+               manage_xticks=False,
+               widths=box_width,
+               autorange=True,
+               medianprops= median_props,
+               showfliers=False)
     
+    # set plot limits, ticks, and tick labels
+    x_pad = int((max_x - min_x) * 0.04)
+    ax.set_xlim(min_x - x_pad, max_x + x_pad)
+    ax.set_ylim((-1 * __YSCALE__, __YSCALE__))
+    ax.locator_params(axis='both', nbins=4)
+    ax.tick_params(right=True, top=True, labelsize=10)
+    ax.ticklabel_format(axis='x', style='plain', useOffset=False)
+
     # add horizontal lines
     ax.grid(axis='y', which='major', linestyle='solid', linewidth=1)
 
@@ -285,12 +286,13 @@ def plot_gene(pdf, df_gene, transcript=None):
     ax.set_title("Chromosome {}: {}:{}".format(*title_parts))
     
     # save main figure
+    fig.tight_layout()
     pdf.savefig()
 
     # if log2s were cutoff by [-2,2] plot, add second plot covering full range
     min_log = df_gene['log2'].min()
     max_log = df_gene['log2'].max()
-    if min_log < -1 * Y_SCALE or max_log > Y_SCALE:
+    if min_log < -1 * __YSCALE__ or max_log > __YSCALE__:
         ax.set_ylim((min_log - 0.1, max_log + 0.1))
         ax.set_title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
 
@@ -298,10 +300,10 @@ def plot_gene(pdf, df_gene, transcript=None):
         y_mid = (max_log + min_log) / 2
         if gene_median < y_mid:
             # labels go above median log
-            new_factor = (max_log - min_log) / (Y_SCALE * 2)
+            new_factor = (max_log - min_log) / (__YSCALE__ * 2)
         else:
             # labels go below median log
-            new_factor = -1 * (max_log - min_log) / (Y_SCALE * 2)
+            new_factor = -1 * (max_log - min_log) / (__YSCALE__ * 2)
 
         for a in exon_labels:
             old_y = a.xy[1]
@@ -337,8 +339,8 @@ def action(args):
             # don't create a subplot for 'intergenic'
             if gene == 'intergenic':
                 continue
-            print(gene)
             gene_df = df[df['gene']==gene]
+            # if refgene has an entry for this gene, pass along the Transcript to make the IGV plot
             if transcripts.has_key(gene):
                 transcript = transcripts[gene]
             else:
