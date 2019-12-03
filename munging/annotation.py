@@ -128,6 +128,13 @@ def ranges(i):
         b = list(b)
         yield b[0][1], b[-1][1]
 
+def _check_start_stop(start, stop):
+    if stop is None:
+        stop = start + 1
+    if stop <= start:
+        raise ValueError("start must be < stop")
+    return start, stop
+
 class UCSCTable(object):
     '''A container class for the parsing functions, used in GenomeIntervalTree.from_table``.'''
     URL = 'http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz'
@@ -174,7 +181,8 @@ class GenomeIntervalTree(defaultdict):
         chrom = t.chrom
         begin = t.tx_start
         end = t.tx_end
-        self[chrom].addi(begin, end, t)
+        # Intervals are not inclusive of the end point, so increment when adding
+        self[chrom].addi(begin, end + 1, t)
 
     def __len__(self):
         return sum([len(tree) for tree in self.values()])
@@ -194,17 +202,6 @@ class GenomeIntervalTree(defaultdict):
         of the file (with no line ending) and returns a dictionary, mapping field names to values. This dictionary will be assigned
         to the ``data`` field of each interval in the resulting tree.
 
-        Finally, there are different ways genes can be mapped into intervals for the sake of indexing as an interval tree.
-        One way is to represent each gene via its transcribed region (``txStart``..``txEnd``). Another is to represent using
-        coding region (``cdsStart``..``cdsEnd``). Finally, the third possibility is to map each gene into several intervals,
-        corresponding to its exons (``exonStarts``..``exonEnds``).
-
-        The mode, in which genes are mapped to intervals is specified via the ``mode`` parameter. The value can be ``tx``, ``cds`` and
-        ``exons``, corresponding to the three mentioned possibilities.
-
-        The ``parser`` function must ensure that its output contains the field named ``chrom``, and also fields named ``txStart``/``txEnd`` if ``mode=='tx'``,
-        fields ``cdsStart``/``cdsEnd`` if ``mode=='cds'``, and fields ``exonCount``/``exonStarts``/``exonEnds`` if ``mode=='exons'``.
-
         The ``decompress`` parameter specifies whether the provided file is gzip-compressed.
         This only applies to the situation when the url is given (no decompression is made if fileobj is provided in any case).
         If decompress is None, data is decompressed if the url ends with .gz, otherwise decompress = True forces decompression.
@@ -220,54 +217,71 @@ class GenomeIntervalTree(defaultdict):
 
 class SubTranscript(object):
     """Superclass for Exon, Intron, and UTR"""
+
     def __init__(self, number, start, end):
         self.number = number
         self.start = start
         self.end = end
 
     def __lt__(self, other):
-        # DOCUMENT ME BETTER, ALWAYS 5' UTR < exon 1 < intron 1 < 3' UTR
+        """
+        Returns True if self is transcribed before other
+        
+        5' UTR < Exon 1 < Intron 1 < Exon 2 < ... < 3' UTR
+
+        NOTE: only designed to compare elements from the same gene / transcript
+        """
+        # 5' UTRs are always first, 3' UTRs are always last
         if isinstance(self, UTR):
             if self.number == 5:
                 return True
             else:   # it's 3'
                 return False
-        
+        # 5' UTRs are always first, 3' UTRs are always last
         elif isinstance(other, UTR):
             if other.number == 3:
                 return True
             else:   # it's 5'
                 return False
-
         elif isinstance(other, SubTranscript):
+            # Exon 1 comes before Intron 1
             if self.number == other.number:
                 if isinstance(self, Exon):
                     return True
                 else:
-                    return False 
+                    return False
+            # Exon 1 comes before Exon 2 
             else:
                 return self.number < other.number
         else:
             raise TypeError("Cannot compare a SubTranscript to a {}".format(other.type))
 
+
 class Exon(SubTranscript):
     """Helper class to encapsulate an Exon"""
+
     def __init__(self, number, start, end, frame, cd_start=None, cd_end=None):
+        """ADD A DOCSTRING"""
         super(Exon, self).__init__(number, start, end)
         self.frame = frame
         self.cd_start = cd_start
         self.cd_end = cd_end
 
     def __str__(self):
+        """Returns a string representation of the Exon in the form 'exon <number>'"""
         return "exon {}".format(str(self.number).zfill(2))
 
     def is_coding(self, start, stop=None):
-        # DOCUMENT ME
-        if not stop:
+        """
+        Returns True if any part of the Exon within [start, stop) contains coding DNA, otherwise returns False
+        
+        If stop is not provided, queries the range [start, stop + 1)
+        """
+        if stop is None:
             stop = start + 1
 
         # if cd_start or cd_end were not initialiazed, the entire exon fell within a UTR and is non-coding
-        if (not self.cd_start) or (not self.cd_end): 
+        if  (self.cd_start is None) or (self.cd_end is None): 
             return False
         # if no part of [start, stop) falls within [cd_start, cd_end], then return as non-coding
         elif start > self.cd_end or stop <= self.cd_start:
@@ -285,9 +299,11 @@ class Intron(SubTranscript):
         super(Intron, self).__init__(number, start, end)
 
     def is_coding(self, start, stop=None):
+        """Returns False, an Intron is never coding"""
         return False
 
     def __str__(self):
+        """Returns a string representation of the Intron in the form 'intron <number>'"""
         return "intron {}".format(str(self.number).zfill(2))
 
 
@@ -299,9 +315,11 @@ class UTR(SubTranscript):
         super(UTR, self).__init__(number, start, end)
     
     def is_coding(self, start, stop=None):
+        """Returns False, a UTR is never coding"""
         return False
 
     def __str__(self):
+        """Returns a string representation of the UTR in the form 'UTR'"""
         return "UTR"
 
 
@@ -312,26 +330,17 @@ class Transcript(object):
     ALL COORDINATES ARE 0-BASED
     UCSC downloaded tables use 0-based start and 1-based end for some incomprehensible reason
     see http://genome.ucsc.edu/FAQ/FAQtracks#tracks1
-    """
+    
+    In this class, all coordinates are 0-based and inclusive ( e.g. for +-stranded transcripts,
+    tx_start is the first base transcribed, tx_end is the last base transcribed)
 
-    @staticmethod
-    def _interval_to_str(interval):
-        """
-        ADD A DOCSTRING
-        """
-        data = interval[2]
-        if data[0] == 'UTR':
-            return 'UTR'
-        elif data[0] == 'EXON':
-            return "exon {}".format(str(data[1]).zfill(2))
-        elif data[0] == 'INTRON':
-            return "intron {}".format(str(data[1]).zfill(2))
-        else:
-            raise ValueError("An interval must be 'EXON', 'INTRON', or 'UTR'.")
+    For class methods such as get_annotation(), start is inclusive but stop is not (which follows the logic of
+    querying the underlying IntervalTree)
+    """
 
     def __init__(self, data):
         """
-        ADD A DOCSTRING
+        Creates an instance of a Transcript object from data: a row (pandas Series or dict) from a UCSC RefGene table.
         """
         # populate fields from data
         self.gene = data['name2']
@@ -347,8 +356,7 @@ class Transcript(object):
         self.cd_start = int(data['cdsStart'])
         self.cd_end = int(data['cdsEnd']) - 1   # convert end to 0-based, inclusive coordinate
         self.exon_count = int(data['exonCount'])
-        # these comma separated entries end with a comma
-        # so drop the last entry from the str.split() array
+        # these comma separated entries end with a comma, so drop the last entry from the str.split() array
         self.exon_starts = [ int(x) for x in data['exonStarts'].split(',')[0:-1] ]
         self.exon_ends = [ int(x) - 1 for x in data['exonEnds'].split(',')[0:-1] ]  # convert end to 0-based, inclusive coordinate
         self.exon_frames = [ int(x) for x in data['exonFrames'].split(',')[0:-1] ]
@@ -406,22 +414,25 @@ class Transcript(object):
             self.tree[intron_start : intron_end + 1] = Intron(intron_num, intron_start, intron_end)
 
     def __str__(self):
-        """
-        ADD A DOCSTRING
-        """
+        """Returns a string representation of the Transcript in the form '<gene>:<id>'"""
         return "{}:{}".format(self.gene, self.id)
 
     def __lt__(self, other):
         # change to compare by chr:pos?
-        """
-        ADD A DOCSTRING
-        """
+        """Returns True if the string representation of self comes alphabetically before that of other"""
         return str(self) < str(other)
 
     def __len__(self):
+        """Returns the distance in nucleotides between the start and end of transcription"""
         return self.tx_end - self.tx_start + 1
 
     def _remove_utr_ons(self, subtranscripts, start, stop):
+        """
+        Given a list of Subtranscripts, and a range [start, stop), returns the list of Subtranscripts
+        where Introns encompassed by a UTR and Exons that contain no coding DNA in [start, stop) have been removed
+        
+        NOTE: while the subtranscripts argument is not mutated, the returned list contains references to the original Subtranscript objects
+        """
         new_list = []
         for s in subtranscripts:
             if isinstance(s, UTR):
@@ -433,13 +444,10 @@ class Transcript(object):
         return new_list
 
     def get_annotation(self, start, stop=None, report_utr=True):
-        # consider idiot proofing for when start == stop
         """
         ADD A DOCSTRING
         """
-        if not stop:
-            stop = start + 1
-    
+        start, stop = _check_start_stop(start, stop)
         intervals = self.tree[start:stop]
         subtranscripts = [ x[2] for x in intervals ]
 
@@ -469,14 +477,16 @@ class Transcript(object):
 
         return prefix + suffix
 
-    def get_exons(self, start, stop=None, report_utr=True):
+    def get_exons(self, start=None, stop=None, report_utr=True):
         # consider idiot proofing for when start == stop
         """
         ADD A DOCSTRING
         """
-        if not stop:
-            stop = start + 1
-      
+        if not start:
+            start = self.tx_start
+            stop = self.tx_end
+
+        start, stop = _check_start_stop(start, stop)
         intervals = self.tree[start:stop]
         exons = [ x[2] for x in intervals if isinstance(x[2], Exon) ]
         
@@ -485,24 +495,12 @@ class Transcript(object):
 
         return sorted(exons)
 
-    def get_exon_numbers(self, start, stop=None, report_utr=True):
-        """
-        ADD A DOCSTRING
-        """
-        if not stop:
-            stop = start + 1
-      
-        exons = self.get_exons(start, stop, report_utr)
-        exon_numbers = [ str(x.number).zfill(2) for x in exons ]
-        return sorted(exon_numbers)
-
     def get_region_types(self, start, stop=None, report_utr=True):
         # consider idiot proofing for when start == stop
         """
         ADD A DOCSTRING
         """
-        if not stop:
-            stop = start + 1
+        start, stop = _check_start_stop(start, stop)
 
         intervals = self.tree[start:stop]
         subtranscripts = [ x[2] for x in intervals ]
@@ -526,8 +524,9 @@ class Transcript(object):
             else:
                 raise TypeError("A SubTranscript must be of type Exon, Intron, or UTR")
 
-        return sorted(list(region_types))
+        return region_types
 
+# NEEDS TO BE DESTROYED WITH CHANGES MADE TO COVERAGE METRICS, BREAKDANCER, PINDEL, ETC
 def define_transcripts(chrm_data):
     """Given the interval, set the gene, region and transcripts"""
     
