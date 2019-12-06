@@ -8,13 +8,10 @@ filter_refseq). Using an unfiltered refGene file will cause an error!
 
 import sys
 import argparse
-import csv
-from collections import defaultdict
-from operator import itemgetter
 import logging
 from munging.utils import Opener
 from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
-import pandas
+import pandas as pd
 
 log = logging.getLogger(__name__)
 
@@ -28,65 +25,50 @@ def build_parser(parser):
                         default=sys.stdout, help='output file')
 
 
-
-def set_gene_event(start_pos, chrm, genes):
-    """Given start position and gene interval tree, 
-    return gene and event"""
-    start=int(start_pos)
-    matching_genes=genes[chrm].search(start)
-    
-    if len(matching_genes)<1:
-        gene=['Intergenic',]
+def add_genes(row, genome_tree):
+    chrom = chromosomes[row[0]]
+    pos = int(row[1])
+    transcripts = [x[2] for x in genome_tree[chrom][pos]]
+    genes = sorted(set([t.gene for t in transcripts]))
+    if len(genes) == 0:
+        return 'Intergenic'
     else:
-        gene=[]
-        for start, stop, data in matching_genes:
-            gene.append(data['name2'])
-    event=str(chrm)+':'+str(start_pos)
-    genes=';'.join(str(x) for x in set(gene))
+        return ';'.join(str(g) for g in genes)
 
-    return event, genes
+def add_event(row):
+    chrom = str(row[0])
+    pos = str(row[1])
+    return "{}:{}".format(chrom,pos)
 
 def action(args):
-    genes = GenomeIntervalTree.from_table(args.refgene, parser=UCSCTable.REF_GENE, mode='tx')
-
-    #try to match chr string in reference file and input data
-    chrm=False
-    if 'chr' in genes.keys()[0]:
-        chrm = True
+    gt = GenomeIntervalTree.from_table(args.refgene)
 
     # read in only the columns we care about, because real data can be too large sometimes
-    headers=['#Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
-    reader = pandas.read_csv(args.bd_file, comment='#', delimiter='\t',header=None,usecols=[0,1,3,4,6,7,9], names=headers)
-    #Convert to a dictionary for processing clearly
-    rows = reader.T.to_dict().values()
-    output = []
-    for row in rows:
-        # each segment is assigned to a gene or exon if either the
-        #only normal chr are process, GL amd MT are ignored
-        try:
-            if chrm:
-                chr1 = 'chr'+str(chromosomes[row['#Chr1']])
-                chr2 = 'chr'+str(chromosomes[row['Chr2']])
-            else:
-                chr1 = str(chromosomes[row['#Chr1']])
-                chr2 = str(chromosomes[row['Chr2']])
-        except KeyError:
-            print('chrm not being processed: {} or {}'.format(row['#Chr1'], row['Chr2']))
-            continue
+    headers=['Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
+    reader = pd.read_csv(args.bd_file, comment='#', delimiter='\t',header=None, usecols=[0,1,3,4,6,7,9], names=headers)
+    
+    # discard rows with size in [-101, 101]
+    df = reader[reader['Size'].abs() > 101].copy()
+    # update Size when Type is CTX
+    df.loc[df['Type'] == 'CTX', 'Size'] = 'N/A'
 
-        row['Event_1'], row['Gene_1']=set_gene_event(row['Pos1'], chr1, genes)
-        row['Event_2'], row['Gene_2']=set_gene_event(row['Pos2'], chr2, genes)
-
-        #discard those between -101 and 101
-        if int(row['Size']) not in range(-101,101):
-            if row['Type']=='CTX':
-                row['Size']='N/A'
-            output.append(row)
-
-    output.sort(key=itemgetter('Event_1'))
-    output.sort(key=itemgetter('num_Reads'), reverse=True)
-    fieldnames=['Event_1','Event_2','Type','Size','Gene_1','Gene_2','num_Reads']
-    writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=fieldnames, delimiter='\t')
-    writer.writeheader()
-    writer.writerows(output)
+    # discard rows containing events on unsupported chromosomes
+    chroms = chromosomes.keys()
+    discarded = df[~df['Chr1'].isin(chroms) | ~df['Chr2'].isin(chroms)]
+    df = df[df['Chr1'].isin(chroms) & df['Chr2'].isin(chroms)]
+    # warn of those rows being skipped
+    for (chr1, chr2) in zip(discarded['Chr1'], discarded['Chr2']):
+        print('Event not being processed due to unsupported chromosme: {} or {}'.format(chr1, chr2))
+    
+    # add events columns
+    df['Event_1'] = df[['Chr1', 'Pos1']].apply(add_event, axis=1)
+    df['Event_2'] = df[['Chr2', 'Pos2']].apply(add_event, axis=1)
+    # add genes columns
+    df['Gene_1'] = df[['Chr1', 'Pos1']].apply(add_genes, genome_tree = gt, axis=1)
+    df['Gene_2'] = df[['Chr2', 'Pos2']].apply(add_genes, genome_tree = gt, axis=1)
+    
+    # sort and save the relevant columns
+    df = df.sort_values(['num_Reads','Event_1'], ascending=[False, True])
+    out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2','num_Reads']
+    df.to_csv(args.outfile, index=False, sep='\t', columns=out_fields)
 
