@@ -33,20 +33,20 @@ log = logging.getLogger(__name__)
 
 ANNOTATIONS = [('snp138',),  # dbsnp
                ('exac03',),  # ExAC 65000 exome allele frequency data 
-#               ('dbscsnv11',), # dbscSNV version 1.1 for splice site prediction by AdaBoost and Random Forest
+               ('dbscsnv11',), # dbscSNV version 1.1 for splice site prediction by AdaBoost and Random Forest
                ('1000g2015aug_all',),  # 1000 genomes annotation:
-#               ('1000g2015aug_amr',),  # 1000 genomes (admmixed american) annotation:
-#               ('1000g2015aug_eur',),  # 1000 genomes (european) annotation:
-#               ('1000g2015aug_eas',),  # 1000 genomes (east asian) annotation:
-#               ('1000g2015aug_sas',),  # 1000 genomes (south asian) annotation:
-#               ('1000g2015aug_afr',),  # 1000 genomes (african) annotation:
-#               ('dbnsfp33a',),  # whole-exome SIFT, PolyPhen2 HDIV, PolyPhen2 HVAR, LRT, MutationTaster, MutationAssessor, FATHMM, MetaSVM, MetaLR, VEST, CADD, GERP++, PhyloP and SiPhy scores from dbNSFP version 3.3
-#               ('esp6500siv2_all',),  # alternative allele frequency in the NHLBI-ESP project with 6500 exomes, including the indel calls and the chrY calls. evs-all
-#               ('esp6500siv2_aa',),  # evs-african american
-#               ('esp6500siv2_ea',),  # evs-european
+               ('1000g2015aug_amr',),  # 1000 genomes (admmixed american) annotation:
+               ('1000g2015aug_eur',),  # 1000 genomes (european) annotation:
+               ('1000g2015aug_eas',),  # 1000 genomes (east asian) annotation:
+               ('1000g2015aug_sas',),  # 1000 genomes (south asian) annotation:
+               ('1000g2015aug_afr',),  # 1000 genomes (african) annotation:
+               ('dbnsfp33a',),  # whole-exome SIFT, PolyPhen2 HDIV, PolyPhen2 HVAR, LRT, MutationTaster, MutationAssessor, FATHMM, MetaSVM, MetaLR, VEST, CADD, GERP++, PhyloP and SiPhy scores from dbNSFP version 3.3
+               ('esp6500siv2_all',),  # alternative allele frequency in the NHLBI-ESP project with 6500 exomes, including the indel calls and the chrY calls. evs-all
+               ('esp6500siv2_aa',),  # evs-african american
+               ('esp6500siv2_ea',),  # evs-european
                ('cosmic84',),  # cosmic84, created internally
                ('clinvar_20180603',),  # CLINVAR database with Variant Clinical Significance (unknown, untested, non-pathogenic, probable-non-pathogenic, probable-pathogenic, pathogenic, drug-response, histocompatibility, other) and Variant disease name, Clinvar version 20170905 with separate columns (CLINSIG CLNDBN CLNACC CLNDSDB CLNDSDBID
-#               ('nci60',),  # NCI-60 human tumor cell line panel exome sequencing allele frequency data
+               ('nci60',),  # NCI-60 human tumor cell line panel exome sequencing allele frequency data
                ('segdup', '--regionanno',),  # segdup annotation:              
                ('refGene', '--geneanno', ['--splicing_threshold','10', '--hgvs']),  # Gene level annotation:
 #               ('intervar_20180118',), #clinical interpretation of missense variants (indels not supported)

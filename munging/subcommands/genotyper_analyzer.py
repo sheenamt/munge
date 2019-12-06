@@ -136,8 +136,9 @@ def action(args):
         varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Reference_Reads'] = info[1]['reference'][1]
         for variant in info[1]['variants']:
             varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'Variant_Reads']=variant[1]
-        
-    header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
+            varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'VAF']=("{0:.4f}".format(float(variant[1])/int(depth)))
+
+    header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads', 'VAF']
     
     varscan_format_variants.to_csv(genotype_analysis, na_rep='0',index=False,columns=header,sep='\t')
 
