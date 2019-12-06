@@ -45,10 +45,11 @@ def add_annotations(df, genome_tree):
     Adds gene, transcript, and exon number annotations to the standard, plottable
     DataFrame df using the data contained within GenomeIntervalTree genome_tree.
 
-    Note: If more than one transcript is found in the genome_tree, annotates with only
+    NOTE: If more than one transcript is found in the genome_tree, annotates with only
     the information from the first transcript found. If row in df covers more than
     one exon in that transcript, labels with only the lowest exon number from that set.
     """
+    # note, for performance reasons this should be changed to .apply or something non-iterative
     for i, row in df.iterrows():
         chrom = row['chr']
         start = int(row['start_pos'])
@@ -77,7 +78,7 @@ def action(args):
         df = parse_cnvkit_file(args.cnv_data)
     else:
         # should never hit here
-        raise ValueError("Improper type specified as argument")
+        raise ValueError("Improper package specified as argument")
 
     # add annotations to the parsed data
     gt = GenomeIntervalTree.from_table(args.refgene)

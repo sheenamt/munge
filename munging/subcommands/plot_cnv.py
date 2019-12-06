@@ -318,13 +318,15 @@ def action(args):
     # load the data
     df = load_cnv_data(args.cnv_data, args.window_size)
 
-    # if refgene is supplied, create Transcripts
+    # if refgene is supplied, create a mapping of gene name to Transcript
     transcripts = {}
     if args.refgene:
         df_ref = UCSCTable(args.refgene).data
-        for _, row in df_ref.iterrows():
-            gene = row['name2']
-            transcripts[gene] = Transcript(row)
+        rows = df_ref.to_dict(orient='records')
+        transcripts.update({row['name2'] : Transcript(row) for row in rows})
+        # for _, row in df_ref.iterrows():
+        #     gene = row['name2']
+        #     transcripts[gene] = Transcript(row)
 
     # infer title for main plot if needed
     if not args.title:
