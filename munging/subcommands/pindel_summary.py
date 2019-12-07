@@ -8,16 +8,11 @@ filter_refseq). Using an unfiltered refGene file will cause an error!
 
 import sys
 import argparse
-import csv
-from collections import defaultdict
-from operator import itemgetter
 import logging
-import pandas
+import pandas as pd
 from munging.utils import Opener
-from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, define_transcripts, multi_split
-import itertools
+from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, multi_split, merge_transcript_data
 
-csv.field_size_limit(10000000)
 log = logging.getLogger(__name__)
 
 
@@ -32,117 +27,118 @@ def build_parser(parser):
                         default=sys.stdout, help='output file')
 
 
-def parse_event(data):
+def parse_vcf_info(info):
     ''' Return the length and type of event, corrects end position if necessary '''
     #Parse read depth and SVtype
-    info=dict(item.split('=') for item in data['INFO'].split(";") if "=" in item)
-    size=int(info['SVLEN'])
-    if info['SVTYPE'] == 'RPL':
-        svtype='DEL'
+    info_dict = dict(item.split('=') for item in info.split(";") if "=" in item)
+    # report absolute value for size
+    size = abs(int(info_dict['SVLEN']))
+    if info_dict['SVTYPE'] == 'RPL':
+        svtype = 'DEL'
     else:
-        svtype=info['SVTYPE']
+        svtype = info_dict['SVTYPE']
     # To maintain consistency with the old Perl annotations, add 1 to the end
     # This means insertions will be listed with consecutive breakends (e.g. 16:68771418-68771419)
     # Deletions and tandem duplications will be listed with breakends separated by a number
     # of positions equal to the size of the event (e.g. 16:817016-817032 for a size 15 deletion)
     # In all cases, the breakends represent the UNAFFECTED nucleotides closest to the variation
-    end=int(info['END']) + 1
-    return size, svtype, end
+    end = int(info_dict['END']) + 1
+    return pd.Series([size, svtype, end])
 
-def ranges(i):
-    for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
-        b = list(b)
-        yield b[0][1], b[-1][1]
+def get_annotations(row, genome_tree):
+    chrom = chromosomes[row['CHROM']]
+    chrom_tree = genome_tree[chrom]
+    start = int(row['POS'])
+    end = int(row['End'])
+    start_transcripts = [ x[2] for x in chrom_tree[start] ]
+    end_transcripts = [ x[2] for x in chrom_tree[end] ]
+    spanning_transcripts = [ x[2] for x in chrom_tree[start:end + 1] ]
+
+    start_genes, _, start_annotations = merge_transcript_data(start_transcripts, start, report_utr=True)
+    end_genes, _, end_annotations = merge_transcript_data(end_transcripts, end, report_utr=True)
+    _, region_types , _ = merge_transcript_data(spanning_transcripts, start, end + 1, report_utr=True)
+
+    genes = sorted(set(start_genes + end_genes))
+    if len(genes) == 0:
+        genes = ['Intergenic']
+    annotations = sorted(set(start_annotations + end_annotations))
+
+    if 'EXON' in region_types:
+        gene_region = 'EXONIC'
+    elif 'UTR' in region_types:
+        gene_region = 'UTR'
+    elif 'INTRON' in region_types:
+        gene_region = 'INTRONIC'
+    else:
+        gene_region = 'Intergenic'
+
+    gene_label = ';'.join(str(x) for x in genes)
+    transcript_label = ';'.join(str(x) for x in annotations) #transcripts #combine_transcripts(set(transcripts)) #
+
+    return pd.Series([gene_label, transcript_label, gene_region])
+
+def parse_vcf_reads(read_info):
+    return int(read_info.split(',')[-1])
+
+def get_position(row):
+    chrom = chromosomes[row['CHROM']]
+    start = str(row['POS'])
+    end = str(row['End'])
+    return "{}:{}-{}".format(chrom, start, end)
+
+# def ranges(i):
+#     for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
+#         b = list(b)
+#         yield b[0][1], b[-1][1]
     
 def action(args):
-    #Create interval tree of introns and exons,  grouped by chr
-    exons = GenomeIntervalTree.from_table(open(args.refgene, 'r'), parser=UCSCTable.REF_GENE, mode='exons')
-    
-    #try to match chr string in reference file and input data
-    chrm=False
-    if 'chr' in exons.keys()[0]:
-        chrm = True
+    #Create interval tree of Transcripts, grouped by chr
+    gt = GenomeIntervalTree.from_table(args.refgene)
 
-    output = []
+    # specify columns to import and names
+    if args.multi_reads:
+        headers=['CHROM','POS','INFO','bbmergedREADS','bwamemREADS']
+        cols_to_use = [0,1,7,9,10]
+    else:
+        headers=['CHROM','POS','INFO','READS']
+        cols_to_use = [0,1,7,9]
 
+    # import VCFs into DataFrames
     (pindel_vcfs,) = args.pindel_vcfs
+    readers = []
     for vcf in pindel_vcfs:
         with open(vcf, 'rU')  as f:
-            if args.multi_reads:
-                #Skip the header lines, read in only the columns we need because some unnecessary columns can be millions of characters long
-                headers=['CHROM','POS','INFO','bbmergedREADS','bwamemREADS']
-                reader = pandas.read_csv(f, comment='#', delimiter='\t',header=None,usecols=[0,1,7,9,10], names=headers)
-            else:
-                #Skip the header lines, read in only the columns we need because some unnecessary columns can be millions of characters long
-                headers=['CHROM','POS','INFO','READS']
-                reader = pandas.read_csv(f, comment='#', delimiter='\t',header=None,usecols=[0,1,7,9], names=headers)
-                #Convert to a dictionary for processing clearly
+            reader = pd.read_csv(f, comment='#', delimiter='\t', header=None, usecols=cols_to_use, names=headers)
+        readers.append(reader)
 
-            rows = reader.T.to_dict().values()
+    # concatenate DataFrames into one
+    df = pd.concat(readers, ignore_index=True)
+    chroms = chromosomes.keys()
+    # filter out entries containing events on unsupported chromosomes
+    df = df[df['CHROM'].isin(chroms)]
+    # parse the contents of the INFO field
+    df[['Size', 'Event_Type', 'End']] = df['INFO'].apply(parse_vcf_info)
+    # do not include small insertion/deletion calls from Pindel
+    df = df[df['Size'] > 10]
+    # add annotations
+    df[['Gene', 'Transcripts', 'Gene_Region']] = df.apply(get_annotations, genome_tree=gt, axis=1)
+    # create the Position field
+    df['Position'] = df.apply(get_position, axis=1)
 
-            for row in rows:
-                row['Size'], row['Event_Type'],row['End']=parse_event(row)
-                # do not include small insertion/deletion calls from Pindel
-                if row['Size'] in range(-10,10):
-                    continue
-                #only normal chr are process, GL is ignored
-                try:
-                    if chrm:
-                        chr1 = 'chr'+str(chromosomes[row['CHROM']])
-                    else:
-                        chr1 = str(chromosomes[row['CHROM']])
-                except KeyError:
-                    continue
-
-                #Setup the variables to be returned
-                gene1, transcripts1=['Intergenic'], []
-                gene2, transcripts2=['Intergenic'], []
-                region = 'Intergenic'
-                # each segment is assigned to a gene if either the
-                # start or end coordinate falls within the feature boundaries.
-                start_intervals = exons[chr1].search(int(row['POS']))
-                end_intervals = exons[chr1].search(int(row['End']))
-                spanning_intervals = exons[chr1].search(int(row['POS']), int(row['End']) + 1)
-
-                if start_intervals:
-                    gene1, _, transcripts1 = define_transcripts(start_intervals)
-                if end_intervals:
-                    gene2, _, transcripts2 = define_transcripts(end_intervals)
-                if spanning_intervals:
-                    _, regions, _ = define_transcripts(spanning_intervals)
-                    if 'EXONIC' in regions:
-                        region = 'EXONIC'
-                    elif 'UTR' in regions:
-                        region = 'UTR'
-                    elif 'INTRONIC' in regions:
-                        region = 'INTRONIC'
-
-                gene=gene1+gene2
-                transcripts=transcripts1+transcripts2
-
-                row['Gene'] =';'.join(str(x) for x in set(gene))
-                row['Gene_Region'] = region
-                row['Transcripts']=';'.join(str(x) for x in sorted(set(transcripts))) #transcripts #combine_transcripts(set(transcripts)) #
-                row['Position']=str(chr1)+':'+str(row['POS'])+'-'+str(row['End'])
-                
-                if args.multi_reads:
-                    row['bbmergedReads']=int(row['bbmergedREADS'].split(',')[-1])
-                    row['bwamemReads']=int(row['bwamemREADS'].split(',')[-1])
-                else:
-                    row['Reads']=int(row['READS'].split(',')[-1])
-                
-                #show absolute value for size
-                row['Size']=abs(row['Size'])
-                output.append(row)
-
+    # parse the contents of the reads field(s)
     if args.multi_reads:
-        output.sort(key=itemgetter('bwamemReads'), reverse=True)  #Sort on reads
-        out_fieldnames=['Gene','Gene_Region','Event_Type','Size','Position','bbmergedReads', 'bwamemReads','Transcripts']
+        df['bbmergedReads'] = df['bbmergedREADS'].apply(parse_vcf_reads)
+        df['bwamemReads'] = df['bwamemREADS'].apply(parse_vcf_reads)
     else:
-        output.sort(key=itemgetter('Reads'), reverse=True)  #Sort on reads
-        out_fieldnames=['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
+        df['Reads']=df['READS'].apply(parse_vcf_reads)
 
-    writer = csv.DictWriter(args.outfile, extrasaction='ignore',fieldnames=out_fieldnames, delimiter='\t')
-    writer.writeheader()
-    writer.writerows(output) 
+    # sort and save to file
+    if args.multi_reads:
+        df = df.sort_values(['bwamemReads', 'Position'], ascending=[False, True])  #Sort on reads
+        out_fields=['Gene','Gene_Region','Event_Type','Size','Position','bbmergedReads', 'bwamemReads','Transcripts']
+    else:
+        df = df.sort_values(['Reads', 'Position'], ascending=[False, True])  #Sort on reads
+        out_fields=['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
+
+    df.to_csv(args.outfile, sep='\t', index=False, columns=out_fields)
 
