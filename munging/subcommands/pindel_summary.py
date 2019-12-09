@@ -45,7 +45,7 @@ def parse_vcf_info(info):
     return pd.Series([size, svtype, end])
 
 def get_annotations(row, genome_tree):
-    """ADD A DOCSTRING"""
+    """returns [gene_label, transcript_label, region_label] for a row in df"""
     # determine coordinates
     chrom = ann.chromosomes[row['CHROM']]
     chrom_tree = genome_tree[chrom]
