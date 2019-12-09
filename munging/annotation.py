@@ -1,9 +1,6 @@
-import os
-import csv
 import pandas as pd
 from collections import namedtuple, defaultdict
 from operator import itemgetter
-import pprint
 import logging
 import sys
 import re
@@ -22,11 +19,11 @@ log = logging.getLogger(__name__)
 # Various files and data strctures specify chromosomes as strings
 # encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
 # ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
-# 'chrX'). `chromosomes` maps all three to the numeric representation.
+# 'chrX'). `chromosomes` maps all three to the string representation.
 chrnums = [str(i) for i in range(1, 23)] + ['X', 'Y', 'MT']
 chromosomes = {'chr{}'.format(c): c for c in chrnums}
 chromosomes.update({str(c): c for c in chrnums})
-chromosomes.update({c: c for c in chrnums})
+chromosomes.update({i: str(i) for i in range(1, 23)})
 
 def get_location(chr, start, stop, **kwargs):
     """
@@ -209,10 +206,9 @@ class GenomeIntervalTree(defaultdict):
         '''
         gtree = GenomeIntervalTree()
         table = UCSCTable(fileobj=fileobj, decompress=decompress)
-
-        for _, row in table.data.iterrows():
+        for row in table.data.to_dict(orient='records'):
             gtree.addi(row)
-                
+
         return gtree
 
 class SubTranscript(object):
@@ -406,6 +402,10 @@ class Transcript(object):
             intron_start = self.exon_ends[i] + 1
             intron_end = self.exon_starts[i + 1] - 1
 
+            # handle edge cases where two exons are adjacent, with no intervening intron (e.g. ZNF274)
+            if intron_start == intron_end + 1:
+                continue
+
             if self.strand == '+':
                 intron_num = i + 1
             else:
@@ -458,9 +458,9 @@ class Transcript(object):
         else:
             subtranscripts = sorted([ x for x in subtranscripts if not isinstance(x, UTR)])
 
-        # if [start,stop] doesn't overlap with the Transcript, return an empty string
+        # if [start,stop] doesn't overlap with the Transcript, return None
         if len(subtranscripts) == 0:
-            return ''
+            return None
 
         # otherwise, return <gene>:<id><suffix>
         prefix = str(self)
@@ -518,48 +518,37 @@ class Transcript(object):
             if isinstance(s, UTR):
                 region_types.add('UTR')
             elif isinstance(s, Exon):
-                region_types.add('EXON')
+                region_types.add('EXONIC')
             elif isinstance(s, Intron):
-                region_types.add('INTRON')
+                region_types.add('INTRONIC')
             else:
                 raise TypeError("A SubTranscript must be of type Exon, Intron, or UTR")
 
         return region_types
 
-# NEEDS TO BE DESTROYED WITH CHANGES MADE TO COVERAGE METRICS, BREAKDANCER, PINDEL, ETC
-def define_transcripts(chrm_data):
-    """Given the interval, set the gene, region and transcripts"""
-    
-    gene_list, region_list, transcript_list = [], [], []
-    
-    # create Transcript dictionary from chrm_data
-    transcripts = {}
-    for start, stop, data in chrm_data:
-        gene = data['name2']
-        accession = data['name']
+def gene_info_from_transcripts(transcripts):
+    """ADD A DOCSTRING"""
+    genes = [t.gene for t in transcripts]
+    if len(genes) == 0:
+        return ['Intergenic']
+    else:
+        return  sorted(set(genes))
 
-        if not transcripts.has_key(accession):
-            transcripts[accession] = Transcript(gene, accession)
+def region_info_from_transcripts(transcripts, start, stop=None, report_utr=True):
+    """ADD A DOCSTRING"""
+    start, stop = _check_start_stop(start, stop)
+    region_types = set()
+    for t in transcripts: 
+        region_types.update(t.get_region_types(start, stop, report_utr))
 
-        t = transcripts[accession]
-        
-        if data.has_key('exonNum'):
-            #print(accession + ': E-' + data['exonNum'])
-            t.exons.append(int(data['exonNum']))
+    if len(region_types) == 0:
+        return ['Intergenic']
+    else:
+        return sorted(region_types)
 
-        if data.has_key('intronNum'):
-            #print(accession + ': I-' + data['intronNum'])
-            t.introns.append(int(data['intronNum']))
-
-        if data.has_key('UTR'):
-            #print(accession + ': U-' + data['UTR'])
-            t.utrs.append(data['UTR'])
-    
-    # populate the output lists
-    for t in transcripts.values():
-        gene_list.append(t.gene)
-        region_list.append(t.get_type())
-        transcript_list.append(t.get_annotation())
-
-    return sorted(set(gene_list)), sorted(set(region_list)), sorted(set(transcript_list))
+def transcript_info_from_transcripts(transcripts, start, stop=None, report_utr=True):
+    """ADD A DOCSTRING"""
+    start, stop = _check_start_stop(start, stop)
+    annotations = [t.get_annotation(start, stop, report_utr) for t in transcripts]
+    return sorted(set(annotations))
 
