@@ -10,7 +10,8 @@ import sys
 import argparse
 import logging
 from munging.utils import Opener
-from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
+#from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
+import munging.annotation as ann
 import pandas as pd
 
 log = logging.getLogger(__name__)
@@ -26,14 +27,11 @@ def build_parser(parser):
 
 
 def add_genes(row, genome_tree):
-    chrom = chromosomes[row[0]]
+    chrom = ann.chromosomes[row[0]]
     pos = int(row[1])
     transcripts = [x[2] for x in genome_tree[chrom][pos]]
-    genes = sorted(set([t.gene for t in transcripts]))
-    if len(genes) == 0:
-        return 'Intergenic'
-    else:
-        return ';'.join(str(g) for g in genes)
+    genes = ann.gene_info_from_transcripts(transcripts)
+    return ';'.join(genes)
 
 def add_event(row):
     chrom = str(row[0])
@@ -41,7 +39,7 @@ def add_event(row):
     return "{}:{}".format(chrom,pos)
 
 def action(args):
-    gt = GenomeIntervalTree.from_table(args.refgene)
+    gt = ann.GenomeIntervalTree.from_table(args.refgene)
 
     # read in only the columns we care about, because real data can be too large sometimes
     headers=['Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
@@ -53,12 +51,12 @@ def action(args):
     df.loc[df['Type'] == 'CTX', 'Size'] = 'N/A'
 
     # discard rows containing events on unsupported chromosomes
-    chroms = chromosomes.keys()
+    chroms = ann.chromosomes.keys()
     discarded = df[~df['Chr1'].isin(chroms) | ~df['Chr2'].isin(chroms)]
     df = df[df['Chr1'].isin(chroms) & df['Chr2'].isin(chroms)]
     # warn of those rows being skipped
     for (chr1, chr2) in zip(discarded['Chr1'], discarded['Chr2']):
-        print('Event not being processed due to unsupported chromosme: {} or {}'.format(chr1, chr2))
+        print('Event not being processed due to unsupported chromosome: {} or {}'.format(chr1, chr2))
     
     # add events columns
     df['Event_1'] = df[['Chr1', 'Pos1']].apply(add_event, axis=1)

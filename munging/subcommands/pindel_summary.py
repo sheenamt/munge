@@ -10,8 +10,8 @@ import sys
 import argparse
 import logging
 import pandas as pd
+import munging.annotation as ann
 from munging.utils import Opener
-from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable, multi_split, merge_transcript_data
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,6 @@ def build_parser(parser):
                         help='Expect bbmerged and bwamem reads')
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
-
 
 def parse_vcf_info(info):
     ''' Return the length and type of event, corrects end position if necessary '''
@@ -46,54 +45,50 @@ def parse_vcf_info(info):
     return pd.Series([size, svtype, end])
 
 def get_annotations(row, genome_tree):
-    chrom = chromosomes[row['CHROM']]
+    """ADD A DOCSTRING"""
+    # determine coordinates
+    chrom = ann.chromosomes[row['CHROM']]
     chrom_tree = genome_tree[chrom]
     start = int(row['POS'])
     end = int(row['End'])
+    # determine affected transcripts
     start_transcripts = [ x[2] for x in chrom_tree[start] ]
     end_transcripts = [ x[2] for x in chrom_tree[end] ]
     spanning_transcripts = [ x[2] for x in chrom_tree[start:end + 1] ]
-
-    start_genes, _, start_annotations = merge_transcript_data(start_transcripts, start, report_utr=True)
-    end_genes, _, end_annotations = merge_transcript_data(end_transcripts, end, report_utr=True)
-    _, region_types , _ = merge_transcript_data(spanning_transcripts, start, end + 1, report_utr=True)
-
-    genes = sorted(set(start_genes + end_genes))
-    if len(genes) == 0:
-        genes = ['Intergenic']
-    annotations = sorted(set(start_annotations + end_annotations))
-
-    if 'EXON' in region_types:
-        gene_region = 'EXONIC'
-    elif 'UTR' in region_types:
-        gene_region = 'UTR'
-    elif 'INTRON' in region_types:
-        gene_region = 'INTRONIC'
+    breakend_transcripts = start_transcripts + end_transcripts
+    # get the genes from either breakend
+    ## QUESTION DO THEY WANT BRCA1;Intergenic or just BRCA1 ##
+    breakend_genes = ann.gene_info_from_transcripts(breakend_transcripts)
+    gene_label = ';'.join(sorted(set(breakend_genes)))
+    # get the gene region from the spanning transcripts
+    regions = ann.region_info_from_transcripts(spanning_transcripts, start, end, report_utr=True)
+    if 'EXONIC' in regions:
+        region_label = 'EXONIC'
+    elif 'UTR' in regions:
+        region_label = 'UTR'
+    elif 'INTRONIC' in regions:
+        region_label = 'INTRONIC'
     else:
-        gene_region = 'Intergenic'
+        region_label = 'Intergenic'
+    # get the transcript info either breakend
+    ## QUESTION DO THEY WANT BRCA1(exon 01);BRCA1(exon 12) or BRCA1(exons 01 - 12) ##
+    breakend_annotations = ann.transcript_info_from_transcripts(breakend_transcripts, start, end, report_utr=True)
+    transcript_label = ';'.join(sorted(set(breakend_annotations)))
 
-    gene_label = ';'.join(str(x) for x in genes)
-    transcript_label = ';'.join(str(x) for x in annotations) #transcripts #combine_transcripts(set(transcripts)) #
-
-    return pd.Series([gene_label, transcript_label, gene_region])
+    return pd.Series([gene_label, transcript_label, region_label])
 
 def parse_vcf_reads(read_info):
     return int(read_info.split(',')[-1])
 
 def get_position(row):
-    chrom = chromosomes[row['CHROM']]
+    chrom = ann.chromosomes[row['CHROM']]
     start = str(row['POS'])
     end = str(row['End'])
     return "{}:{}-{}".format(chrom, start, end)
-
-# def ranges(i):
-#     for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
-#         b = list(b)
-#         yield b[0][1], b[-1][1]
     
 def action(args):
     #Create interval tree of Transcripts, grouped by chr
-    gt = GenomeIntervalTree.from_table(args.refgene)
+    gt = ann.GenomeIntervalTree.from_table(args.refgene)
 
     # specify columns to import and names
     if args.multi_reads:
@@ -113,7 +108,7 @@ def action(args):
 
     # concatenate DataFrames into one
     df = pd.concat(readers, ignore_index=True)
-    chroms = chromosomes.keys()
+    chroms = ann.chromosomes.keys()
     # filter out entries containing events on unsupported chromosomes
     df = df[df['CHROM'].isin(chroms)]
     # parse the contents of the INFO field
