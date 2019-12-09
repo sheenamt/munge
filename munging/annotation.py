@@ -20,10 +20,11 @@ log = logging.getLogger(__name__)
 # encoding ints, like ('1', '2', ..., 'X'), sometimes as ints (1, 2,
 # ... 'X'), and sometimes with a prefix ('chr1', 'chr2', ...,
 # 'chrX'). `chromosomes` maps all three to the string representation.
-chrnums = [str(i) for i in range(1, 23)] + ['X', 'Y', 'MT']
-chromosomes = {'chr{}'.format(c): c for c in chrnums}
-chromosomes.update({str(c): c for c in chrnums})
+chromosome_sort_order = [str(i) for i in range(1, 23)] + ['X', 'Y', 'MT']
+chromosomes = {'chr{}'.format(c): c for c in chromosome_sort_order}
+chromosomes.update({str(c): c for c in chromosome_sort_order})
 chromosomes.update({i: str(i) for i in range(1, 23)})
+
 
 def get_location(chr, start, stop, **kwargs):
     """
