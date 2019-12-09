@@ -19,7 +19,7 @@ from natsort import natsorted
 from munging.annotation import UCSCTable, Transcript
 
 # global parameter for the preferred limits to the y-axis [-2, 2]
-__YSCALE__ = 2
+y_scale = 2
 
 def build_parser(parser):
     parser.add_argument('cnv_data',
@@ -107,18 +107,18 @@ def plot_main(pdf, df, title, min_log_ratio):
     shifted_labels = {}
     for gene, coord in flagged_genes.items():
         label_shifted = False
-        if coord[1] > __YSCALE__:
-            coord = (coord[0], 0.97 * __YSCALE__)
+        if coord[1] > y_scale:
+            coord = (coord[0], 0.97 * y_scale)
             label_shifted = True
-        elif coord[1] < -1 * __YSCALE__:
-            coord = (coord[0], -0.99 * __YSCALE__)
+        elif coord[1] < -1 * y_scale:
+            coord = (coord[0], -0.99 * y_scale)
             label_shifted = True        
         a = plt.annotate(gene, coord, fontsize=8)
         if label_shifted:
             shifted_labels[gene] = a
 
     # set plot limits, ticks, and tick labels
-    plt.ylim((-1 * __YSCALE__, __YSCALE__))
+    plt.ylim((-1 * y_scale, y_scale))
     plt.tick_params(right=True, top=True)
     plt.xticks(x_tick_values, chromosomes, fontsize=8)
     plt.yticks(fontsize=10)
@@ -153,7 +153,7 @@ def plot_main(pdf, df, title, min_log_ratio):
     # if logs2 were cutoff by [-2,2] plot, add second plot covering full range
     min_log = df['log2'].min()
     max_log = df['log2'].max()
-    if min_log < -1 * __YSCALE__ or max_log > __YSCALE__:
+    if min_log < -1 * y_scale or max_log > y_scale:
         plt.ylim((min_log - 0.1, max_log + 0.1))
         plt.title(title + ' (Plot 2)')
 
@@ -269,7 +269,7 @@ def plot_gene(pdf, df_gene, transcript=None):
     x_pad = int((max_x - min_x) * 0.04)
     if x_pad > 0:
         ax.set_xlim(min_x - x_pad, max_x + x_pad)
-    ax.set_ylim((-1 * __YSCALE__, __YSCALE__))
+    ax.set_ylim((-1 * y_scale, y_scale))
     ax.locator_params(axis='both', nbins=4)
     ax.tick_params(right=True, top=True, labelsize=10)
     ax.ticklabel_format(axis='x', style='plain', useOffset=False)
@@ -292,7 +292,7 @@ def plot_gene(pdf, df_gene, transcript=None):
     # if log2s were cutoff by [-2,2] plot, add second plot covering full range
     min_log = df_gene['log2'].min()
     max_log = df_gene['log2'].max()
-    if min_log < -1 * __YSCALE__ or max_log > __YSCALE__:
+    if min_log < -1 * y_scale or max_log > y_scale:
         ax.set_ylim((min_log - 0.1, max_log + 0.1))
         ax.set_title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
 
@@ -300,10 +300,10 @@ def plot_gene(pdf, df_gene, transcript=None):
         y_mid = (max_log + min_log) / 2
         if gene_median < y_mid:
             # labels go above median log
-            new_factor = (max_log - min_log) / (__YSCALE__ * 2)
+            new_factor = (max_log - min_log) / (y_scale * 2)
         else:
             # labels go below median log
-            new_factor = -1 * (max_log - min_log) / (__YSCALE__ * 2)
+            new_factor = -1 * (max_log - min_log) / (y_scale * 2)
 
         for a in exon_labels:
             old_y = a.xy[1]
@@ -324,9 +324,6 @@ def action(args):
         df_ref = UCSCTable(args.refgene).data
         rows = df_ref.to_dict(orient='records')
         transcripts.update({row['name2'] : Transcript(row) for row in rows})
-        # for _, row in df_ref.iterrows():
-        #     gene = row['name2']
-        #     transcripts[gene] = Transcript(row)
 
     # infer title for main plot if needed
     if not args.title:
