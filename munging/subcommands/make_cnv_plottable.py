@@ -6,7 +6,7 @@ that is usable by the plot_cnv subcommand.
 import argparse
 import os
 import pandas as pd
-from munging.annotation import Transcript, GenomeIntervalTree
+import munging.annotation as ann
 
 def build_parser(parser):
     parser.add_argument('cnv_data',
@@ -23,7 +23,10 @@ def parse_contra_file(file_name):
     df_raw = pd.read_csv(file_name, sep='\t', header=0, dtype=str)
     df_plot = pd.DataFrame()
     df_plot['log2'] = df_raw['Adjusted.Mean.of.LogRatio']
-    df_plot['chr'] = df_raw['Chr']
+    # convert chromosome to standard format ['1', '2', ..., 'X', 'Y', 'GT]
+    df_plot['chr'] = df_raw['Chr'].apply(lambda x: ann.chromosomes[x])
+    # make chr column sortable with natural sorting order
+    df_plot['chr'] = pd.Categorical(df_plot['chr'], categories=ann.chromosome_sort_order, ordered=True)
     df_plot['start_pos'] = df_raw['OriStCoordinate']
     df_plot['end_pos'] = df_raw['OriEndCoordinate']
     return df_plot
@@ -35,7 +38,10 @@ def parse_cnvkit_file(file_name):
     df_targets = df_raw[df_raw['gene'] != 'Antitarget']
     df_plot = pd.DataFrame()
     df_plot['log2'] = df_targets['log2']
-    df_plot['chr'] = df_targets['chromosome']
+    # convert chromosome to standard format ['1', '2', ..., 'X', 'Y', 'GT]
+    df_plot['chr'] = df_targets['chromosome'].apply(lambda x: ann.chromosomes[x])
+    # make chr column sortable with natural sorting order
+    df_plot['chr'] = pd.Categorical(df_plot['chr'], categories=ann.chromosome_sort_order, ordered=True)
     df_plot['start_pos'] = df_targets['start']
     df_plot['end_pos'] = df_targets['end']
     return df_plot
@@ -81,12 +87,15 @@ def action(args):
         raise ValueError("Improper package specified as argument")
 
     # add annotations to the parsed data
-    gt = GenomeIntervalTree.from_table(args.refgene)
+    gt = ann.GenomeIntervalTree.from_table(args.refgene)
     add_annotations(df, gt)
+
+    # sort by chromosome, then position
+    df = df.sort_values(['chr', 'start_pos']) 
 
     # set the outfile path
     if args.outfile:
-        out_path = args.file
+        out_path = args.outfile
     else:
         dir_name = os.path.dirname(args.cnv_data)
         base_name = os.path.basename(args.cnv_data)
