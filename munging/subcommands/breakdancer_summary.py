@@ -26,9 +26,10 @@ def build_parser(parser):
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
 
-def add_genes(row, genome_tree):
-    chrom = ann.chromosomes[row[0]]
-    pos = int(row[1])
+def add_genes(chr_pos_pair, genome_tree):
+    """returns a string with the concatenated set of genes found at the chr_pos_pair coordinates in genome_tree"""
+    chrom = ann.chromosomes[chr_pos_pair[0]]
+    pos = int(chr_pos_pair[1])
     transcripts = [x[2] for x in genome_tree[chrom][pos]]
     genes = ann.gene_info_from_transcripts(transcripts)
     return ';'.join(genes)
@@ -39,12 +40,12 @@ def add_event(row):
     return "{}:{}".format(chrom,pos)
 
 def filter_genes(row, gene_set):
+    """returns True if any gene in the row is found in the gene_set; otherwise returns False"""
     genes1 = row['Gene_1'].split(';')
     genes2 = row['Gene_2'].split(';')
     row_genes = set(genes1 + genes2)
     gene_intersection = row_genes & gene_set
     return len(gene_intersection) > 0
-
 
 def action(args):
     gt = ann.GenomeIntervalTree.from_table(args.refgene)
