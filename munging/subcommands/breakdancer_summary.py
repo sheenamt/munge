@@ -10,7 +10,6 @@ import sys
 import argparse
 import logging
 from munging.utils import Opener
-#from munging.annotation import chromosomes,GenomeIntervalTree, UCSCTable
 import munging.annotation as ann
 import pandas as pd
 
@@ -22,7 +21,7 @@ def build_parser(parser):
                         help='RefGene file')
     parser.add_argument('bd_file', type=Opener(), 
                         help='Breakdancer output')
-    parser.add_argument('-g', '--henes', type=Opener(),
+    parser.add_argument('-g', '--genes', type=Opener(),
                         help='Text file of genes to keep')
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
@@ -39,13 +38,21 @@ def add_event(row):
     pos = str(row[1])
     return "{}:{}".format(chrom,pos)
 
+def filter_genes(row, gene_set):
+    genes1 = row['Gene_1'].split(';')
+    genes2 = row['Gene_2'].split(';')
+    row_genes = set(genes1 + genes2)
+    gene_intersection = row_genes & gene_set
+    return len(gene_intersection) > 0
+
+
 def action(args):
     gt = ann.GenomeIntervalTree.from_table(args.refgene)
 
     # read in only the columns we care about, because real data can be too large sometimes
     headers=['Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
     df = pd.read_csv(args.bd_file, comment='#', delimiter='\t',header=None, usecols=[0,1,3,4,6,7,9], names=headers)
-    
+
     # discard rows with size in [-101, 101]
     df = df[df['Size'].abs() > 101]
     # update Size when Type is CTX
@@ -54,13 +61,20 @@ def action(args):
     # discard rows containing events on unsupported chromosomes
     chroms = ann.chromosomes.keys()
     df = df[df['Chr1'].isin(chroms) & df['Chr2'].isin(chroms)]
-    
+
     # add events columns
     df['Event_1'] = df[['Chr1', 'Pos1']].apply(add_event, axis=1)
     df['Event_2'] = df[['Chr2', 'Pos2']].apply(add_event, axis=1)
     # add genes columns
     df['Gene_1'] = df[['Chr1', 'Pos1']].apply(add_genes, genome_tree = gt, axis=1)
     df['Gene_2'] = df[['Chr2', 'Pos2']].apply(add_genes, genome_tree = gt, axis=1)
+
+    if args.genes:
+        # read in genes to keep
+        gene_df = pd.read_csv(args.genes, comment='#', delimiter='\t',header=None, usecols=[0], names=['gene'])
+        gene_set = set(gene_df['gene'])
+        # discard rows that don't contain a gene from the gene_set
+        df = df[df.apply(filter_genes, gene_set=gene_set, axis=1)]
     
     # sort and save the relevant columns
     df = df.sort_values(['num_Reads','Event_1'], ascending=[False, True])
