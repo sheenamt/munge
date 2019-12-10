@@ -57,7 +57,6 @@ def get_annotations(row, genome_tree):
     spanning_transcripts = [ x[2] for x in chrom_tree[start:end + 1] ]
     breakend_transcripts = start_transcripts + end_transcripts
     # get the genes from either breakend
-    ## QUESTION DO THEY WANT BRCA1;Intergenic or just BRCA1 ##
     breakend_genes = ann.gene_info_from_transcripts(breakend_transcripts)
     gene_label = ';'.join(sorted(set(breakend_genes)))
     # get the gene region from the spanning transcripts
@@ -70,10 +69,10 @@ def get_annotations(row, genome_tree):
         region_label = 'INTRONIC'
     else:
         region_label = 'Intergenic'
-    # get the transcript info either breakend
-    ## QUESTION DO THEY WANT BRCA1(exon 01);BRCA1(exon 12) or BRCA1(exons 01 - 12) ##
-    breakend_annotations = ann.transcript_info_from_transcripts(breakend_transcripts, start, end, report_utr=True)
-    transcript_label = ';'.join(sorted(set(breakend_annotations)))
+    # get the transcript info from either breakend
+    start_annotations = ann.transcript_info_from_transcripts(start_transcripts, start, report_utr=True)
+    end_annotations = ann.transcript_info_from_transcripts(end_transcripts, end, report_utr=True)
+    transcript_label = ';'.join(sorted(set(start_annotations + end_annotations)))
 
     return pd.Series([gene_label, transcript_label, region_label])
 
