@@ -22,9 +22,10 @@ def build_parser(parser):
                         help='RefGene file')
     parser.add_argument('bd_file', type=Opener(), 
                         help='Breakdancer output')
+    parser.add_argument('-g', '--henes', type=Opener(),
+                        help='Text file of genes to keep')
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
-
 
 def add_genes(row, genome_tree):
     chrom = ann.chromosomes[row[0]]
@@ -43,20 +44,16 @@ def action(args):
 
     # read in only the columns we care about, because real data can be too large sometimes
     headers=['Chr1','Pos1','Chr2','Pos2','Type','Size','num_Reads']
-    reader = pd.read_csv(args.bd_file, comment='#', delimiter='\t',header=None, usecols=[0,1,3,4,6,7,9], names=headers)
+    df = pd.read_csv(args.bd_file, comment='#', delimiter='\t',header=None, usecols=[0,1,3,4,6,7,9], names=headers)
     
     # discard rows with size in [-101, 101]
-    df = reader[reader['Size'].abs() > 101].copy()
+    df = df[df['Size'].abs() > 101]
     # update Size when Type is CTX
     df.loc[df['Type'] == 'CTX', 'Size'] = 'N/A'
 
     # discard rows containing events on unsupported chromosomes
     chroms = ann.chromosomes.keys()
-    discarded = df[~df['Chr1'].isin(chroms) | ~df['Chr2'].isin(chroms)]
     df = df[df['Chr1'].isin(chroms) & df['Chr2'].isin(chroms)]
-    # warn of those rows being skipped
-    for (chr1, chr2) in zip(discarded['Chr1'], discarded['Chr2']):
-        print('Event not being processed due to unsupported chromosome: {} or {}'.format(chr1, chr2))
     
     # add events columns
     df['Event_1'] = df[['Chr1', 'Pos1']].apply(add_event, axis=1)
