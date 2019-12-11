@@ -64,13 +64,13 @@ def action(args):
         # find all transcripts in the interval [start, end]
         transcripts = [ x[2] for x in gt[chrom][start:end + 1] ]
 
+        # create annotations
         genes = ann.gene_info_from_transcripts(transcripts)
-        # QUESTION: INTRONIC; UTR vs UTR
         region_types = ann.region_info_from_transcripts(transcripts, start, end + 1, report_utr=True)
         transcript_labels = ann.transcript_info_from_transcripts(transcripts, start, end + 1, report_utr=True)
 
-        row['Mean Coverage'] = row[('READS','mean')]
-        row['Median Coverage'] = row[('READS','median')]
+        row['Mean Coverage'] = row[('READS','mean')].round(1)
+        row['Median Coverage'] = row[('READS','median')].round(1)
         row['Gene'] =';'.join(genes)
         row['Gene_Region']=';'.join(region_types)
         row['Transcripts']=';'.join(transcript_labels)
