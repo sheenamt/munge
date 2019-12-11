@@ -24,8 +24,8 @@ y_scale = 2
 def build_parser(parser):
     parser.add_argument('cnv_data',
                         help='Path to the CNV_plottable.tsv file')
-    parser.add_argument('outfile', 
-                        help='Path to out file')
+    parser.add_argument('-o', '--outfile', default='plot_cnv.pdf',
+                        help='Path to out file (default: %(default)s)')
     parser.add_argument('-t', '--min_log_ratio', type=float, default=0.5, 
                         help='Minimum abs(log ratio) for printing gene names (default: %(default)s)')
     parser.add_argument('-w', '--window_size', type=int, default=20, 
