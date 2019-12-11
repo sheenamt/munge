@@ -91,8 +91,9 @@ def plot_main(pdf, df, title, min_log_ratio):
     # plot entries left to right from chrom 1 to chrom X
     chromosomes = natsorted(df['chr'].unique())
 
-    x_tick_values = []
+    x_tick_values = []  # used create axis labels for each chromosome
     v_line_coords = []
+    # create a scatter plot of log2 vs index for each chromosome
     for chrom in chromosomes:
         df_chrom = df[df['chr'] == chrom]
         indices = df_chrom.index.values
@@ -150,7 +151,7 @@ def plot_main(pdf, df, title, min_log_ratio):
     fig.tight_layout()
     pdf.savefig()
 
-    # if logs2 were cutoff by [-2,2] plot, add second plot covering full range
+    # if and log2s were cutoff by [-2,2] plot, add second plot covering full range
     min_log = df['log2'].min()
     max_log = df['log2'].max()
     if min_log < -1 * y_scale or max_log > y_scale:
@@ -175,6 +176,8 @@ def plot_gene(pdf, df_gene, transcript=None):
     """
     fig = plt.figure(figsize=(11, 8.5))
 
+    # ax is the axis on which the log2s will be plotted
+    # if Transcript provided, igv is the axis for the IGV-like figure
     if transcript is None:
         ax = fig.add_subplot(1,1,1)
 
@@ -185,7 +188,7 @@ def plot_gene(pdf, df_gene, transcript=None):
         igv.set_ylim((0, 1))
         igv.axis('off')
     
-    # plot non-exonic entries
+    # plot non-exonic entries in black
     df_introns = df_gene[pd.isnull(df_gene['exon'])]
     ax.scatter(df_introns['mean_pos'], df_introns['log2'], marker='o', color='black', alpha=0.7, s=3)
     
@@ -203,10 +206,10 @@ def plot_gene(pdf, df_gene, transcript=None):
     offset_step_size = 0.1
     max_offset_steps = 3
 
-    # plot exonic entries
+    # plot exonic entries, each in their own color
     covered_exons = df_gene['exon'].dropna().unique()
-    exon_positions = []
-    exon_vectors = []
+    exon_positions = [] # needed for box and whiskers plot
+    exon_vectors = []   # needed for box and whiskers plot
     for i, exon in enumerate(covered_exons):
         # plot entries for exon
         df_exon = df_gene[df_gene['exon'] == exon]
@@ -332,8 +335,10 @@ def action(args):
     # create plots and save to pdf-formatted outfile
     with PdfPages(args.outfile) as pdf:
 
+        # create the main plot
         plot_main(pdf, df, args.title, args.min_log_ratio)
 
+        # create a subplot for each gene
         for gene in df['gene'].unique():
             # don't create a subplot for 'intergenic'
             if gene == 'intergenic':
