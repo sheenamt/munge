@@ -296,10 +296,11 @@ def plot_gene(pdf, df_gene, transcript=None):
     min_log = df_gene['log2'].min()
     max_log = df_gene['log2'].max()
     if min_log < -1 * y_scale or max_log > y_scale:
+        # adjust the range of the y axis
         ax.set_ylim((min_log - 0.1, max_log + 0.1))
         ax.set_title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
 
-        # move exon labels to account for new scale
+        # create new exon labels to account for new y scale
         y_mid = (max_log + min_log) / 2
         if gene_median < y_mid:
             # labels go above median log
@@ -309,9 +310,13 @@ def plot_gene(pdf, df_gene, transcript=None):
             new_factor = -1 * (max_log - min_log) / (y_scale * 2)
 
         for a in exon_labels:
-            old_y = a.xy[1]
+            (old_x, old_y) = a.get_position()
+            exon = a.get_text()
+            color = a.get_color()
             new_y = (old_y - gene_median) * (new_factor / offset_factor) + gene_median
-            a.set_y(new_y)
+            a.remove()
+            ax.annotate(exon, (old_x, new_y), fontsize=10, color=color)
+            
         # save second figure
         pdf.savefig()
 
