@@ -176,7 +176,7 @@ class GenomeIntervalTree(defaultdict):
         ADD A DOCSTRING
         """
         t = Transcript(data)
-        chrom = t.chrom
+        chrom = str(t.chrom)
         begin = t.tx_start
         end = t.tx_end
         # Intervals are not inclusive of the end point, so increment when adding
@@ -342,7 +342,7 @@ class Transcript(object):
         # populate fields from data
         self.gene = data['name2']
         self.id = data['name']
-        self.chrom = data['chrom']
+        self.chrom = str(data['chrom'])
         if 'chr' in self.chrom:
             self.chrom = self.chrom.replace('chr', '')
         self.strand = data['strand']
