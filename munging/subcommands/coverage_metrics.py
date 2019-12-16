@@ -57,9 +57,9 @@ def action(args):
         
         # set the position label
         if start==end:
-            row['Position'] = '{}:{}'.format(chrom, start)
+            row['Position'] = 'chr{}:{}'.format(chrom, start)
         else:
-            row['Position'] = '{}:{}-{}'.format(chrom, start, end)
+            row['Position'] = 'chr{}:{}-{}'.format(chrom, start, end)
             
         # find all transcripts in the interval [start, end]
         transcripts = [ x[2] for x in gt[chrom][start:end + 1] ]
@@ -69,8 +69,8 @@ def action(args):
         region_types = ann.region_info_from_transcripts(transcripts, start, end + 1, report_utr=True)
         transcript_labels = ann.transcript_info_from_transcripts(transcripts, start, end + 1, report_utr=True)
 
-        row['Mean Coverage'] = row[('READS','mean')].round(1)
-        row['Median Coverage'] = row[('READS','median')].round(1)
+        row['Mean Coverage'] = round(row[('READS','mean')], 1)
+        row['Median Coverage'] = round(row[('READS','median')], 1)
         row['Gene'] =';'.join(genes)
         row['Gene_Region']=';'.join(region_types)
         row['Transcripts']=';'.join(transcript_labels)
