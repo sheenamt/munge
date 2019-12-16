@@ -26,13 +26,20 @@ class TestCoverageMetrics(TestBase):
         self.target_cov_input=os.path.join(cov_testfiles,'BRCA1_PerBaseCoverage.txt')
         self.refgene_input=os.path.join(cov_testfiles,'test-refGene.txt')
 
-    def testParsePerBase1(self):
-        '''Test parsing of per base output from bedtools
-        '''
-        expected=os.path.join(cov_testfiles,'expected_output.txt')
-        simplecsv=os.path.join(self.outdir, "simple-brca1-100.csv")
-        cmd=["./munge", "coverage_metrics", self.target_cov_input, self.refgene_input, "-o", simplecsv]
+    def testParsePerBase50(self):
+        """Test parsing of per base output from bedtools with a failing coverage threshold of 50"""
+        expected=os.path.join(cov_testfiles,'expected_output_t50.tsv')
+        simpletsv=os.path.join(self.outdir, "simple-brca1-t50.tsv")
+        cmd=["./munge", "coverage_metrics", self.target_cov_input, self.refgene_input, "-o", simpletsv]
         subprocess.call(cmd)
-        self.assertTrue(filecmp.cmp(simplecsv, expected))
+        self.assertTrue(filecmp.cmp(simpletsv, expected))
+
+    def testParsePerBase100(self):
+        """Test parsing of per base output from bedtools with a failing coverage threshold of 100"""
+        expected=os.path.join(cov_testfiles,'expected_output_t100.tsv')
+        simpletsv=os.path.join(self.outdir, "simple-brca1-t100.tsv")
+        cmd=["./munge", "coverage_metrics", self.target_cov_input, self.refgene_input, "-t", "100", "-o", simpletsv]
+        subprocess.call(cmd)
+        self.assertTrue(filecmp.cmp(simpletsv, expected))
 
 
