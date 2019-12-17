@@ -570,6 +570,8 @@ def gene_info_from_transcripts(transcripts, start=None, stop=None):
 
     If start is not provided, returns every unique gene found in transcripts
     If transcripts is empty or no transcript is covered by [start,stop), returns ['Intergenic']
+
+    NOTE: queries are not inclusive of the upper limit
     """
     # if no start is provided, report genes from every transcript
     if not start:
