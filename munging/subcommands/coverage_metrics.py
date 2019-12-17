@@ -57,9 +57,9 @@ def action(args):
         
         # set the position label
         if start==end:
-            row['Position'] = 'chr{}:{}'.format(chrom, start)
+            row['Position'] = '{}:{}'.format(chrom, start)
         else:
-            row['Position'] = 'chr{}:{}-{}'.format(chrom, start, end)
+            row['Position'] = '{}:{}-{}'.format(chrom, start, end)
             
         # find all transcripts in the interval [start, end]
         transcripts = [ x[2] for x in gt[chrom][start:end + 1] ]
