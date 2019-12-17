@@ -31,20 +31,23 @@ class TestPindelSummary(TestBase):
                     'FILTER': 'PASS', 'QUAL': '.', 'READS': '1/1:11,67', 'ALT': 'TTTATC', 'REF': 'T', 'ID': '.'},
                    {'INFO': 'END=7579659;HOMLEN=25;HOMSEQ=CCCCAGCCCTCCAGGTCCCCAGCCC;SVLEN=-16;SVTYPE=DEL', 'FORMAT': 'GT:AD', 'CHROM': '17', 'POS': '7579643', 
                     'FILTER': 'PASS', 'QUAL': '.', 'READS': '0/1:35,26', 'ALT': 'C', 'REF': 'CCCCCAGCCCTCCAGGT', 'ID': '.'})
-    def testParseEvent(self):
+    def testParseVCFInfo(self):
         ''' Return the length and type of event, corrects end position if necessary '''
-        #Test when start==stop but size > 1 (which only size >1 should ever hit this parser
-        #Parse event returns negative value for DEL, but pindel_summary script converts this to abs for output.
-        #Abs conversion is tested in the testPindelSummary test
-        expected_output0=(-32, 'DEL',1808033)
-        expected_output1=(5, 'INS', 89690953)
-        expected_output2=(-16,'DEL',7579660)
-        #test that RPL svtype becomes DEL
-        self.assertEqual(pindel_summary.parse_event(self.data[0]), expected_output0)
+        expected_output0=[32, 'DEL',1808033]
+        expected_output1=[5, 'INS', 89690953]
+        expected_output2=[16,'DEL',7579660]
+        info0 = self.data[0]['INFO']
+        info1 = self.data[1]['INFO']
+        info2 = self.data[2]['INFO']
+        test_output0 = list(pindel_summary.parse_vcf_info(info0))
+        test_output1 = list(pindel_summary.parse_vcf_info(info1))
+        test_output2 = list(pindel_summary.parse_vcf_info(info2))
+        #test that RPL svtype becomes DEL and size becomes positive
+        self.assertEqual(test_output0, expected_output0)
         #Test that if start==stop, but size > 1, the stop is recalculated
-        self.assertEqual(pindel_summary.parse_event(self.data[1]), expected_output1)
+        self.assertEqual(test_output1, expected_output1)
         #test that a 'normal' case processes correctly
-        self.assertEqual(pindel_summary.parse_event(self.data[2]), expected_output2)
+        self.assertEqual(test_output2, expected_output2)
         
 
     def testPindelSummary(self):
@@ -53,8 +56,8 @@ class TestPindelSummary(TestBase):
         # Test when start is in coding but stop isn't (edge case) 
         # Test when start is not in coding but stop is (edge case)
         # Test when a call covers exons and introns (edge case)
-        simpletsv=os.path.join(pindel_testfiles, 'testing_output.txt')
-        expected_output=os.path.join(pindel_testfiles, 'expected_output.txt')
+        simpletsv=os.path.join(self.outdir, 'testing_output.tsv')
+        expected_output=os.path.join(pindel_testfiles, 'expected_output.tsv')
         pindel_vcfs=[]
         for root, dirs, files in os.walk(pindel_testfiles):
             for file in files:
@@ -71,8 +74,8 @@ class TestPindelSummary(TestBase):
         # Test when start is in coding but stop isn't (edge case) 
         # Test when start is not in coding but stop is (edge case)
         # Test when a call covers exons and introns (edge case)
-        simpletsv=os.path.join(multiread_testfiles, 'multiread_testing_output.txt')
-        expected_output=os.path.join(multiread_testfiles, 'multiread_expected_output.txt')
+        simpletsv=os.path.join(self.outdir, 'multiread_testing_output.tsv')
+        expected_output=os.path.join(multiread_testfiles, 'multiread_expected_output.tsv')
         pindel_vcfs=[]
         for root, dirs, files in os.walk(multiread_testfiles):
             for file in files:
