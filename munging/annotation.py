@@ -1,3 +1,12 @@
+"""
+A module for adding annotations to genomic locations using the data contained within
+a UCSC RefGene table.
+
+Contains two principal classes: GenomeIntervalTree and Transcript
+
+A Transcript is a class that encapsulates all the information from a row in a UCSC RefGene table
+"""
+
 import pandas as pd
 from collections import namedtuple, defaultdict
 from operator import itemgetter
@@ -163,17 +172,27 @@ class UCSCTable(object):
         self.data = pd.read_csv(fileobj, sep='\t', header=None, comment='#', names=UCSCTable.REF_GENE_FIELDS)    
 
 class GenomeIntervalTree(defaultdict):
-    '''
-    The data structure maintains a set of IntervalTrees, one for each chromosome.
-    It is essentially a ``defaultdict(IntervalTree)`` with a couple of convenience methods
-    for reading various data formats.
-    '''
+    """
+    A GenomeIntervalTree is a dictionary of key,value pairs where each key is a chromosome
+    and each value is an IntervalTree associated with that chromosome. Each IntervalTree
+    is composed of Intervals whose 3rd element is a Transcript.
+
+    EXAMPLES:
+    GT is a GenomeIntervalTree.
+    GT['2'] will return an IntervalTree for chromosome 2
+    GT['2][400000] will return a set of every Interval that overlaps position 400000 on chromosome 2
+    GT['2][400000:500000] will return a set of every Interval that overlaps any base in [400000,500000) on chromosome 2
+    [x[2] for x in GT['2][400000]] is a list of every Transcript that overlaps position 400000 on chromosome 2
+
+    NOTE: Queries are assumed to be 0-based and are not inclusive of the upper limit when a range is provided.
+    """
     def __init__(self):
         super(GenomeIntervalTree, self).__init__(IntervalTree)
 
     def addi(self, data):
         """
-        ADD A DOCSTRING
+        Creates a Transcript from data (a row in a pandas dataframe or a correctly formatted dictionary)
+        and adds it to the GenomeIntervalTree at the correct location.
         """
         t = Transcript(data)
         chrom = str(t.chrom)
@@ -322,13 +341,12 @@ class UTR(SubTranscript):
 
 class Transcript(object):
     """
-    ADD CLASS DOCUMENTATION
+    A class to encapuslate all the information contained within a row of a UCSC RefGene table.
 
     ALL COORDINATES ARE 0-BASED
-    UCSC downloaded tables use 0-based start and 1-based end for some incomprehensible reason
-    see http://genome.ucsc.edu/FAQ/FAQtracks#tracks1
+    UCSC downloaded tables use 0-based start and 1-based end (see http://genome.ucsc.edu/FAQ/FAQtracks#tracks1)
     
-    In this class, all coordinates are 0-based and inclusive ( e.g. for +-stranded transcripts,
+    Inside this class, all coordinates are 0-based and inclusive ( e.g. for +-stranded transcripts,
     tx_start is the first base transcribed, tx_end is the last base transcribed)
 
     For class methods such as get_annotation(), start is inclusive but stop is not (which follows the logic of
@@ -446,7 +464,14 @@ class Transcript(object):
 
     def get_annotation(self, start, stop=None, report_utr=True):
         """
-        ADD A DOCSTRING
+        Returns a nicely formatted string annotation of a location in the Transcript.
+
+        When only start is provided, returns an annotation at a single position: e.g. 'TP53:NM_000546(exon 02)'
+        When start and stop are provided, returns an annotation of the interval [start,stop): e.g. 'TP53:NM_000546(exon 02 - intron 03)'
+        When report_utr is True, annotates non-coding regions of exons as UTR; when false, annotates those regions as exons
+        If no portion of the Transcript overlaps with [start,stop), returns None
+
+        NOTE: queries are not inclusive of the upper limit
         """
         start, stop = _check_start_stop(start, stop)
         intervals = self.tree[start:stop]
@@ -474,14 +499,20 @@ class Transcript(object):
         else:
             first = subtranscripts[0]
             last = subtranscripts[-1]
-            suffix = ":({} - {})".format(str(first), str(last))
+            suffix = "({} - {})".format(str(first), str(last))
 
         return prefix + suffix
 
     def get_exons(self, start=None, stop=None, report_utr=True):
-        # consider idiot proofing for when start == stop
         """
-        ADD A DOCSTRING
+        Returns a sorted list of the Transcript's Exons that fall in the interval [start, stop).
+
+        If neither start nor stop is provided, returns every Exon from tx_start to tx_end.
+        If report_utr is True, only returns Exons that contain coding bases within [start,stop);
+        otherwise returns all Exons in the interval
+        Exons are sorted by increasing number, regardless of strand.
+
+        NOTE: queries are not inclusive of the upper limit
         """
         if not start:
             start = self.tx_start
@@ -497,9 +528,14 @@ class Transcript(object):
         return sorted(exons)
 
     def get_region_types(self, start, stop=None, report_utr=True):
-        # consider idiot proofing for when start == stop
         """
-        ADD A DOCSTRING
+        Returns set of strings representing every region type ('EXONIC', 'INTRONIC, 'UTR')
+        found by querying the Transcript over the interval [start,stop).
+
+        If report_utr is True, classifies non-coding exonic regions as 'UTR'; otherwise classifies
+        them as 'EXONIC'
+
+        NOTE: queries are not inclusive of the upper limit
         """
         start, stop = _check_start_stop(start, stop)
 
@@ -527,16 +563,38 @@ class Transcript(object):
 
         return region_types
 
-def gene_info_from_transcripts(transcripts):
-    """ADD A DOCSTRING"""
-    genes = [t.gene for t in transcripts]
+def gene_info_from_transcripts(transcripts, start=None, stop=None):
+    """
+    Returns an alphabetically-sorted list of strings representing every unique gene
+    found in a collection of Transcripts over the inverval [start, stop).
+
+    If start is not provided, returns every unique gene found in transcripts
+    If transcripts is empty or no transcript is covered by [start,stop), returns ['Intergenic']
+    """
+    # if no start is provided, report genes from every transcript
+    if not start:
+        start = 0
+        stop = sys.maxint
+
+    start, stop = _check_start_stop(start, stop)
+    genes = [t.gene for t in transcripts if t.tx_start < stop and t.tx_end >= start]
     if len(genes) == 0:
         return ['Intergenic']
     else:
         return  sorted(set(genes))
 
 def region_info_from_transcripts(transcripts, start, stop=None, report_utr=True):
-    """ADD A DOCSTRING"""
+    """
+    Returns an alphabetically-sorted list of strings representing every unique
+    region type ('EXONIC', 'INTRONIC, 'UTR') found by querying a collection of Transcripts
+    over the interval [start,stop). 
+
+    If transcripts is empty or no transcript is covered by [start,stop), returns ['Intergenic']
+    If report_utr is True, classifies non-coding exonic regions as 'UTR'; otherwise classifies
+    them as 'EXONIC'
+
+    NOTE: queries are not inclusive of the upper limit
+    """
     start, stop = _check_start_stop(start, stop)
     region_types = set()
     for t in transcripts: 
@@ -548,8 +606,19 @@ def region_info_from_transcripts(transcripts, start, stop=None, report_utr=True)
         return sorted(region_types)
 
 def transcript_info_from_transcripts(transcripts, start, stop=None, report_utr=True):
-    """ADD A DOCSTRING"""
+    """
+    Returns an alphabetically-sorted list of strings representing transcript annotations
+    (e.g. 'TP53:NM_000546(exon 02 - intron 03)') found by querying a collection of Transcripts
+    over the interval [start,stop). 
+
+    If transcripts is empty or no transcript is covered by [start,stop), returns an empty list
+    If report_utr is True, annotates non-coding exonic regions as 'UTR'; otherwise annotates
+    them as exons
+
+    NOTE: queries are not inclusive of the upper limit
+    """
     start, stop = _check_start_stop(start, stop)
     annotations = [t.get_annotation(start, stop, report_utr) for t in transcripts]
+    annotations = [x for x in annotations if x is not None]
     return sorted(set(annotations))
 
