@@ -241,36 +241,17 @@ class SubTranscript(object):
 
     def __lt__(self, other):
         """
-        Returns True if self is transcribed before other
-        
-        5' UTR < Exon 1 < Intron 1 < Exon 2 < ... < 3' UTR
+        Returns True if self.start < other.start or when self.start == other.start and self.end < other.end;
+        otherwise returns False.
 
-        NOTE: only designed to compare elements from the same gene / transcript
+        Raises a TypeError if other is not a SubTranscript
         """
-        # 5' UTRs are always first, 3' UTRs are always last
-        if isinstance(self, UTR):
-            if self.number == 5:
-                return True
-            else:   # it's 3'
-                return False
-        # 5' UTRs are always first, 3' UTRs are always last
-        elif isinstance(other, UTR):
-            if other.number == 3:
-                return True
-            else:   # it's 5'
-                return False
-        elif isinstance(other, SubTranscript):
-            # Exon 1 comes before Intron 1
-            if self.number == other.number:
-                if isinstance(self, Exon):
-                    return True
-                else:
-                    return False
-            # Exon 1 comes before Exon 2 
-            else:
-                return self.number < other.number
-        else:
+        if not isinstance(other, SubTranscript):
             raise TypeError("Cannot compare a SubTranscript to a {}".format(other.type))
+        elif self.start == other.start:
+            return self.end < other.end
+        else:
+            return self.start < other.start
 
 
 class Exon(SubTranscript):
@@ -379,22 +360,7 @@ class Transcript(object):
         # create IntervalTree
         self.tree = IntervalTree()
 
-        # add the UTRs
-        # define 5' or 3' based on strand
-        if self.strand == '+':
-            first_utr = 5
-            second_utr = 3
-        else:
-            first_utr = 3
-            second_utr = 5
-
-        # exclude the edge cases where there is no UTR
-        if self.tx_start < self.cd_start:
-            self.tree[self.tx_start : self.cd_start] = UTR(first_utr, self.tx_start, self.cd_start - 1)
-        if self.tx_end > self.cd_end:
-            self.tree[self.cd_end + 1 : self.tx_end + 1] = UTR(second_utr, self.cd_end + 1, self.tx_end)
-
-        # add the exons
+        # add the exons and UTRs
         for i in range(self.exon_count):
             exon_start = self.exon_starts[i]
             exon_end = self.exon_ends[i]
@@ -407,14 +373,33 @@ class Transcript(object):
                 exon_num = self.exon_count - i
 
             # if the exon is split by a UTR, adjust its boundary
-            start = max(exon_start, self.cd_start)
-            end = min(exon_end, self.cd_end)
+            coding_start = max(exon_start, self.cd_start)
+            coding_end = min(exon_end, self.cd_end)
 
-            # since interval trees are not inclusive of upper limit, add one to the exon end boundary
-            if start > exon_end or end < exon_start:
-                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame)
+            # if the entirety of the exon comes before the coding region, add a non-coding exon and a UTR
+            if coding_start > exon_end:
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
+                                                            cd_start=None, cd_end=None)
+                self.tree[exon_start : exon_end + 1] = UTR(exon_num, exon_start, exon_end)
+            # if the entirety of the exon comes after the coding region, add a non-coding exon and a UTR
+            elif coding_end < exon_start:
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
+                                                            cd_start=None, cd_end=None)
+                self.tree[exon_start : exon_end + 1] = UTR(exon_num, exon_start, exon_end)
+            # if the start of the exon was adjusted, add a coding exon and a UTR
+            elif coding_start > exon_start:
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
+                                                            cd_start=coding_start, cd_end=coding_end)
+                self.tree[exon_start : coding_start] = UTR(exon_num, exon_start, coding_start - 1)
+            # if the end of the exon was adjusted, add a coding exon and a UTR
+            elif coding_end < exon_end:
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
+                                                            cd_start=coding_start, cd_end=coding_end)
+                self.tree[coding_end + 1 : exon_end + 1] = UTR(exon_num, coding_end + 1, exon_end)
+            # if no adjustment was made, just add a coding exon
             else:
-                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame, cd_start=start, cd_end=end)
+                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
+                                                           cd_start=coding_start, cd_end=coding_end)
 
         # add the introns
         for i in range(self.exon_count - 1):
@@ -445,10 +430,10 @@ class Transcript(object):
         """Returns the distance in nucleotides between the start and end of transcription"""
         return self.tx_end - self.tx_start + 1
 
-    def _remove_utr_ons(self, subtranscripts, start, stop):
+    def _remove_noncoding_exons(self, subtranscripts, start, stop):
         """
         Given a list of Subtranscripts, and a range [start, stop), returns the list of Subtranscripts
-        where Introns encompassed by a UTR and Exons that contain no coding DNA in [start, stop) have been removed
+        where Exons that contain no coding DNA in [start, stop) have been removed
         
         NOTE: while the subtranscripts argument is not mutated, the returned list contains references to the original Subtranscript objects
         """
@@ -458,7 +443,7 @@ class Transcript(object):
                 new_list.append(s)
             elif isinstance(s, Exon) and s.is_coding(start, stop):
                 new_list.append(s)
-            elif isinstance(s, Intron) and s.end >= self.cd_start and s.start <= self.cd_end:
+            elif isinstance(s, Intron):
                 new_list.append(s)
         return new_list
 
@@ -477,12 +462,18 @@ class Transcript(object):
         intervals = self.tree[start:stop]
         subtranscripts = [ x[2] for x in intervals ]
 
-        # if reporting UTR, remove introns and exons that are entrirely encompassed by the UTR within [start, stop)
+        # the reverse_sort flag is used to make sure that exon 01 comes before exon 02 in the annotation
+        if self.strand == '+':
+            reverse_sort = False
+        else:
+            reverse_sort = True
+
+        # if reporting UTR, exons are non-coding within [start, stop)
         if report_utr:
-            subtranscripts = sorted(self._remove_utr_ons(subtranscripts, start, stop))
+            subtranscripts = sorted(self._remove_noncoding_exons(subtranscripts, start, stop), reverse=reverse_sort)
         # if not reporting UTR, remove UTRs from subtranscripts
         else:
-            subtranscripts = sorted([ x for x in subtranscripts if not isinstance(x, UTR)])
+            subtranscripts = sorted([ x for x in subtranscripts if not isinstance(x, UTR)], reverse=reverse_sort)
 
         # if [start,stop] doesn't overlap with the Transcript, return None
         if len(subtranscripts) == 0:
@@ -544,7 +535,7 @@ class Transcript(object):
 
         # if reporting UTR, remove introns and exons that are entrirely encompassed by the UTR within [start, stop)
         if report_utr:
-            subtranscripts = sorted(self._remove_utr_ons(subtranscripts, start, stop))
+            subtranscripts = sorted(self._remove_noncoding_exons(subtranscripts, start, stop))
         # if not reporting UTR, remove UTRs from subtranscripts
         else:
             subtranscripts = sorted([ x for x in subtranscripts if not isinstance(x, UTR) ])
