@@ -161,10 +161,10 @@ class TestAnnotation(TestBase):
         self.assertEqual(t.get_annotation(cd_start, tx_end + 1), prefix + '(UTR - exon 05)')
         self.assertEqual(t.get_annotation(cd_start, tx_end + 1, report_utr=False), prefix + '(exon 01 - exon 05)')
         # an intron between non-coding portions of exons
-        self.assertEqual(t.get_annotation(first_intron_start), prefix + '(intron 05)')
-        self.assertEqual(t.get_annotation(first_intron_start, report_utr=False), prefix + '(intron 05)')
-        self.assertEqual(t.get_annotation(last_intron_end), prefix + '(intron 01)')
-        self.assertEqual(t.get_annotation(last_intron_end, report_utr=False), prefix + '(intron 01)')
+        self.assertEqual(t.get_annotation(first_intron_start, first_intron_end + 1), prefix + '(intron 05)')
+        self.assertEqual(t.get_annotation(first_intron_start, first_intron_end + 1, report_utr=False), prefix + '(intron 05)')
+        self.assertEqual(t.get_annotation(last_intron_start, last_intron_end + 1), prefix + '(intron 01)')
+        self.assertEqual(t.get_annotation(last_intron_start, last_intron_end + 1, report_utr=False), prefix + '(intron 01)')
 
         ### test the get_exons() function ###
         # all the exons
@@ -210,10 +210,10 @@ class TestAnnotation(TestBase):
         self.assertEqual(t.get_region_types(cd_end), {'EXONIC'})
         self.assertEqual(t.get_region_types(cd_end, report_utr=False), {'EXONIC'})
         # an intron between non-coding portions of exons
-        self.assertEqual(t.get_region_types(first_intron_start), {'INTRONIC'})
-        self.assertEqual(t.get_region_types(first_intron_start, report_utr=False), {'INTRONIC'})
-        self.assertEqual(t.get_region_types(last_intron_end), {'INTRONIC'})
-        self.assertEqual(t.get_region_types(last_intron_end, report_utr=False), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(first_intron_start, first_intron_end + 1), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(first_intron_start, first_intron_end + 1, report_utr=False), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(last_intron_start, last_intron_end + 1), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(last_intron_start, last_intron_end + 1, report_utr=False), {'INTRONIC'})
 
 
     def testCHEK1(self):
@@ -286,10 +286,10 @@ class TestAnnotation(TestBase):
         self.assertEqual(t.get_annotation(cd_start, tx_end + 1), prefix + '(exon 02 - UTR)')
         self.assertEqual(t.get_annotation(cd_start, tx_end + 1, report_utr=False), prefix + '(exon 02 - exon 14)')
         # an intron between non-coding portions of exons
-        self.assertEqual(t.get_annotation(first_intron_start), prefix + '(intron 01)')
-        self.assertEqual(t.get_annotation(first_intron_start, report_utr=False), prefix + '(intron 01)')
-        self.assertEqual(t.get_annotation(last_intron_end), prefix + '(intron 13)')
-        self.assertEqual(t.get_annotation(last_intron_end, report_utr=False), prefix + '(intron 13)')
+        self.assertEqual(t.get_annotation(first_intron_start, first_intron_end + 1), prefix + '(intron 01)')
+        self.assertEqual(t.get_annotation(first_intron_start, first_intron_end + 1, report_utr=False), prefix + '(intron 01)')
+        self.assertEqual(t.get_annotation(last_intron_start, last_intron_end + 1), prefix + '(intron 13)')
+        self.assertEqual(t.get_annotation(last_intron_start, last_intron_end + 1, report_utr=False), prefix + '(intron 13)')
 
         ### test the get_exons() function ###
         # all the exons
@@ -335,10 +335,10 @@ class TestAnnotation(TestBase):
         self.assertEqual(t.get_region_types(cd_end), {'EXONIC'})
         self.assertEqual(t.get_region_types(cd_end, report_utr=False), {'EXONIC'})
         # an intron between non-coding portions of exons
-        self.assertEqual(t.get_region_types(first_intron_start), {'INTRONIC'})
-        self.assertEqual(t.get_region_types(first_intron_start, report_utr=False), {'INTRONIC'})
-        self.assertEqual(t.get_region_types(last_intron_end), {'INTRONIC'})
-        self.assertEqual(t.get_region_types(last_intron_end, report_utr=False), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(first_intron_start, first_intron_end + 1), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(first_intron_start, first_intron_end + 1, report_utr=False), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(last_intron_start, last_intron_end + 1), {'INTRONIC'})
+        self.assertEqual(t.get_region_types(last_intron_start, last_intron_end + 1, report_utr=False), {'INTRONIC'})
 
     def testTACSTD2(self):
         """
