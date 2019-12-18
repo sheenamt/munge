@@ -498,7 +498,7 @@ class Transcript(object):
 
         NOTE: queries are not inclusive of the upper limit
         """
-        if not start:
+        if start is None:
             start = self.tx_start
             stop = self.tx_end
 
@@ -558,7 +558,7 @@ def gene_info_from_transcripts(transcripts, start=None, stop=None):
     NOTE: queries are not inclusive of the upper limit
     """
     # if no start is provided, report genes from every transcript
-    if not start:
+    if start is None:
         start = 0
         stop = sys.maxint
 
