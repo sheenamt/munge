@@ -376,31 +376,24 @@ class Transcript(object):
             coding_start = max(exon_start, self.cd_start)
             coding_end = min(exon_end, self.cd_end)
 
-            # if the entirety of the exon comes before the coding region, add a non-coding exon and a UTR
-            if coding_start > exon_end:
+            # the control statements are written this way (without elifs) to account for single exon transcripts
+            # if the entirety of the exon is non-coding, add a non-coding exon and a UTR
+            if coding_start > exon_end or coding_end < exon_start:
                 self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
                                                             cd_start=None, cd_end=None)
                 self.tree[exon_start : exon_end + 1] = UTR(exon_num, exon_start, exon_end)
-            # if the entirety of the exon comes after the coding region, add a non-coding exon and a UTR
-            elif coding_end < exon_start:
-                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
-                                                            cd_start=None, cd_end=None)
-                self.tree[exon_start : exon_end + 1] = UTR(exon_num, exon_start, exon_end)
-            # if the start of the exon was adjusted, add a coding exon and a UTR
-            elif coding_start > exon_start:
-                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
-                                                            cd_start=coding_start, cd_end=coding_end)
+                continue
+            # otherwise, add a coding exon
+            self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
+                                                           cd_start=coding_start, cd_end=coding_end)
+            # if the start of the exon was adjusted, add a UTR
+            if coding_start > exon_start:
                 self.tree[exon_start : coding_start] = UTR(exon_num, exon_start, coding_start - 1)
             # if the end of the exon was adjusted, add a coding exon and a UTR
-            elif coding_end < exon_end:
-                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
-                                                            cd_start=coding_start, cd_end=coding_end)
+            if coding_end < exon_end:
                 self.tree[coding_end + 1 : exon_end + 1] = UTR(exon_num, coding_end + 1, exon_end)
-            # if no adjustment was made, just add a coding exon
-            else:
-                self.tree[exon_start : exon_end + 1] = Exon(exon_num, exon_start, exon_end, exon_frame,
-                                                           cd_start=coding_start, cd_end=coding_end)
 
+                
         # add the introns
         for i in range(self.exon_count - 1):
             intron_start = self.exon_ends[i] + 1
@@ -468,7 +461,7 @@ class Transcript(object):
         else:
             reverse_sort = True
 
-        # if reporting UTR, exons are non-coding within [start, stop)
+        # if reporting UTR, remove exons are non-coding within [start, stop)
         if report_utr:
             subtranscripts = sorted(self._remove_noncoding_exons(subtranscripts, start, stop), reverse=reverse_sort)
         # if not reporting UTR, remove UTRs from subtranscripts
