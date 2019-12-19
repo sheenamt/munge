@@ -22,7 +22,8 @@ ASSAYS={'OPX':'OncoPlex',
         'GLT':'HotSpot-Hereditary',
         'TESTDATA':'testdata',
         'MSI-PLUS':'msi-plus',
-        'MONC':'miniOnco'}
+        'MONC':'miniOnco',
+        'BRS':'BrocaScreen'}
 
 MACHINE_CODES={'H':'hiseq',
                'M':'miseq',
@@ -37,7 +38,8 @@ ASSAY_CODES={'colo':'coloseq',
              'hh':'hotspot-heme',
              'glt':'hotspot-hereditary',
              'sth':'hotspot-heme',
-             'monc':'minionco'}
+             'monc':'minionco',
+             'brs':'brocascreen'}
 
 def dict_factory(cursor, row):
     """
