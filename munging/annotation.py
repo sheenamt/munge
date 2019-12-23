@@ -33,6 +33,7 @@ chromosome_sort_order = [str(i) for i in range(1, 23)] + ['X', 'Y', 'MT']
 chromosomes = {'chr{}'.format(c): c for c in chromosome_sort_order}
 chromosomes.update({str(c): c for c in chromosome_sort_order})
 chromosomes.update({i: str(i) for i in range(1, 23)})
+chromosomes.update({23: 'X', 24: 'Y'})
 
 
 def get_location(chr, start, stop, **kwargs):
