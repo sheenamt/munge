@@ -22,7 +22,7 @@ def build_parser(parser):
     parser.add_argument('bd_file', type=Opener(), 
                         help='Breakdancer output')
     parser.add_argument('-g', '--genes', type=Opener(),
-                        help='Text file of genes to keep')
+                        help='Text file of genes to flag')
     parser.add_argument('-o', '--outfile', type=Opener('w'), metavar='FILE',
                         default=sys.stdout, help='output file')
 
@@ -75,10 +75,13 @@ def action(args):
         gene_df = pd.read_csv(args.genes, comment='#', delimiter='\t',header=None, usecols=[0], names=['gene'])
         gene_set = set(gene_df['gene'])
         # discard rows that don't contain a gene from the gene_set
-        df = df[df.apply(filter_genes, gene_set=gene_set, axis=1)]
+        df['Flagged_Genes'] = df.apply(filter_genes, gene_set=gene_set, axis=1)
+        out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2', 'Flagged_Genes', 'num_Reads']
+    
+    else:
+        out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2', 'num_Reads']
     
     # sort and save the relevant columns
     df = df.sort_values(['num_Reads','Event_1'], ascending=[False, True])
-    out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2','num_Reads']
     df.to_csv(args.outfile, index=False, sep='\t', columns=out_fields)
 

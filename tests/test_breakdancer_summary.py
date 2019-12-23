@@ -31,7 +31,7 @@ class TestBreakdancerSummary(TestBase):
         #Test that size filter is happening
         #Test that parsing is correct in general
         expected_output=os.path.join(breakdancer_testfiles, 'expected_unfiltered_output.tsv')
-        testing_output=os.path.join(breakdancer_testfiles, 'testing_unfiltered_output.tsv')
+        testing_output=os.path.join(self.outdir, 'testing_unfiltered_output.tsv')
         cmd=["./munge", "breakdancer_summary", self.refgene, self.ctx, '-o', testing_output]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(expected_output, testing_output))
@@ -42,7 +42,7 @@ class TestBreakdancerSummary(TestBase):
         #Test that parsing is correct in general
         #Test that gene filter is happening properly
         expected_output=os.path.join(breakdancer_testfiles, 'expected_filtered_output.tsv')
-        testing_output=os.path.join(breakdancer_testfiles, 'testing_filtered_output.tsv')
+        testing_output=os.path.join(self.outdir, 'testing_filtered_output.tsv')
         cmd=["./munge", "breakdancer_summary", self.refgene, self.ctx, '-g', self.genes, '-o', testing_output]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(expected_output, testing_output))
