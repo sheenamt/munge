@@ -83,6 +83,45 @@ def add_annotations(df, genome_tree):
             df.at[i, 'gene'] = 'intergenic'
 
 def run_conifer(sample_df, baseline_df, components_removed):
+    """
+    Applies the CoNIFER de-noising algorithm to the sample_df log2 data
+    
+    Takes properly_formatted sample and baseline DataFrames. components_removed is the number of entries
+    to remove from the diagonal S matrix derived from the SVD decomposition; more components removed
+    results in a more aggressive smoothing.
+
+    Returns the sample_df DataFrame with an additional column 'conifer_log2'
+
+    NOTE: Some probes (rows) in sample_df will be removed if those probes contain duplicates or if
+    they were not represented in the CoNIFER baseline. Additionally, the order of the probes will be
+    scrambled.
+    """
+    # set index for both DataFrames to facilitate the merge
+    baseline_df = baseline_df.set_index(['chr', 'start_pos', 'end_pos'])
+    sample_df = sample_df.set_index(['chr', 'start_pos', 'end_pos'])
+
+    # drop duplicate probes from sample_df
+    sample_df = sample_df.loc[~sample_df.index.duplicated(keep='first')]
+
+    # merge sample log2 into baseline DataFrame
+    baseline_df = baseline_df.merge(sample_df['log2'], how='left', left_index=True, right_index=True)
+
+    # impute missing log2 values in sample column with probe medians
+    baseline_df['log2'] =  baseline_df['log2'].fillna(baseline_df['probe_median'])
+
+    # transform the log2s of baseline and sample, removing some diagonal components
+    log2_matrix = baseline_df[baseline_df.columns[2:]].values
+    U, S, Vt = np.linalg.svd(log2_matrix,full_matrices=False)
+    new_S = np.diag(np.hstack([np.zeros([components_removed]),S[components_removed:]]))
+    transformed_log2s = np.dot(U, np.dot(new_S, Vt))
+
+    # merge the transformed log2 column for the sample into the plottable df
+    baseline_df['conifer_log2'] = transformed_log2s[:,-1]
+    sample_df = sample_df.merge(baseline_df[['conifer_log2']], how='inner', left_index=True, right_index=True)
+
+    # reset the index to restore the 'chr', 'start_pos', and 'end_pos' columns
+    sample_df = sample_df.reset_index()
+
     return sample_df
 
 def action(args):
@@ -101,43 +140,31 @@ def action(args):
 
     # apply CoNIFER if requested
     if args.conifer_baseline:
-        # read in the conifer baseline
+        # read in the baseline
         baseline_df = pd.read_feather(args.conifer_baseline)
-        baseline_df = baseline_df.set_index(['chr', 'start_pos', 'end_pos'])
-        # drop duplicate probes from df
-        df = df.set_index(['chr', 'start_pos', 'end_pos'])
-        df = df.loc[~df.index.duplicated(keep='first')]
-        # merge sample into baseline using index
-        baseline_df = pd.merge(baseline_df, df[['log2']], how='left', left_index=True, right_index=True)
-        # impute missing log2 values in sample column with probe medians
-        baseline_df['log2'] =  baseline_df['log2'].fillna(baseline_df['probe_median'])
-        # transform
-        log2_matrix = baseline_df[baseline_df.columns[2:]].values
-        U, S, Vt = np.linalg.svd(log2_matrix,full_matrices=False)
-        new_S = np.diag(np.hstack([np.zeros([args.components_removed]),S[args.components_removed:]]))
-        transformed_log2s = np.dot(U, np.dot(new_S, Vt))
-        # merge the transformed log2 column for the sample into the plottable df
-        baseline_df['conifer_log2'] = transformed_log2s[:,-1]
-        df = df.merge(baseline_df[['conifer_log2']], how='inner', left_index=True, right_index=True)
+
+        # run conifer and add the transformed sample log2s as a column named 'conifer_log2'
+        df = run_conifer(df, baseline_df, args.components_removed)
+
         out_columns=['chr', 'start_pos', 'end_pos', 'log2', 'conifer_log2', 'gene', 'transcript', 'exon']
     else:
         out_columns=['chr', 'start_pos', 'end_pos', 'log2', 'gene', 'transcript', 'exon']
 
+    # make chr column sortable with natural sorting order
+    df['chr'] = pd.Categorical(df['chr'], categories=ann.chromosome_sort_order, ordered=True)
+
+    # sort by chromosome, then position
+    df = df.sort_values(['chr', 'start_pos'])
+
     # set the outfile path
-    if args.outfile:
+    if args.outfile:    # if provided as an argument
         out_path = args.outfile
-    else:
+    else:               # otherwise infer from cnv_data file name
         dir_name = os.path.dirname(args.cnv_data)
         base_name = os.path.basename(args.cnv_data)
         prefix = base_name.split('.')[0]
         out_file = "{}.{}.CNV_plottable.tsv".format(prefix, args.package)
         out_path = os.path.join(dir_name, out_file)
-    
-    # make chr column sortable with natural sorting order
-    df = df.reset_index()
-    df['chr'] = pd.Categorical(df['chr'], categories=ann.chromosome_sort_order, ordered=True)
-    # sort by chromosome, then position
-    print(df.dtypes)
-    df = df.sort_values(['chr', 'start_pos']) 
+
     # save the data
     df.to_csv(out_path, sep='\t', index=False, columns=out_columns)
