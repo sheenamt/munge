@@ -47,8 +47,22 @@ def load_cnv_data(file_path, window_size):
                          }
     df = pd.read_csv(file_path, sep='\t', header=0, dtype=column_data_types)
     df['mean_pos'] = df[['start_pos', 'end_pos']].mean(axis=1).astype(int)
-    df['rolling_median'] = df['log2'].rolling(window_size, min_periods=1).median()
+
     return df
+
+def filled_rolling_median(series, window_size):
+    """
+    Returns the median of a center-aligned rolling window of size `window_size` for `series`.
+    
+    Rather than returning NaN at the beginning and end of the series, uses a left-aligned or right-aligned window.
+    """
+
+    right = series.rolling(window_size, center=False).median()
+    center = series.rolling(window_size, center=True).median()
+    left = series.rolling(window_size, center=False).median().shift(-1 * window_size)
+    filled = center.fillna(right).fillna(left)
+
+    return filled
 
 def extract_plot_title(file_path):
     """Returns the 'genetics string' of the data file"""
@@ -325,6 +339,9 @@ def plot_gene(pdf, df_gene, transcript=None):
 def action(args):
     # load the data
     df = load_cnv_data(args.cnv_data, args.window_size)
+
+    # apply the rolding median
+    df['rolling_median'] = filled_rolling_median(df['log2'], args.window_size)
 
     # if refgene is supplied, create a mapping of gene name to Transcript
     transcripts = {}
