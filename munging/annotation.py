@@ -342,9 +342,7 @@ class Transcript(object):
         # populate fields from data
         self.gene = data['name2']
         self.id = data['name']
-        self.chrom = str(data['chrom'])
-        if 'chr' in self.chrom:
-            self.chrom = self.chrom.replace('chr', '')
+        self.chrom = chromosomes[data['chrom']]
         self.strand = data['strand']
         if self.strand not in ['+', '-']:
             raise ValueError("A transcript must be on the '+' or '-' strand")
@@ -547,6 +545,7 @@ class Transcript(object):
                 raise TypeError("A SubTranscript must be of type Exon, Intron, or UTR")
 
         return region_types
+
 
 def gene_info_from_transcripts(transcripts, start=None, stop=None):
     """
