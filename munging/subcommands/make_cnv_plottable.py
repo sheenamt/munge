@@ -92,9 +92,8 @@ def run_conifer(sample_df, baseline_df, components_removed):
 
     Returns the sample_df DataFrame with an additional column 'conifer_log2'
 
-    NOTE: Some probes (rows) in sample_df will be removed if those probes contain duplicates or if
-    they were not represented in the CoNIFER baseline. Additionally, the order of the probes will be
-    scrambled.
+    NOTE: Some probes (rows) in sample_df will be removed if those probes contain duplicates.
+    Additionally, the order of the probes will be scrambled.
     """
     # set index for both DataFrames to facilitate the merge
     baseline_df = baseline_df.set_index(['chr', 'start_pos', 'end_pos'])
@@ -117,7 +116,7 @@ def run_conifer(sample_df, baseline_df, components_removed):
 
     # merge the transformed log2 column for the sample into the plottable df
     baseline_df['conifer_log2'] = transformed_log2s[:,-1]
-    sample_df = sample_df.merge(baseline_df[['conifer_log2']], how='inner', left_index=True, right_index=True)
+    sample_df = sample_df.merge(baseline_df[['conifer_log2']], how='left', left_index=True, right_index=True)
 
     # reset the index to restore the 'chr', 'start_pos', and 'end_pos' columns
     sample_df = sample_df.reset_index()
