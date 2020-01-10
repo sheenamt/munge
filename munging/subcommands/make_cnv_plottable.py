@@ -19,7 +19,7 @@ def build_parser(parser):
                         help='Path to the transcript-filtered UCSC RefGene table file (used for annotation)')
     parser.add_argument('-b', '--conifer_baseline', 
                         help='Path to the assay-specific CoNIFER baseline')
-    parser.add_argument('-n', '--components_removed', type=int, default=50, 
+    parser.add_argument('-n', '--components_removed', type=int, default=10, 
                         help='Number of components to remove from diagonal matrix during CoNIFER (default: %(default)s)')
     parser.add_argument('-o', '--outfile', 
                         help='Path to the out file (default <prefix>.<package>.CNV_plottable.tsv)')
@@ -115,8 +115,8 @@ def run_conifer(sample_df, baseline_df, components_removed):
     transformed_log2s = np.dot(U, np.dot(new_S, Vt))
 
     # merge the transformed log2 column for the sample into the plottable df
-    baseline_df['conifer_log2'] = transformed_log2s[:,-1]
-    sample_df = sample_df.merge(baseline_df[['conifer_log2']], how='left', left_index=True, right_index=True)
+    baseline_df['conifer'] = transformed_log2s[:,-1]
+    sample_df = sample_df.merge(baseline_df[['conifer']], how='left', left_index=True, right_index=True)
 
     # reset the index to restore the 'chr', 'start_pos', and 'end_pos' columns
     sample_df = sample_df.reset_index()
@@ -145,7 +145,7 @@ def action(args):
         # run conifer and add the transformed sample log2s as a column named 'conifer_log2'
         df = run_conifer(df, baseline_df, args.components_removed)
 
-        out_columns=['chr', 'start_pos', 'end_pos', 'log2', 'conifer_log2', 'gene', 'transcript', 'exon']
+        out_columns=['chr', 'start_pos', 'end_pos', 'log2', 'conifer', 'gene', 'transcript', 'exon']
     else:
         out_columns=['chr', 'start_pos', 'end_pos', 'log2', 'gene', 'transcript', 'exon']
 
