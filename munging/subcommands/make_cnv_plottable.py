@@ -67,17 +67,20 @@ def add_annotations(df, genome_tree):
         start = int(row['start_pos'])
         # searching an interval tree is not inclusive of the endpoint, so increment by one
         end = int(row['end_pos']) + 1
-        transcript_list = genome_tree[chrom][start:end]
+        transcript_list = sorted(genome_tree[chrom][start:end])
+
         if transcript_list:
             # use only the first (and hopefully only) transcript for adding annotations
-            t = transcript_list.pop()[2]
+            t = transcript_list[0][2]
             df.at[i, 'gene'] = t.gene
             df.at[i, 'transcript'] = t.id
+        
             # label exons, including those that fall within a UTR
-            exons = t.get_exons(start, end, report_utr=False)
+            exons = sorted(t.get_exons(start, end, report_utr=False))
             if exons:
                 # use only the first (and hopefully only) exon number for each interval
                 df.at[i, 'exon'] = str(exons[0].number)
+
         # if no hits from the genome tree, annotate as intergenic
         else:
             df.at[i, 'gene'] = 'intergenic'
