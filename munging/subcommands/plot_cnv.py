@@ -30,7 +30,7 @@ def build_parser(parser):
                         help='Path to out file (default: %(default)s)')
     parser.add_argument('-t', '--min_log_ratio', type=float, default=0.5, 
                         help='Minimum abs(log ratio) for printing gene names (default: %(default)s)')
-    parser.add_argument('-w', '--window_size', type=int, default=5, 
+    parser.add_argument('-w', '--window_size', type=int, default=20, 
                         help='Window size for rolling median (default: %(default)s)')
     parser.add_argument('-r', '--refgene',
                         help='Path to the transcript-filtered USCS RefSeq table file (used to add IGV-like figures to gene-level plots)')
