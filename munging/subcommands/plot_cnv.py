@@ -179,7 +179,7 @@ def create_gene_subplot(axis, df_subplot, data_column):
     for i, exon in enumerate(covered_exons):
         # plot entries for exon
         df_exon = df_subplot[df_subplot['exon'] == exon]
-        s = axis.scatter(df_exon['mean_pos'], df_exon[data_column], label=exon, marker='o', s=6)
+        s = axis.scatter(df_exon['mean_pos'], df_exon[data_column], label=exon, marker='o', s=12)
 
         # add label for exon
         color = s.get_facecolor()[0] 
