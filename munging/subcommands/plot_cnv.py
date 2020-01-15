@@ -362,6 +362,7 @@ def plot_gene(pdf, df_gene, transcript=None):
         igv = fig.add_subplot(gs[1], sharex=ax)
         igv.set_ylim((0, 1))
         igv.axis('off')
+        subplots = {'log2' : ax}
         # label axes
         ax.set_xlabel('Position', fontsize=12)
         ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
