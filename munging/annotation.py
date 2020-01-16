@@ -228,7 +228,9 @@ class GenomeIntervalTree(defaultdict):
         gtree = GenomeIntervalTree()
         table = UCSCTable(fileobj=fileobj, decompress=decompress)
         for row in table.data.to_dict(orient='records'):
-            gtree.addi(row)
+            # check if the entry is on a supported chromosome before adding to the tree
+            if row['chrom'] in chromosomes.keys():
+                gtree.addi(row)
 
         return gtree
 
