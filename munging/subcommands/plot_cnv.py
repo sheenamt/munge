@@ -204,7 +204,7 @@ def create_gene_subplot(axis, df_subplot, data_column):
         color = s.get_facecolor()[0] 
         label_x = df_exon['mean_pos'].mean()
         label_y = gene_median + offset_factor * (max_label_offset - offset_step_size * (i % max_offset_steps))
-        a = axis.annotate(exon, (label_x, label_y), fontsize=10, color=color, ha='center')
+        a = axis.text(label_x, label_y, exon, fontsize=10, color=color, ha='center')
         exon_labels.append(a)
         # add exon data for box and whiskers plot
         exon_positions.append(df_exon['mean_pos'].median())
@@ -236,105 +236,6 @@ def create_gene_subplot(axis, df_subplot, data_column):
     axis.grid(axis='y', which='major', linestyle='solid', linewidth=1)
 
     return exon_labels
-
-def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
-    """Saves to the pdf a plot of every point across all chromosomes present in df, flagging genes above min_log_ratio"""
-    fig = plt.figure(figsize=(11, 8.5))
-    
-    if 'conifer' in df.columns:
-        ax = fig.add_subplot(211)
-        cnf = fig.add_subplot(212, sharex=ax)
-        plots = {'log2' : ax, 'conifer' : cnf}
-        # label axes
-        cnf.set_xlabel('Chromosome', fontsize=12)
-        cnf.set_ylabel('CoNIFER Ratio', fontsize=12)
-        ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
-
-    else:
-        ax = fig.add_subplot(1,1,1)
-        plots = {'log2' : ax}
-        # label axes
-        ax.set_xlabel('Chromosome', fontsize=12)
-        ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
-
-    # plot entries left to right from chrom 1 to chrom X
-    chromosomes = natsorted(df['chr'].unique())
-
-    x_tick_values = []  # used create axis labels for each chromosome
-    v_line_coords = []  # used to draw lines between each chromosome
-
-    # create a scatter plot of log2 vs index for each chromosome
-    for chrom in chromosomes:
-        df_chrom = df[df['chr'] == chrom]
-        indices = df_chrom.index.values
-        x_tick_values.append(np.median(indices))
-        v_line_coords.append(np.max(indices))
-
-        for data_column, axis in plots.items():
-            axis.scatter(indices, df_chrom[data_column], label=chrom, marker=',', s=0.2)
-
-    # flag genes that are above or below log ratio threshold
-    for data_column, axis in plots.items():
-        flagged_df = df[[data_column, 'gene']][df[data_column].notnull()]
-        flagged_genes = flag_genes(flagged_df, min_log_ratio, rolling_window_size)
-
-        for gene, coord in flagged_genes.items():
-            axis.annotate(gene, coord, fontsize=8)
-    
-    for axis in plots.values():
-        # set plot limits, ticks, and tick labels
-        axis.set_ylim((-1 * y_scale, y_scale))
-        axis.locator_params(axis='both', nbins=4)
-        axis.tick_params(right=True, top=True, labelsize=10)
-        axis.set_xticks(x_tick_values)
-        axis.set_xticklabels(chromosomes, fontsize=8)
-
-        # add vertical lines (skip line after last chrom)
-        for coord in v_line_coords[0:-1]:
-            axis.axvline(x=coord, alpha=0.1, color='black', linewidth=1)
-
-        # add horizontal lines
-        axis.grid(axis='y', which='major', linestyle='solid', linewidth=1)
-        for coord in [min_log_ratio * -1, min_log_ratio]:
-            axis.axhline(y=coord, alpha=0.5, color='black', linewidth=1, linestyle='dotted')
-
-    # add title
-    ax.set_title(title)
-
-    # create legend
-    handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles,
-               labels,
-               fontsize=10, 
-               markerfirst=False, 
-               markerscale=20, 
-               borderaxespad=0.0,
-               loc='center right')
-
-    # use a tight layout to maximize area for plots
-    fig.tight_layout()
-
-    # shift the subplots so the legend doesn't overlap
-    plt.subplots_adjust(right=0.92)
-
-    # save main figure
-    pdf.savefig()
-
-    # if log2s were cutoff by [-2,2] plot, add second plot covering full range
-    rescaled = False
-
-    for data_column, axis in plots.items():
-        min_log = df[data_column].min()
-        max_log = df[data_column].max()
-        if min_log < -1 * y_scale or max_log > y_scale:
-            axis.set_ylim((min_log - 0.1, max_log + 0.1))
-            rescaled = True
-
-    if rescaled:
-        ax.set_title(title + ' (Plot 2)')
-        pdf.savefig()
-
-    plt.close()
 
 def plot_gene(pdf, df_gene, transcript=None):
     """
@@ -435,12 +336,111 @@ def plot_gene(pdf, df_gene, transcript=None):
                 new_y = old_y * stretch_factor + y_mid
                 label.remove()
                 # create a new label at the new coordinates
-                axis.annotate(exon, (old_x, new_y), fontsize=10, color=color)            
+                axis.text(old_x, new_y, exon, fontsize=10, color=color)            
 
     if rescaled:
         ax.set_title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
 
         # save second figure
+        pdf.savefig()
+
+    plt.close()
+
+def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
+    """Saves to the pdf a plot of every point across all chromosomes present in df, flagging genes above min_log_ratio"""
+    fig = plt.figure(figsize=(11, 8.5))
+    
+    if 'conifer' in df.columns:
+        ax = fig.add_subplot(211)
+        cnf = fig.add_subplot(212, sharex=ax)
+        plots = {'log2' : ax, 'conifer' : cnf}
+        # label axes
+        cnf.set_xlabel('Chromosome', fontsize=12)
+        cnf.set_ylabel('CoNIFER Ratio', fontsize=12)
+        ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
+
+    else:
+        ax = fig.add_subplot(1,1,1)
+        plots = {'log2' : ax}
+        # label axes
+        ax.set_xlabel('Chromosome', fontsize=12)
+        ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
+
+    # plot entries left to right from chrom 1 to chrom X
+    chromosomes = natsorted(df['chr'].unique())
+
+    x_tick_values = []  # used create axis labels for each chromosome
+    v_line_coords = []  # used to draw lines between each chromosome
+
+    # create a scatter plot of log2 vs index for each chromosome
+    for chrom in chromosomes:
+        df_chrom = df[df['chr'] == chrom]
+        indices = df_chrom.index.values
+        x_tick_values.append(np.median(indices))
+        v_line_coords.append(np.max(indices))
+
+        for data_column, axis in plots.items():
+            axis.scatter(indices, df_chrom[data_column], label=chrom, marker=',', s=0.2)
+
+    # flag genes that are above or below log ratio threshold
+    for data_column, axis in plots.items():
+        flagged_df = df[[data_column, 'gene']][df[data_column].notnull()]
+        flagged_genes = flag_genes(flagged_df, min_log_ratio, rolling_window_size)
+
+        for gene, coord in flagged_genes.items():
+            axis.text(coord[0], coord[1], gene, fontsize=8)
+    
+    for axis in plots.values():
+        # set plot limits, ticks, and tick labels
+        axis.set_ylim((-1 * y_scale, y_scale))
+        axis.locator_params(axis='both', nbins=4)
+        axis.tick_params(right=True, top=True, labelsize=10)
+        axis.set_xticks(x_tick_values)
+        axis.set_xticklabels(chromosomes, fontsize=8)
+
+        # add vertical lines (skip line after last chrom)
+        for coord in v_line_coords[0:-1]:
+            axis.axvline(x=coord, alpha=0.1, color='black', linewidth=1)
+
+        # add horizontal lines
+        axis.grid(axis='y', which='major', linestyle='solid', linewidth=1)
+        for coord in [min_log_ratio * -1, min_log_ratio]:
+            axis.axhline(y=coord, alpha=0.5, color='black', linewidth=1, linestyle='dotted')
+
+    # add title
+    ax.set_title(title)
+
+    # create legend
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles,
+               labels,
+               fontsize=10, 
+               markerfirst=False, 
+               markerscale=20, 
+               borderaxespad=0.0,
+               loc='center right')
+
+    # use a tight layout to maximize area for plots
+    fig.tight_layout()
+
+    # shift the subplots so the legend doesn't overlap
+    plt.subplots_adjust(right=0.92)
+
+    # save main figure
+    pdf.savefig()
+
+    # if log2s were cutoff by [-2,2] plot, add second plot covering full range
+    rescaled = False
+
+    for data_column, axis in plots.items():
+        min_log = df[data_column].min()
+        max_log = df[data_column].max()
+        if min_log < -1 * y_scale or max_log > y_scale:
+            axis.set_ylim((min_log - 0.1, max_log + 0.1))
+            rescaled = True
+
+    if rescaled:
+        ax.set_title(title + ' (Plot 2)')
         pdf.savefig()
 
     plt.close()
