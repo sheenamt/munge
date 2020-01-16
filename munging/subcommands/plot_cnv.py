@@ -383,12 +383,30 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
             axis.scatter(indices, df_chrom[data_column], label=chrom, marker=',', s=0.2)
 
     # flag genes that are above or below log ratio threshold
+    moved_labels = {}
     for data_column, axis in plots.items():
         flagged_df = df[[data_column, 'gene']][df[data_column].notnull()]
         flagged_genes = flag_genes(flagged_df, min_log_ratio, rolling_window_size)
 
+        # add labels for flagged genes
+        moved_labels[data_column] = []
         for gene, coord in flagged_genes.items():
-            axis.text(coord[0], coord[1], gene, fontsize=8)
+            label_x = coord[0]
+            # adjust text coordinates if it's off the scale
+            if coord[1] < -1 * y_scale:
+                label_y = -0.95 * y_scale
+                moved = True
+            elif coord[1] > y_scale:
+                label_y = 0.95 * y_scale
+                moved = True
+            else:
+                label_y = coord[1]
+                moved = False
+
+            label = axis.text(label_x, label_y, gene, fontsize=8, va='center', ha='right')
+        
+            if moved:
+                moved_labels[data_column].append((label, coord[1]))
     
     for axis in plots.values():
         # set plot limits, ticks, and tick labels
@@ -440,6 +458,13 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
             rescaled = True
 
     if rescaled:
+        for data_column, axis in plots.items():
+            for label, new_y in moved_labels[data_column]:
+                gene = label.get_text()
+                label_coords = label.get_position()
+                label.remove()
+                axis.text(label_coords[0], new_y, gene, fontsize=8, va='center', ha='right')
+
         ax.set_title(title + ' (Plot 2)')
         pdf.savefig()
 
