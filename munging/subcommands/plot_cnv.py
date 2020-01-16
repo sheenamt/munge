@@ -117,34 +117,53 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
 
 def create_transcript_subplot(axis, transcript):
     """Creates an IGV-like representation of transcript on axis"""
+    left, right = axis.get_xlim()
+
+    # add horizontal line from transcription start to end
+    axis.hlines(0.5, left, right, color='b', linewidth=1)
+
+    # add arrows to indicate direction of transcription
+    if transcript.strand == '+':
+        arrow_text = '>'
+    else:
+        arrow_text = '<'
+    
+    num_arrows = 15
+    arrow_step = (right - left)*1.0 / num_arrows
+
+    for i in range(num_arrows):
+        arrow_x = left + (i + 0.5) * arrow_step
+        axis.text(arrow_x, 0.48, arrow_text, color='b', fontsize=10, ha='right', va='center')
+
+    # add boxes for exons
     exons = transcript.get_exons(report_utr=False)
-    axis.hlines(0.5, transcript.tx_start, transcript.tx_end, color='b')
-    rectangles = []
+    boxes = []
+
     for e in exons:
         if e.cd_start is None or e.cd_end is None:
             # make a small box for whole exon
             length = e.end - e.start + 1
             r = patches.Rectangle((e.start, 0.375), width=length, height=0.25, color='b')
-            rectangles.append(r)
+            boxes.append(r)
             continue
         if e.cd_start > e.start:
             # make a small box for non-coding at start
             length = e.cd_start - e.start + 1
             r = patches.Rectangle((e.start, 0.375), width=length, height=0.25, color='b')
-            rectangles.append(r)
+            boxes.append(r)
         if e.cd_end < e.end:
             # make a small box for non-coding at end
             length = e.end - e.cd_end + 1
             r = patches.Rectangle((e.cd_end, 0.375), width=length, height=0.25, color='b')
-            rectangles.append(r)
+            boxes.append(r)
 
         # make a large box for coding region of exon
         length = e.cd_end - e.cd_start + 1
         r = patches.Rectangle((e.cd_start, 0.25), width=length, height=0.5, color='b')
-        rectangles.append(r)
+        boxes.append(r)
 
-    for r in rectangles:
-        axis.add_patch(r)
+    for b in boxes:
+        axis.add_patch(b)
 
 def create_gene_subplot(axis, df_subplot, data_column):
     """
@@ -375,16 +394,16 @@ def plot_gene(pdf, df_gene, transcript=None):
         ax.set_xlabel('Position', fontsize=12)
         ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
 
-    # create the igv subplot
-    if transcript is not None:
-        create_transcript_subplot(igv, transcript)
-
+    # create CNV plots
     exon_labels = {}
-
     for data_column, axis in subplots.items():
         df_subplot = df_gene[['mean_pos', data_column, 'exon']]
         df_subplot = df_subplot[df_subplot[data_column].notnull()]
         exon_labels[data_column] = create_gene_subplot(axis, df_subplot, data_column)
+
+    # create the igv subplot
+    if transcript is not None:
+        create_transcript_subplot(igv, transcript)
 
     # set title
     title_parts = df_gene.iloc[0][['chr', 'gene', 'transcript']]
