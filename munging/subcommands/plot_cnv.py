@@ -101,17 +101,19 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
         df_gene['rolling_median'] = filled_rolling_median(df_gene[data_column_name], rolling_window_size)
 
         # find the max median and its index, and flag gene if condition met
-        max_idx = df_gene['rolling_median'].idxmax()
-        max_median = df_gene.loc[max_idx]['rolling_median']
+        max_median = df_gene['rolling_median'].max()
         if max_median > min_log_ratio:
-            flagged_genes[gene] = (max_idx, max_median)
+            label_x = df_gene[data_column_name].idxmax()
+            label_y = df_gene.loc[label_x][data_column_name]
+            flagged_genes[gene] = (label_x, label_y)
             continue
 
         # find the min median and its index, and flag gene if condition met
-        min_idx = df_gene['rolling_median'].idxmin()
-        min_median = df_gene.loc[min_idx]['rolling_median']
+        min_median = df_gene['rolling_median'].min()
         if min_median < -1 * min_log_ratio:
-            flagged_genes[gene] = (min_idx, min_median)
+            label_x = df_gene[data_column_name].idxmin()
+            label_y = df_gene.loc[label_x][data_column_name]
+            flagged_genes[gene] = (label_x, label_y)
         
     return flagged_genes
 
@@ -393,17 +395,17 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
         for gene, coord in flagged_genes.items():
             label_x = coord[0]
             # adjust text coordinates if it's off the scale
-            if coord[1] < -1 * y_scale:
+            if coord[1] < -0.98 * y_scale:
                 label_y = -0.95 * y_scale
                 moved = True
-            elif coord[1] > y_scale:
+            elif coord[1] > 0.98 * y_scale:
                 label_y = 0.95 * y_scale
                 moved = True
             else:
                 label_y = coord[1]
                 moved = False
 
-            label = axis.text(label_x, label_y, gene, fontsize=8, va='center', ha='right')
+            label = axis.text(label_x, label_y, gene, fontsize=8, va='center', ha='left')
         
             if moved:
                 moved_labels[data_column].append((label, coord[1]))
@@ -454,7 +456,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
         min_log = df[data_column].min()
         max_log = df[data_column].max()
         if min_log < -1 * y_scale or max_log > y_scale:
-            axis.set_ylim((min_log - 0.1, max_log + 0.1))
+            axis.set_ylim((min_log - 0.2, max_log + 0.2))
             rescaled = True
 
     if rescaled:
@@ -463,7 +465,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
                 gene = label.get_text()
                 label_coords = label.get_position()
                 label.remove()
-                axis.text(label_coords[0], new_y, gene, fontsize=8, va='center', ha='right')
+                axis.text(label_coords[0], new_y, gene, fontsize=8, va='center', ha='left')
 
         ax.set_title(title + ' (Plot 2)')
         pdf.savefig()
@@ -490,6 +492,8 @@ def action(args):
 
         # create the main plot
         plot_main(pdf, df, args.title, args.min_log_ratio, args.window_size)
+
+        exit()
 
         # create a subplot for each gene
         for gene in df['gene'].unique():
