@@ -85,12 +85,17 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
     Flags genes that are outside the bounds specified by min_log_ratio
 
     Genes are flagged if their most extreme 'rolling_median' is outside the bounds
-    defined by [-min_log_ratio, min_log_ratio]
+    defined by [-min_log_ratio, min_log_ratio] or if any point is above or below a
+    hard-coded value
 
-    Returns a dict of <gene>:(<index_of_rolling_median> ,<value_rolling_median>) 
+    Returns a dict of <gene>:(<index_of_gene_extrema> ,<value_gene_extrema) 
     """
     flagged_genes = {}
     data_column_name = df.columns[0]  # allows for flagging conifer or non-conifer log2s
+
+    # a mapping of data_column_name to hard-coded values for review based on value of single points
+    review_thresholds = {'log2' : 2.0,
+                         'conifer' : 1.0}
 
     for gene in df['gene'].unique():
         # don't flag intergenic entries
@@ -98,22 +103,36 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
             continue
         # create a subslice of entries for that gene
         df_gene = df[df['gene']==gene].copy()
+
+        # find extreme points of the gene
+        max_x = df_gene[data_column_name].idxmax()
+        max_y = df_gene.loc[max_x][data_column_name]
+        min_x = df_gene[data_column_name].idxmax()
+        min_y = df_gene.loc[min_x][data_column_name]
+
+        # flag if max or min is above or below a review threshold
+        if max_x > review_thresholds[data_column_name]:
+            flagged_genes[gene] = (max_x, max_y)
+            continue
+        if min_x < -1 * review_thresholds[data_column_name]:
+            flagged_genes[gene] = (min_x, min_y)
+            continue
+
+        # flag if any rolling median is outside [-min_log_ratio, min_log_ratio]
         df_gene['rolling_median'] = filled_rolling_median(df_gene[data_column_name], rolling_window_size)
 
         # find the max median and its index, and flag gene if condition met
         max_median = df_gene['rolling_median'].max()
         if max_median > min_log_ratio:
-            label_x = df_gene[data_column_name].idxmax()
-            label_y = df_gene.loc[label_x][data_column_name]
-            flagged_genes[gene] = (label_x, label_y)
+            flagged_genes[gene] = (max_x, max_y)
             continue
 
         # find the min median and its index, and flag gene if condition met
         min_median = df_gene['rolling_median'].min()
         if min_median < -1 * min_log_ratio:
-            label_x = df_gene[data_column_name].idxmin()
-            label_y = df_gene.loc[label_x][data_column_name]
-            flagged_genes[gene] = (label_x, label_y)
+            flagged_genes[gene] = (max_x, max_y)
+            continue
+
         
     return flagged_genes
 
