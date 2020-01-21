@@ -5,22 +5,21 @@ import pandas as pd
 import plotly
 import plotly.graph_objs as go
 
+import sys
+
 def build_parser(parser):
     parser.add_argument('groupumi_metrics',
                         help='Path to metric file from fgbio GroupReadsByUmi')
-    parser.add_argument('outfile',
-                        help='Path to outfile')
+    parser.add_argument('out_html',
+                        help='Path to html output')
+    parser.add_argument('out_table',
+                        help='Path to table output')
 
 def action(args):
     umi_data = args.groupumi_metrics
 
     #create data frame of chrom:start:UMI from bam
     df = pd.read_csv(umi_data, sep='\t')
-    
-    #    family_size Int The family size, or number of templates/read-pairs belonging to the family.
-    #    count Count The number of families (or source molecules) observed with family_size observations.
-    #    fraction Proportion The fraction of all families of all sizes that have this specific family_size.
-    #    fraction_gt_or_eq_family_size Proportion The fraction of all families that have >= family_size
     
     #setup bar chart
     barchart = go.Bar(x=df['family_size'],
@@ -58,6 +57,13 @@ def action(args):
     fig = go.Figure(data = [barchart,table], layout = layout)
 
     #plot
-    plotly.offline.plot(fig, filename=args.outfile, auto_open=False)
+    plotly.offline.plot(fig, filename=args.out_html, auto_open=False)
 
+    #    family_size Int The family size, or number of templates/read-pairs belonging to the family.
+    #    count Count The number of families (or source molecules) observed with family_size observations.
+    #    fraction Proportion The fraction of all families of all sizes that have this specific family_size.
+    #    fraction_gt_or_eq_family_size Proportion The fraction of all families that have >= family_size
+
+    #table
+    df.head().to_csv(args.out_table, index=False, sep='\t')
 
