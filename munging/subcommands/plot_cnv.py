@@ -57,6 +57,7 @@ def filled_rolling_median(series, window_size):
     Returns the median of a center-aligned rolling window of size `window_size` for `series`.
     
     Rather than returning NaN at the beginning and end of the series, uses a left-aligned or right-aligned window.
+    If the series is shorter than the window size, shrinks window to series length.
     """
     # shrink the window if it's larger than the length of the series
     if len(series) < window_size:
@@ -84,18 +85,14 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
     """
     Flags genes that are outside the bounds specified by min_log_ratio
 
-    Genes are flagged if their most extreme 'rolling_median' is outside the bounds
-    defined by [-min_log_ratio, min_log_ratio] or if any point is above or below a
-    hard-coded value
+    Genes are flagged if their most extreme 'rolling_median' is outside the bounds defined by 
+    -min_log_ratio, min_log_ratio] or if four consecutive conifer points are outside said bounds and they deviate
+    strongly from the gene median.
 
-    Returns a dict of <gene>:(<index_of_gene_extrema> ,<value_gene_extrema) 
+    Returns a dict of <gene>:(<index_of_gene_extrema>, <value_gene_extrema) 
     """
     flagged_genes = {}
     data_column_name = df.columns[0]  # allows for flagging conifer or non-conifer log2s
-
-    # a mapping of data_column_name to hard-coded values for review based on value of single points
-    review_thresholds = {'log2' : 2.0,
-                         'conifer' : 1.0}
 
     for gene in df['gene'].unique():
         # don't flag intergenic entries
@@ -107,18 +104,10 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
         # find extreme points of the gene
         max_x = df_gene[data_column_name].idxmax()
         max_y = df_gene.loc[max_x][data_column_name]
-        min_x = df_gene[data_column_name].idxmax()
+        min_x = df_gene[data_column_name].idxmin()
         min_y = df_gene.loc[min_x][data_column_name]
 
-        # flag if max or min is above or below a review threshold
-        if max_x > review_thresholds[data_column_name]:
-            flagged_genes[gene] = (max_x, max_y)
-            continue
-        if min_x < -1 * review_thresholds[data_column_name]:
-            flagged_genes[gene] = (min_x, min_y)
-            continue
-
-        # flag if any rolling median is outside [-min_log_ratio, min_log_ratio]
+        # calculate a rolling median at each probe
         df_gene['rolling_median'] = filled_rolling_median(df_gene[data_column_name], rolling_window_size)
 
         # find the max median and its index, and flag gene if condition met
@@ -130,9 +119,24 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
         # find the min median and its index, and flag gene if condition met
         min_median = df_gene['rolling_median'].min()
         if min_median < -1 * min_log_ratio:
-            flagged_genes[gene] = (max_x, max_y)
+            flagged_genes[gene] = (min_x, min_y)
             continue
 
+        # if conifer, flag if at least 4 consecutive probes are above or below threshold AND
+        # the distance between the gene median and the probes is larger than the threshold
+        if data_column_name == 'conifer':
+            CONIFER_WINDOW = 4
+            median = df_gene['conifer'].median()
+            # flag probes
+            df_gene['flagged'] = [True if min(abs(x), abs(x - median)) > min_log_ratio else False for x in df_gene['conifer']]
+            # count flagged probes in rolling window of 4
+            df_gene['rolling_flagged'] = df_gene['flagged'].rolling(window=CONIFER_WINDOW).sum()
+            # flag gene if condition met
+            if df_gene['rolling_flagged'].max() >= CONIFER_WINDOW:
+                label_x = df_gene['rolling_flagged'].idxmax()
+                label_y = df_gene.loc[label_x]['conifer']
+                flagged_genes[gene] = (label_x, label_y)
+                continue
         
     return flagged_genes
 
@@ -149,10 +153,10 @@ def create_transcript_subplot(axis, transcript):
     else:
         arrow_text = '<'
     
-    num_arrows = 15
-    arrow_step = (right - left)*1.0 / num_arrows
+    NUM_ARROWS = 15     # hard coded parameter for number of arrows to add
+    arrow_step = (right - left)*1.0 / NUM_ARROWS
 
-    for i in range(num_arrows):
+    for i in range(NUM_ARROWS):
         arrow_x = left + (i + 0.5) * arrow_step
         axis.text(arrow_x, 0.48, arrow_text, color='b', fontsize=10, ha='right', va='center')
 
@@ -161,19 +165,19 @@ def create_transcript_subplot(axis, transcript):
     boxes = []
 
     for e in exons:
+        # if the entire exon is non-coding, make a small box for whole exon and continue
         if e.cd_start is None or e.cd_end is None:
-            # make a small box for whole exon
             length = e.end - e.start + 1
             r = patches.Rectangle((e.start, 0.375), width=length, height=0.25, color='b')
             boxes.append(r)
             continue
+        # if the start of the exon is non-coding, make a small box for non-coding region at start
         if e.cd_start > e.start:
-            # make a small box for non-coding at start
             length = e.cd_start - e.start + 1
             r = patches.Rectangle((e.start, 0.375), width=length, height=0.25, color='b')
             boxes.append(r)
-        if e.cd_end < e.end:
-            # make a small box for non-coding at end
+        # if the end of the exon is non-coding, make a small box for non-coding region at end
+        if e.cd_end < e.end:  
             length = e.end - e.cd_end + 1
             r = patches.Rectangle((e.cd_end, 0.375), width=length, height=0.25, color='b')
             boxes.append(r)
@@ -264,6 +268,8 @@ def plot_gene(pdf, df_gene, transcript=None):
 
     If a Transcript object is provided for transcript, also creates an IGV-like representation of
     the gene at the bottom of the plot.
+
+    If df_gene contains a conifer column, adds a subplot to the conifer data
     """
     fig = plt.figure(figsize=(11, 8.5))
 
@@ -316,7 +322,7 @@ def plot_gene(pdf, df_gene, transcript=None):
         ax.set_xlabel('Position', fontsize=12)
         ax.set_ylabel('Adjusted Mean of Log Ratio', fontsize=12)
 
-    # create CNV plots
+    # create CNV subplots
     exon_labels = {}
     for data_column, axis in subplots.items():
         df_subplot = df_gene[['mean_pos', data_column, 'exon']]
@@ -342,6 +348,7 @@ def plot_gene(pdf, df_gene, transcript=None):
         min_log = df_gene[data_column].min()
         max_log = df_gene[data_column].max()
 
+        # check if rescaling needed
         if min_log < -1 * y_scale or max_log > y_scale:
             axis.set_ylim((min_log - 0.1, max_log + 0.1))
             rescaled = True
@@ -350,7 +357,7 @@ def plot_gene(pdf, df_gene, transcript=None):
             stretch_factor = (max_log - min_log) / (y_scale * 2)
 
             for label in exon_labels[data_column]:
-                # extract infom from old label and remove it
+                # extract info from old label and remove it
                 (old_x, old_y) = label.get_position()
                 exon = label.get_text()
                 color = label.get_color()
@@ -370,6 +377,9 @@ def plot_gene(pdf, df_gene, transcript=None):
 def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
     """Saves to the pdf a plot of every point across all chromosomes present in df, flagging genes above min_log_ratio"""
     fig = plt.figure(figsize=(11, 8.5))
+
+    # ax is the axis on which the log2s will be plotted
+    # if conifer data is present, cnf is the axis for that plot
     
     if 'conifer' in df.columns:
         ax = fig.add_subplot(211)
@@ -393,7 +403,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
     x_tick_values = []  # used create axis labels for each chromosome
     v_line_coords = []  # used to draw lines between each chromosome
 
-    # create a scatter plot of log2 vs index for each chromosome
+    # create a scatter plot of CNV ratios vs index for each chromosome
     for chrom in chromosomes:
         df_chrom = df[df['chr'] == chrom]
         indices = df_chrom.index.values
@@ -512,11 +522,9 @@ def action(args):
         # create the main plot
         plot_main(pdf, df, args.title, args.min_log_ratio, args.window_size)
 
-        exit()
-
-        # create a subplot for each gene
+        # create a plot for each gene
         for gene in df['gene'].unique():
-            # don't create a subplot for 'intergenic'
+            # don't create a plot for 'intergenic'
             if gene == 'intergenic':
                 continue
             gene_df = df[df['gene']==gene]
