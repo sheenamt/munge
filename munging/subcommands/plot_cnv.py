@@ -130,10 +130,10 @@ def flag_genes(df, min_log_ratio, rolling_window_size):
             # flag probes
             df_gene['flagged'] = [True if min(abs(x), abs(x - median)) > min_log_ratio else False for x in df_gene['conifer']]
             # count flagged probes in rolling window of 4
-            df_gene['rolling_flagged'] = df_gene['flagged'].rolling(window=CONIFER_WINDOW).sum()
+            df_gene['rolling_count'] = df_gene['flagged'].rolling(window=CONIFER_WINDOW, center=True).sum()
             # flag gene if condition met
-            if df_gene['rolling_flagged'].max() >= CONIFER_WINDOW:
-                label_x = df_gene['rolling_flagged'].idxmax()
+            if df_gene['rolling_count'].max() >= CONIFER_WINDOW:
+                label_x = df_gene['rolling_count'].idxmax()
                 label_y = df_gene.loc[label_x]['conifer']
                 flagged_genes[gene] = (label_x, label_y)
                 continue
