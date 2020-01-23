@@ -93,7 +93,7 @@ def run_conifer(sample_df, baseline_df, components_removed):
     to remove from the diagonal S matrix derived from the SVD decomposition; more components removed
     results in a more aggressive smoothing.
 
-    Returns the sample_df DataFrame with an additional column 'conifer_log2'
+    Returns the sample_df DataFrame with an additional column 'conifer'
 
     NOTE: Some probes (rows) in sample_df will be removed if those probes contain duplicates.
     Additionally, the order of the probes will be scrambled.
