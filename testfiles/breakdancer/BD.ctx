@@ -1,12 +1,17 @@
 #Software: 1.4.5 (commit 251f983)
-#Command: breakdancer-max output/165R02_B01_MONCv1_NA0261/165R02_B01_MONCv1_NA0261.cfg -h -g output/165R02_B01_MONCv1_NA0261/165R02_B01_MONCv1_NA0261.bed 
+#Command: breakdancer-max output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.cfg -h -g output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.bed 
 #Library Statistics:
-#output/165R02_B01_MONCv1_NA0261/165R02_B01_MONCv1_NA0261.final.bam	mean:165	std:60	uppercutoff:550	lowercutoff:0	readlen:101	library:MiniOncoKAPA165R-MONCv1	reflen:2995589796	seqcov:0.0394449	phycov:0.0322198	1:25	2:20	4:78519	8:31	32:11
-#Chr1	Pos1	Orientation1	Chr2	Pos2	Orientation2	Type	Size	Score	num_Reads	num_Reads_lib	Allele_frequency	165R02_B01_MONCv1_NA0261.final.bam
-#size filtered
-4	1806370	61+51-	4	1806641	0+2-	DEL	35	99	2	output/185R01_A01_MONCv2_MA0392/185R01_A01_MONCv2_MA0392.final.bam|2	-8352.74	16707.49
-#normal
-4	1806374	61+51-	4	1806641	0+2-	DEL	335	99	2	output/185R01_A01_MONCv2_MA0392/185R01_A01_MONCv2_MA0392.final.bam|2	-8352.74	16707.49
-#intergenic
-4	1795000	61+51-	4	179500	0+2-	DEL	505	99	2	output/185R01_A01_MONCv2_MA0392/185R01_A01_MONCv2_MA0392.final.bam|2	-8352.74	16707.49
-X	153770455	7+6-	X	153770465	7+6-	DEL	110	99	5	output/9695_G12_OPXv5_HA0254/9695_G12_OPXv5_HA0254.final.bam|5	-nan	NA
+#output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam	mean:203.42	std:71.15	uppercutoff:557.14	lowercutoff:0	readlen:101	library:AnnotationsWJ-OPXv6	reflen:3013382227	seqcov:0.854474	phycov:0.860481	1:2214	2:18966	4:319069	8:1008	32:55884
+#Chr1	Pos1	Orientation1	Chr2	Pos2	Orientation2	Type	Size	Score	num_Reads	num_Reads_lib	Allele_frequency	257R29_E04_OPXv6_HA0709.final.bam
+# tests 'Intergenic' labeling, should be gene filtered if Breakdancer_genes argument provided
+1	121485336	220+198-	19	27731988	58+52-	CTX	-202	99	84	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|84	27.65
+2	47629615	301+241-	2	47631784	301+241-	ITX	-105	99	207	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|207	-nan	NA
+# tests gene filtering when only one event contains a gene from preferred list and it is concatenated with a gene that is not; should not be gene filtered
+1	156785500	16+15-	1	156785651	16+15-	ITX	-105	99	13	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|13	-nan	NA
+# tests re-sizing CTX; should not be gene filtered
+9	87346062	76+107-	15	77910867	0+16-	CTX	-202	99	12	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|12	74.82
+# both events contain genes from preferred list; should not be gene filtered
+7	140489694	3+0-	7	140489760	228+192-	DEL	392	99	3	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|3	-907.00	1816.00
+9	87346314	1489+1241-	9	87353964	1489+1241-	ITX	-105	99	1116	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|1116	-nan	NA
+# should be size filtered
+7	140489694	3+0-	7	140489760	228+192-	DEL	99	99	3	output/257R29_E04_OPXv6_HA0709/257R29_E04_OPXv6_HA0709.final.bam|3	-907.00	1816.00
