@@ -19,7 +19,10 @@ log = logging.getLogger(__name__)
 
 def build_parser(parser):
     parser.add_argument('type', 
-                        choices=['pindel','snp','indel','cnv_exon','cnv_gene','quality','msi_flagged','clin_flagged','hotspot_flagged', 'glt_flagged', 'annotsv', 'amplicon', 'breakdancer'],
+                        choices=['pindel','snp','indel','cnv_exon','cnv_gene',
+                        'quality','msi_flagged','clin_flagged','hotspot_flagged', 
+                        'glt_flagged', 'annotsv', 'amplicon', 'breakdancer',
+                        'exon_cov', 'gene_cov'],
                         help='Type of output summary to create')
     parser.add_argument('path',
                         help='Path to analysis files')
@@ -40,6 +43,12 @@ def action(args):
     files = ifilter(filters.any_analysis, walker(args.path))
     if args.type == 'indel':
         parser_type = 'snp'
+    elif args.type == 'exon_cov':
+        parser_type = 'coveragekit'
+        files = list(filter(filters.exon_coverage_analysis, files))
+    elif args.type == 'gene_cov':
+        parser_type = 'coveragekit'
+        files = list(filter(filters.gene_coverage_analysis, files))
     else:
         parser_type = args.type
     analysis_type='_'.join(['parsers.parse',parser_type])

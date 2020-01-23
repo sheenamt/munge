@@ -118,7 +118,21 @@ def amplicon_analysis(pth):
     return pth.fname.split('.')[-2] in set (['Amplicon_Analysis'])
 
 
+def exon_coverage_analysis(pth):
+    """
+    True only for pfx.Coverage_Exon_Analysis.{txt,csv}
+    """
 
+    return pth.fname.split('.')[-2] in set (['Coverage_Exon_Analysis'])
+
+
+def gene_coverage_analysis(pth):
+    """
+    True only for pfx.Coverage_Gene_Analysis.{txt,csv}
+    """
+
+    return pth.fname.split('.')[-2] in set (['Coverage_Gene_Analysis'])
+    
 def maskable(pth):
     """
     True only for maskable files
