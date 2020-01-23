@@ -15,7 +15,7 @@ def build_parser(parser):
                         help='Path to the raw output from the CNV caller')
     parser.add_argument('package', choices=['contra', 'cnvkit'],
                         help='Software package used to create the CNV_data')
-    parser.add_argument('-r', '--refgene',
+    parser.add_argument('refgene',
                         help='Path to the transcript-filtered UCSC RefGene table file (used for annotation)')
     parser.add_argument('-b', '--conifer_baseline', 
                         help='Path to the assay-specific CoNIFER baseline')
