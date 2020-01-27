@@ -21,7 +21,7 @@ from natsort import natsorted
 from munging.annotation import UCSCTable, Transcript
 
 # global parameter for the preferred limits to the y-axis [-2, 2]
-y_scale = 2
+Y_SCALE = 2
 
 def build_parser(parser):
     parser.add_argument('cnv_data',
@@ -239,20 +239,22 @@ def create_gene_subplot(axis, df_subplot, data_column):
     min_x = df_subplot['mean_pos'].min()
     max_x = df_subplot['mean_pos'].max()
     box_width = (max_x - min_x) / 80
-    median_props = dict(linestyle='-', linewidth=3, color='black')
+    median_props = dict(linestyle='-', linewidth=2, color='black')
+    boxprops = dict(linestyle='-', linewidth=1, color='black')
     axis.boxplot(exon_vectors,
             positions=exon_positions,
             manage_xticks=False,
             widths=box_width,
             autorange=True,
-            medianprops= median_props,
+            medianprops=median_props,
+            boxprops=boxprops,
             showfliers=False)
 
     # set plot limits, ticks, and tick labels
     x_pad = int((max_x - min_x) * 0.04)
     if x_pad > 0:
         axis.set_xlim(min_x - x_pad, max_x + x_pad)
-    axis.set_ylim((-1 * y_scale, y_scale))
+    axis.set_ylim((-1 * Y_SCALE, Y_SCALE))
     axis.locator_params(axis='both', nbins=4)
     axis.tick_params(right=True, top=True, labelsize=10)
     axis.ticklabel_format(axis='x', style='plain', useOffset=False)
@@ -271,7 +273,7 @@ def plot_gene(pdf, df_gene, transcript=None):
 
     If df_gene contains a conifer column, adds a subplot to the conifer data
     """
-    fig = plt.figure(figsize=(11, 8.5))
+    fig = plt.figure(figsize=(11, 8.5), dpi=300)
 
     # ax is the axis on which the log2s will be plotted
     # if Transcript provided, igv is the axis for the IGV-like figure
@@ -339,7 +341,7 @@ def plot_gene(pdf, df_gene, transcript=None):
     
     # save first figure
     fig.tight_layout()
-    pdf.savefig()
+    pdf.savefig(dpi='figure')
 
     # if any log2s were cutoff by [-2,2] plot, add second plot covering full range
     rescaled = False
@@ -349,12 +351,12 @@ def plot_gene(pdf, df_gene, transcript=None):
         max_log = df_gene[data_column].max()
 
         # check if rescaling needed
-        if min_log < -1 * y_scale or max_log > y_scale:
+        if min_log < -1 * Y_SCALE or max_log > Y_SCALE:
             axis.set_ylim((min_log - 0.1, max_log + 0.1))
             rescaled = True
             # adjust exon label y-coordinates
             y_mid = (max_log + min_log) / 2
-            stretch_factor = (max_log - min_log) / (y_scale * 2)
+            stretch_factor = (max_log - min_log) / (Y_SCALE * 2)
 
             for label in exon_labels[data_column]:
                 # extract info from old label and remove it
@@ -370,13 +372,13 @@ def plot_gene(pdf, df_gene, transcript=None):
         ax.set_title("Chromosome {}: {}:{} (Plot 2)".format(*title_parts))
 
         # save second figure
-        pdf.savefig()
+        pdf.savefig(dpi='figure')
 
     plt.close()
 
 def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
     """Saves to the pdf a plot of every point across all chromosomes present in df, flagging genes above min_log_ratio"""
-    fig = plt.figure(figsize=(11, 8.5))
+    fig = plt.figure(figsize=(11, 8.5), dpi=300)
 
     # ax is the axis on which the log2s will be plotted
     # if conifer data is present, cnf is the axis for that plot
@@ -411,7 +413,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
         v_line_coords.append(np.max(indices))
 
         for data_column, axis in plots.items():
-            axis.scatter(indices, df_chrom[data_column], label=chrom, marker=',', s=0.2)
+            axis.scatter(indices, df_chrom[data_column], label=chrom, marker='s', s=0.2, rasterized=True)
 
     # flag genes that are above or below log ratio threshold
     moved_labels = {}
@@ -424,11 +426,11 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
         for gene, coord in flagged_genes.items():
             label_x = coord[0]
             # adjust text coordinates if it's off the scale
-            if coord[1] < -0.98 * y_scale:
-                label_y = -0.95 * y_scale
+            if coord[1] < -0.98 * Y_SCALE:
+                label_y = -0.95 * Y_SCALE
                 moved = True
-            elif coord[1] > 0.98 * y_scale:
-                label_y = 0.95 * y_scale
+            elif coord[1] > 0.98 * Y_SCALE:
+                label_y = 0.95 * Y_SCALE
                 moved = True
             else:
                 label_y = coord[1]
@@ -441,7 +443,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
     
     for axis in plots.values():
         # set plot limits, ticks, and tick labels
-        axis.set_ylim((-1 * y_scale, y_scale))
+        axis.set_ylim((-1 * Y_SCALE, Y_SCALE))
         axis.locator_params(axis='both', nbins=4)
         axis.tick_params(right=True, top=True, labelsize=10)
         axis.set_xticks(x_tick_values)
@@ -476,7 +478,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
     plt.subplots_adjust(right=0.92)
 
     # save main figure
-    pdf.savefig()
+    pdf.savefig(dpi='figure')
 
     # if log2s were cutoff by [-2,2] plot, add second plot covering full range
     rescaled = False
@@ -484,7 +486,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
     for data_column, axis in plots.items():
         min_log = df[data_column].min()
         max_log = df[data_column].max()
-        if min_log < -1 * y_scale or max_log > y_scale:
+        if min_log < -1 * Y_SCALE or max_log > Y_SCALE:
             axis.set_ylim((min_log - 0.2, max_log + 0.2))
             rescaled = True
 
@@ -497,7 +499,7 @@ def plot_main(pdf, df, title, min_log_ratio, rolling_window_size):
                 axis.text(label_coords[0], new_y, gene, fontsize=8, va='center', ha='left')
 
         ax.set_title(title + ' (Plot 2)')
-        pdf.savefig()
+        pdf.savefig(dpi='figure')
 
     plt.close()
 
