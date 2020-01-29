@@ -110,29 +110,42 @@ def action(args):
     chroms = ann.chromosomes.keys()
     # filter out entries containing events on unsupported chromosomes
     df = df[df['CHROM'].isin(chroms)]
-    # parse the contents of the INFO field
-    df[['Size', 'Event_Type', 'End']] = df['INFO'].apply(parse_vcf_info)
-    # do not include small insertion/deletion calls from Pindel
-    df = df[df['Size'] > 10]
-    # add annotations
-    df[['Gene', 'Transcripts', 'Gene_Region']] = df.apply(get_annotations, genome_tree=gt, axis=1)
-    # create the Position field
-    df['Position'] = df.apply(get_position, axis=1)
 
-    # parse the contents of the reads field(s)
-    if args.multi_reads:
-        df['bbmergedReads'] = df['bbmergedREADS'].apply(parse_vcf_reads)
-        df['bwamemReads'] = df['bwamemREADS'].apply(parse_vcf_reads)
+    # check whether there are any variants left
+    if df.shape[0] > 0:
+        # parse the contents of the INFO field
+        df[['Size', 'Event_Type', 'End']] = df['INFO'].apply(parse_vcf_info)
+        # do not include small insertion/deletion calls from Pindel
+        df = df[df['Size'] > 10]
+        # add annotations
+        df[['Gene', 'Transcripts', 'Gene_Region']] = df.apply(get_annotations, genome_tree=gt, axis=1)
+        # create the Position field
+        df['Position'] = df.apply(get_position, axis=1)
+
+        # parse the contents of the reads field(s)
+        if args.multi_reads:
+            df['bbmergedReads'] = df['bbmergedREADS'].apply(parse_vcf_reads)
+            df['bwamemReads'] = df['bwamemREADS'].apply(parse_vcf_reads)
+        else:
+            df['Reads']=df['READS'].apply(parse_vcf_reads)
+
+        # sort and save to file
+        if args.multi_reads:
+            df = df.sort_values(['bwamemReads', 'Position'], ascending=[False, True])  #Sort on reads
+            out_fields=['Gene','Gene_Region','Event_Type','Size','Position','bbmergedReads', 'bwamemReads','Transcripts']
+        else:
+            df = df.sort_values(['Reads', 'Position'], ascending=[False, True])  #Sort on reads
+            out_fields=['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
+
+        df.to_csv(args.outfile, sep='\t', index=False, columns=out_fields)
+
+    # otherwise create a dummy output
     else:
-        df['Reads']=df['READS'].apply(parse_vcf_reads)
-
-    # sort and save to file
-    if args.multi_reads:
-        df = df.sort_values(['bwamemReads', 'Position'], ascending=[False, True])  #Sort on reads
-        out_fields=['Gene','Gene_Region','Event_Type','Size','Position','bbmergedReads', 'bwamemReads','Transcripts']
-    else:
-        df = df.sort_values(['Reads', 'Position'], ascending=[False, True])  #Sort on reads
-        out_fields=['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
-
-    df.to_csv(args.outfile, sep='\t', index=False, columns=out_fields)
+        if args.multi_reads:
+            out_fields=['Gene','Gene_Region','Event_Type','Size','Position','bbmergedReads', 'bwamemReads','Transcripts']
+        else:
+            out_fields = ['Gene','Gene_Region','Event_Type','Size','Position','Reads', 'Transcripts']
+        df = df.reindex([0], columns=out_fields)
+        df.loc[0,'Gene'] = 'No Pindel Data to Report'
+        df.to_csv(args.outfile, sep='\t', index=False, columns=out_fields)
 

@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 pindel_testfiles = os.path.join(config.datadir, 'pindel')
 multiread_testfiles = os.path.join(config.datadir, 'pindel_multiread')
+empty_testfiles = os.path.join(config.datadir, 'pindel_empty')
 
 class TestPindelSummary(TestBase):
     """
@@ -83,6 +84,24 @@ class TestPindelSummary(TestBase):
                     pindel_vcfs.append(os.path.join(root, file))
 
         cmd=["./munge", "pindel_summary", "--multi_reads", self.refgene]+ [x for x in pindel_vcfs] +[ '-o',simpletsv ]
+        subprocess.call(cmd)
+        self.assertTrue(filecmp.cmp(expected_output, simpletsv))
+
+    def testPindelSummaryEmpty(self):
+        # Test when start/stop are in coding (ie normal case)
+        # Test when start/stop are not incoding (ie intergenic case)
+        # Test when start is in coding but stop isn't (edge case) 
+        # Test when start is not in coding but stop is (edge case)
+        # Test when a call covers exons and introns (edge case)
+        simpletsv=os.path.join(self.outdir, 'empty_testing_output.tsv')
+        expected_output=os.path.join(empty_testfiles, 'empty_expected_output.tsv')
+        pindel_vcfs=[]
+        for root, dirs, files in os.walk(empty_testfiles):
+            for file in files:
+                if file.endswith(".vcf"):
+                    pindel_vcfs.append(os.path.join(root, file))
+
+        cmd=["./munge", "pindel_summary", self.refgene]+ [x for x in pindel_vcfs] +[ '-o',simpletsv ]
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(expected_output, simpletsv))
 
