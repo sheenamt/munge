@@ -300,12 +300,16 @@ def parse_clinical_fusions(event, fusion_partners):
     """
     # only consider gene fusion events
     if event['Type'] == 'GENE_FUSION':
-        region1 = event['Event1'].split(':')
-        chrom1 = region1[0]
-        pos1 = int(region1[1])
-        region2 = event['Event2'].split(':')
-        chrom2 = region2[0]
-        pos2 = int(region2[1])
+        # find chrom/pos for each event; if they do not exist, it is not a flagged fusion
+        try:
+            region1 = event['Event1'].split(':')
+            chrom1 = region1[0]
+            pos1 = int(region1[1])
+            region2 = event['Event2'].split(':')
+            chrom2 = region2[0]
+            pos2 = int(region2[1])
+        except IndexError:
+            return 'NO'
 
         # check if Event1 corresponds to a gene of interest and Event2 to one of its fusion partners
         # if so, return the pair's custom note
