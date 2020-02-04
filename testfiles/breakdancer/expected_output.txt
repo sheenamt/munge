@@ -1,4 +1,0 @@
-Event_1	Event_2	Type	Size	Gene_1	Gene_2	num_Reads
-chrX:153770455	chrX:153770465	DEL	110	G6PD;IKBKG	G6PD;IKBKG	5
-chr4:1795000	chr4:179500	DEL	505	Intergenic	Intergenic	2
-chr4:1806374	chr4:1806641	DEL	335	FGFR3	FGFR3	2

@@ -19,12 +19,15 @@ import __init__ as config
 log = logging.getLogger(__name__)
 
 files1 = """4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.Coverage_Gene_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.Coverage_Exon_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.CNV_Gene_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.CNV_Exon_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.CNV_QC_Gene_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.CNV_QC_Exon_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.CNV_bins.txt
 4902_B01_BROv7_NA12878_HA0187.Pindel_Analysis.txt
+4902_B01_BROv7_NA12878_HA0187.Breakdancer_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.QC_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.SV_Analysis.txt
 4902_B01_BROv7_NA12878_HA0187.Genotype_Analysis.txt
@@ -36,10 +39,13 @@ files1 = """4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.SNP_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.CNV_Gene_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.CNV_Exon_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.Coverage_Gene_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.Coverage_Exon_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.CNV_bins.txt
 4929_E04_OPXv4_NA12878_HA0187.CNV_QC_Gene_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.CNV_QC_Exon_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.Pindel_Analysis.txt
+4929_E04_OPXv4_NA12878_HA0187.Breakdancer_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.SV_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.Genotype_Analysis.txt
 4929_E04_OPXv4_NA12878_HA0187.Quality_Analysis.txt
@@ -54,10 +60,13 @@ files1 = """4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt
 4903_C01_OPXv4_HA0187.quality_metrics
 4903_C01_OPXv4_HA0187.CNV_Gene_Analysis.txt
 4903_C01_OPXv4_HA0187.CNV_Exon_Analysis.txt
+4903_C01_OPXv4_HA0187.Coverage_Gene_Analysis.txt
+4903_C01_OPXv4_HA0187.Coverage_Exon_Analysis.txt
 4903_C01_OPXv4_HA0187.CNV_QC_Gene_Analysis.txt
 4903_C01_OPXv4_HA0187.CNV_QC_Exon_Analysis.txt
 4903_C01_OPXv4_HA0187.CNV_bins.txt
 4903_C01_OPXv4_HA0187.Pindel_Analysis.txt
+4903_C01_OPXv4_HA0187.Breakdancer_Analysis.txt
 4903_C01_OPXv4_HA0187.SV_Analysis.txt
 4903_C01_OPXv4_HA0187.Genotype_Analysis.txt
 4903_C01_OPXv4_HA0187.Quality_Analysis.txt""".splitlines()
@@ -106,6 +115,13 @@ class TestFilters(TestBase):
         assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Pindel_Analysis.txt',
                                '4929_E04_OPXv4_NA12878_HA0187.Pindel_Analysis.txt',
                                '4903_C01_OPXv4_HA0187.Pindel_Analysis.txt'])
+
+    def testBreakdancerFileFilter(self):
+
+        keepers = {fn for fn in files1 if f.breakdancer_analysis(Path('',fn))}
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Breakdancer_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Breakdancer_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Breakdancer_Analysis.txt'])
 
     def testMSIFileFilter(self):
 
@@ -163,11 +179,25 @@ class TestFilters(TestBase):
         assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.SNP_Analysis.txt',
                                '4902_B01_BROv7_NA12878_HA0187.SV_Analysis.txt',
                                '4902_B01_BROv7_NA12878_HA0187.Pindel_Analysis.txt',
+                               '4902_B01_BROv7_NA12878_HA0187.Breakdancer_Analysis.txt',
                                '4929_E04_OPXv4_NA12878_HA0187.SNP_Analysis.txt',
                                '4929_E04_OPXv4_NA12878_HA0187.SV_Analysis.txt',
                                '4929_E04_OPXv4_NA12878_HA0187.Pindel_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Breakdancer_Analysis.txt',
                                '4903_C01_OPXv4_HA0187.SNP_Analysis.txt',
                                '4903_C01_OPXv4_HA0187.SV_Analysis.txt',
-                               '4903_C01_OPXv4_HA0187.Pindel_Analysis.txt'
+                               '4903_C01_OPXv4_HA0187.Pindel_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Breakdancer_Analysis.txt',
                            ])
 
+    def testCoverageGeneFileFilter(self):
+        keepers = {fn for fn in files1 if f.gene_coverage_analysis(Path('',fn))}
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Coverage_Gene_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Coverage_Gene_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Coverage_Gene_Analysis.txt'])
+
+    def testCoverageExonFileFilter(self):
+        keepers = {fn for fn in files1 if f.exon_coverage_analysis(Path('',fn))}
+        assert keepers == set(['4902_B01_BROv7_NA12878_HA0187.Coverage_Exon_Analysis.txt',
+                               '4929_E04_OPXv4_NA12878_HA0187.Coverage_Exon_Analysis.txt',
+                               '4903_C01_OPXv4_HA0187.Coverage_Exon_Analysis.txt'])

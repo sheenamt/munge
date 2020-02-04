@@ -13,7 +13,7 @@ def build_parser(parser):
     parser.add_argument('input_file', default=None,
                         help='Explicitly specify input file of variants in Annovar format')
     parser.add_argument('--machine',
-                        choices=['H', 'N', 'M'],
+                        choices=['HISEQ', 'NEXTSEQ', 'MISEQ'],
                         help='Machine type for internal frequencies')
     parser.add_argument('--assay',
                         help='Assay code for interal frequencies')
@@ -95,9 +95,9 @@ def action(args):
         annots = [AnnotInfo(*a) for a in ANNOTATIONS]
         #Machine and assay are optional and only used when we want full annotation 
         if args.machine:
-            machine=args.machine
+            machine=args.machine.lower()
         if args.assay:
-            assay=args.assay.split('v')[0]
+            assay=args.assay.lower()
             internal_cadd_file = '_'.join(['hg19','CADD',assay])
             if os.path.isfile(os.path.join(args.library_dir, internal_cadd_file)):
                 annots.append(AnnotInfo(dbtype='generic', anno_type='--genericdbfile', args=[internal_cadd_file, '-filter']))

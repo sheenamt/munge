@@ -5,7 +5,9 @@ import logging
 import argparse
 import pandas as pd
 import sys
+import csv
 from munging.annotation import multi_split, chromosomes
+from intervaltree import Interval, IntervalTree
 
 log = logging.getLogger(__name__)
 pd.options.display.width = 1000
@@ -20,6 +22,10 @@ def build_parser(parser):
                         help='Threshold for quality filter, 200 default')
     parser.add_argument('-s','--report_singletons',action='store_true',
                         help='Report singleton breakpoints. Results in many more output lines')
+    parser.add_argument('-c','--capture_file',
+                        help='Assay BED file. Allows annotations for on-target or off')
+    parser.add_argument('-f','--flagged_fusions',
+                        help='Assay flagged fusions file. Allows flagging of clinically-relevant gene fusions')                    
     parser.add_argument('-o', '--outfile',
                         help='Output file', default=sys.stdout,
                         type=argparse.FileType('w'))
@@ -155,6 +161,189 @@ def parse_repeats(data):
 
 def parse_singleton(event):
     return [event['Event1'], event['Event2'], event['Gene'], event['Gene name'], event['location'],'SINGLETON EVENT', event['NM'], event['QUAL'], 'SINGLETON EVENT;'+event['FILTER'], event['1000g_event'],event['1000g_max_AF'],event['Repeats'],'SINGLETON EVENT',event['DGV_GAIN_found|tested'],event['DGV_LOSS_found|tested']]
+
+def split_genes(gene_field):
+    """Undoes multi-gene concatenation and removes the 'Promoter' tag"""
+    return str(gene_field).replace('[Promoter]','').split(';')
+
+def parse_event_type(event):
+    """Returns 'GENE_FUSION', 'INTRAGENE', 'INTERGENIC', or 'SINGLETON' depending on contents of event"""
+    
+    if event['Event2'] == 'SingleBreakEnd':
+        return 'SINGLETON'
+
+    # undo multi gene concatenation and remove 'Promoter' label
+    genes_1 = split_genes(event['Gene1'])
+    genes_2 = split_genes(event['Gene2'])
+
+    # if there is no overlap between the set of genes for Gene1 and Gene2, label GENE_FUSION
+    if not (set(genes_1) & set(genes_2)):
+        return 'GENE_FUSION'
+    # if both gene1 and gene2 are intergenic, label INTERGENIC
+    elif genes_1 == ['Intergenic'] and genes_2 == ['Intergenic']:
+        return 'INTERGENIC'
+    # otherwise, label INTRAGENIC
+    return 'INTRAGENIC'
+
+
+def build_capture_trees(bed_file):
+    """Reads BED file and returns a dict of 25 interval trees (1/per chromosome)"""
+    # read the BED file
+    bed_df = pd.read_csv(bed_file, usecols=[0,1,2,3], sep='\t',
+        names=['chrom', 'start', 'stop', 'gene'],
+        dtype={'chrom':str, 'start' : int, 'stop' : int, 'gene' : str})
+
+    # Intervals exclude the end point, so increment all stops
+    bed_df['stop'] += 1
+
+    # build an interval tree for each chromosome
+    trees = {}
+    chroms = [str(i) for i in range(1,23)] + ['X', 'Y']
+    for c in chroms:
+       # select rows for c
+       chrom_df = bed_df[bed_df.chrom == c][['start', 'stop', 'gene']]
+       # convert rows to series of tuples
+       chrom_tuples = [tuple(x) for x in chrom_df.values]
+       # build the interval tree from tuples
+       trees[c] = IntervalTree.from_tuples(chrom_tuples)
+    
+    return trees
+
+
+def parse_capture_intent(event, interval_trees):
+    """returns YES or NO depending on whether positions in event are found in the interval_trees"""
+    
+    # separate Event1 and Event2 into [<chr>, <pos>]
+    pos1 = event['Event1'].replace('chr', '').split(':')
+    pos2 = event['Event2'].replace('chr', '').split(':')
+
+    # if pos1 is found in interval_trees label YES
+    try:
+         tree1 = interval_trees[pos1[0]]
+         if len(tree1[int(pos1[1])]) > 0:
+             return 'YES'
+    except KeyError:
+        pass
+
+    # if pos2 is found in interval_trees label YES
+    try:
+         tree2 = interval_trees[pos2[0]]
+         if len(tree2[int(pos2[1])]) > 0:
+             return 'YES'
+    except KeyError:
+        pass
+
+    # otherwise, label NO
+    return 'NO'
+
+
+def parse_flagged_fusions_file(flagged_fusions_file):
+    """
+    Uses the contents of the assay flagged fusions file to return a searchable data structure
+    of annotated region pairs.
+
+    Returns a dictionary of 24 IntervalTrees, one for each chromosome. Each IntervalTree
+    is composed of Intervals whose boundaries are defined by [region1] and whose contents
+    are themselves IntervalTrees.
+    
+    These secondary trees are composed of intervals whose boundaries are defined by [region2] and
+    whose contents are [notes]
+    """
+    fusions_df = pd.read_csv(flagged_fusions_file, sep='\t', header=0, dtype={'chrom1':str, 'chrom2':str})
+
+    # build an interval tree for each chromosome
+    trees = {}
+    chroms = ['chr' + str(i) for i in range(1,23)] + ['chrX', 'chrY']
+    for c in chroms:
+        
+        # fiter the fusions_df on chrom1
+        chrom_df = fusions_df[fusions_df['chrom1'] == c]
+
+        trees[c] = IntervalTree()
+        
+        # create a collection of subtrees for each unique region1 on c
+        regions = {}
+        for _, row in chrom_df.iterrows():
+            region1 = row['region1']
+
+            # if this region hasn't been seen yet, create a dict for each chromosomal tree
+            if region1 not in regions.keys():
+                regions[region1] =  {}
+
+            # the intervals of the subtrees are defined by region2
+            chrom2 = row['chrom2']
+            interval2 = row['region2'].split('-')
+            start2 = int(interval2[0])
+            stop2 = int(interval2[1]) + 1
+
+            # if this is the first fusions partner on chrom2, create a new IntervalTree
+            if chrom2 not in regions[region1].keys():
+                regions[region1][chrom2] = IntervalTree()
+
+            # add the interval for region2 
+            regions[region1][chrom2][start2:stop2] = row['notes']
+        
+        # populate the primary interval tree for this chromosome
+        for region1 in regions.keys():
+            interval1 = region1.split('-')
+            start1 = int(interval1[0])
+            stop1 = int(interval1[1]) + 1
+            trees[c][start1:stop1] = regions[region1]
+
+    return trees
+
+
+def parse_clinical_fusions(event, fusion_partners):
+    """
+    Returns a custom note if event is represented in the fusion_partners data structure
+    Otherwise returns 'NO'.
+    """
+    # only consider gene fusion events
+    if event['Type'] == 'GENE_FUSION':
+        region1 = event['Event1'].split(':')
+        chrom1 = region1[0]
+        pos1 = int(region1[1])
+        region2 = event['Event2'].split(':')
+        chrom2 = region2[0]
+        pos2 = int(region2[1])
+
+        # check if Event1 corresponds to a gene of interest and Event2 to one of its fusion partners
+        # if so, return the pair's custom note
+        for interval1 in fusion_partners[chrom1][pos1]:
+            try:
+                subtrees = interval1[2]
+                for interval2 in subtrees[chrom2][pos2]:
+                    return parse_flagged_fusion_note(interval2[2])
+
+            except KeyError:
+                continue
+
+        # check if Event2 corresponds to a gene of interest and Event1 to one of its fusion partners
+        # if so, return the pair's custom note
+        for interval2 in fusion_partners[chrom2][pos2]:
+            try:
+                subtrees = interval2[2]
+                for interval1 in subtrees[chrom1][pos1]:
+                    return parse_flagged_fusion_note(interval1[2])
+                    
+            except KeyError:
+                continue
+
+    return 'NO'
+
+
+def parse_flagged_fusion_note(note):
+    """
+    Modifies a flagged_fusion_note for display in a workbook
+    """
+    if 'Quiver' in note:
+        fusion = note.split(':')[1].split('-')
+        gene1 = fusion[0]
+        gene2 = fusion[1]
+        output = '=HYPERLINK("http://quiver.archerdx.com/results?query={0}%3A{1}", "{2}")'
+        return output.format(gene1, gene2, note)
+    
+    return note
 
 def smoosh_event_into_one_line(event_df):
     ''' Smooshes a multiline annotsv event into one line'''
@@ -314,11 +503,24 @@ def action(args):
             event_results_list.append(event_result)
     var_cols = ['Event1', 'Event2', 'Gene1','Gene2','location1','location2','Length', 'NM','QUAL','FILTER','1000g_event', '1000g_max_AF', 'Repeats1','Repeats2','DGV_GAIN_found|tested','DGV_LOSS_found|tested']
     output_df=pd.DataFrame(event_results_list,columns=var_cols)
+
+    # add column for event 'Type'
+    output_df['Type'] = output_df.apply(parse_event_type, axis=1)
+
+    # if requested, add column for capture intent
+    if args.capture_file:
+        capture_trees = build_capture_trees(args.capture_file)
+        output_df['Intended_For_Capture'] = output_df.apply(parse_capture_intent, interval_trees=capture_trees, axis=1)
+
+    # if requested, add column for clinically relevant fusions
+    if args.flagged_fusions:
+        fp_trees = parse_flagged_fusions_file(args.flagged_fusions)
+        output_df['Flagged_Fusions'] = output_df.apply(parse_clinical_fusions, fusion_partners=fp_trees, axis=1)
+
+    # filter out singletons unless otherwise requested
     if not args.report_singletons:
-
-        # delete all rows for which column 'Age' has value greater than 30 and Country is India 
         output_df=output_df[(output_df['Event2'] !='SingleBreakEnd') & (output_df['location2'] !='SINGLETON EVENT')]
-    output_df.to_csv(args.outfile, index=False, columns=var_cols,sep='\t')
 
+    # save output to file
+    output_df.to_csv(args.outfile, index=False, sep='\t', quoting=csv.QUOTE_NONE)
 
-    

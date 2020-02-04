@@ -55,8 +55,8 @@ class TestParsers(TestBase):
                                           'Polyphen', 'Sift', 'Mutation_Taster', 'Gerp', 
                                           'UW_Freq', 'UW_Count', 'UW_DEC_p',
                                           '1000g_ALL', 'EVS_esp6500_ALL', '1000g_AMR', 'EVS_esp6500_AA', '1000g_EUR',
-                                          'EVS_esp6500_EU', '1000g_SAS','1000g_EAS', '1000g_AFR', 'ADA_Alter_Splice', 'RF_Alter_Splice', 
-                                          '5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
+                                          'EVS_esp6500_EU', '1000g_SAS','1000g_EAS', '1000g_AFR', 'ADA_Alter_Splice', 'RF_Alter_Splice',
+                                          'mutalyzer_errors', '5437_NA12878_Ref|Var','6037_NA12878_Ref|Var','0228T_Ref|Var', 'Count'])
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         
     def testCNVGeneParser(self):
@@ -210,13 +210,17 @@ class TestParsers(TestBase):
         files = ifilter(filters.any_analysis, walker(testfiles))  
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys,sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
-        self.assertListEqual(prefixes,['6037_NA12878_Variants|Total', '6037_NA12878_Status', '0228T_Variants|Total', '0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_Status'])
-        self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '6037_NA12878_Variants|Total', '6037_NA12878_Status', '0228T_Variants|Total', '0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_Status'])
+        self.assertListEqual(prefixes,['6037_NA12878_Variants|Total', '6037_NA12878_VAF','6037_NA12878_Status', '0228T_Variants|Total', '0228T_VAF','0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_VAF','5437_NA12878_Status'])
+        self.assertListEqual(fieldnames, ['Position', 'Ref_Base', 'Var_Base', 'Clinically_Flagged', '6037_NA12878_Variants|Total', '6037_NA12878_VAF','6037_NA12878_Status', '0228T_Variants|Total', '0228T_VAF', '0228T_Status', '5437_NA12878_Variants|Total', '5437_NA12878_VAF','5437_NA12878_Status'])
         self.assertListEqual(variant_keys, ['Position', 'Ref_Base', 'Var_Base'])
         self.assertEqual(specimens[('chr7:55259524','T','A')]['0228T_Status'], 'REVIEW')#less than 100 reads
         self.assertEqual(specimens[('chr3:37034946', 'G', 'A')]['0228T_Status'], 'HET')#.2-.7
         self.assertEqual(specimens[('chr2:215661788','C','T')]['0228T_Status'], 'HOMO')#>.7
         self.assertEqual(specimens[('chr13:32936674', 'C', 'T')]['0228T_Status'], 'NEG')#<.1
+        self.assertEqual(specimens[('chr7:55259524','T','A')]['0228T_VAF'], '0.0000')
+        self.assertEqual(specimens[('chr3:37034946', 'G', 'A')]['0228T_VAF'], '0.5062')
+        self.assertEqual(specimens[('chr2:215661788','C','T')]['0228T_VAF'], '0.9924')
+        self.assertEqual(specimens[('chr13:32936674', 'C', 'T')]['0228T_VAF'], '0.0163')
 
     def testAnnotSVParser(self):
         specimens = defaultdict(dict)
@@ -229,6 +233,50 @@ class TestParsers(TestBase):
         chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
         specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
         self.assertListEqual(prefixes,['0228T', '5437_NA12878', '6037_NA12878','Count'])
-        self.assertListEqual(fieldnames, ['Event1','Event2','Gene1','Gene2','NM','0228T', '5437_NA12878', '6037_NA12878','Count'])
-        self.assertListEqual(variant_keys, ['Event1','Event2','Gene1','Gene2','NM'])
+        self.assertListEqual(fieldnames, ['Event1','Event2','Gene1','Gene2', 'location1', 'location2', 'NM', '1000g_event', '1000g_max_AF', 'Repeats1', 'Repeats2', 'DGV_GAIN_found|tested', 'DGV_LOSS_found|tested', '0228T', '5437_NA12878', '6037_NA12878','Count'])
+        self.assertListEqual(variant_keys, ['Event1','Event2'])
         self.assertEqual(len(specimens), 19)
+
+    def testAmpliconParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
+        analysis_type='parsers.parse_amplicon'
+        files = ifilter(filters.any_analysis, walker(testfiles))
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(prefixes,['0228T', '5437_NA12878', '6037_NA12878'])
+        self.assertListEqual(fieldnames, ['Position', 'Probe','0228T', '5437_NA12878', '6037_NA12878'])
+        self.assertListEqual(variant_keys, ['Position', 'Probe'])
+        #Should heave 753 entries for hhv3, the only assay running this parser
+        self.assertEqual(len(specimens), 753)
+
+    def testBreakDancerParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        sort_order=['0228T_CON_OPXv4_INT','5437_E05_OPXv4_NA12878_MA0013','6037_E05_OPXv4_NA12878_HA0201']
+        analysis_type='parsers.parse_breakdancer'
+        files = ifilter(filters.any_analysis, walker(testfiles))  
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(prefixes,['0228T', '6037_NA12878','Count'])
+        self.assertListEqual(fieldnames, ['Event_1', 'Event_2', 'Type', 'Size', 'Gene_1', 'Gene_2', '0228T', '6037_NA12878','Count'])
+        self.assertListEqual(variant_keys, ['Event_1', 'Event_2'])
+
+    def testCoverageKitParser(self):
+        specimens = defaultdict(dict)
+        annotation = {} 
+        prefixes = []
+        variant_keys = []
+        sort_order=['NA12878-HP998-HHv3','OCIAML3-HP998-HHv3']
+        analysis_type='parsers.parse_coveragekit'
+        files = ifilter(filters.exon_coverage_analysis, walker(testfiles))  
+        chosen_parser='{}(files, specimens, annotation, prefixes, variant_keys, sort_order)'.format(analysis_type)
+        specimens, annotation, prefixes, fieldnames, variant_keys=eval(chosen_parser)
+        self.assertListEqual(prefixes,['NA12878-HP998-HHv3_AveCoverage','OCIAML3-HP998-HHv3_AveCoverage'])
+        self.assertListEqual(fieldnames, ['RegionID', 'Position','NA12878-HP998-HHv3_AveCoverage','OCIAML3-HP998-HHv3_AveCoverage'])
+        self.assertListEqual(variant_keys, ['RegionID', 'Position'])

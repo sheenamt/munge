@@ -1,8 +1,10 @@
+intervaltree==2.1.0
+matplotlib>=2.2.4
 natsort>=5.0.2
 numpy>=1.10.1
 pandas>=0.17.1
-XlsxWriter==0.9.6
-suds==0.4
-xlwt==0.7.5
 plotly>=2.7.0
-
+pyarrow>=0.15.1
+suds==0.4
+XlsxWriter==0.9.6
+xlwt==0.7.5

@@ -119,7 +119,9 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
             #Create a smaller version of this really long string
             reads_pfx=pfx['mini-pfx']+'_Variants|Total'
             status_pfx=pfx['mini-pfx']+'_Status'
+            vaf_pfx=pfx['mini-pfx']+'_VAF'
             prefixes.append(reads_pfx)
+            prefixes.append(vaf_pfx)
             prefixes.append(status_pfx)
             with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
                 reader = csv.DictReader(fname, delimiter='\t')
@@ -133,7 +135,8 @@ def parse_hotspot_flagged(files, specimens, annotation, prefixes, variant_keys, 
                     except ZeroDivisionError:
                         frac = '0'
                     specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
-                    if int(row['Valid_Reads']) >= 100:
+                    specimens[variant][vaf_pfx]=frac
+                    if int(row['Valid_Reads']) >= 50:
                         if float(frac) > 0.70:
                             specimens[variant][status_pfx]='HOMO'
                         elif float(frac) <= 0.10:
@@ -235,6 +238,45 @@ def parse_pindel(files, specimens, annotation, prefixes, variant_keys, sort_orde
     fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
+
+def parse_breakdancer(files, specimens, annotation, prefixes, variant_keys, sort_order):
+    """Parse the breakdancer analysis file, give total counts of samples with site"""
+
+    files = filter(filters.breakdancer_analysis, files)
+    variant_keys = ['Event_1', 'Event_2']
+    #Other annotation to keep 
+    annotation_headers = [
+        'Type',
+        'Size',
+        'Gene_1',
+        'Gene_2'
+        ]
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            prefixes.append(pfx['mini-pfx'])
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    #Update the specimen dict for this variant, for this pfx, report the num_Reads found
+                    specimens[variant][pfx['mini-pfx']] = row['num_Reads']
+                    annotation[variant] = row
+
+    #Update the specimen dict for this variant, count samples present
+    for key, value in specimens.iteritems():
+        specimens[key]['Count']=len(value)
+
+    #Add 'Count' to prefixes for correct dict zipping/printing    
+    prefixes.append('Count')
+    fieldnames = variant_keys + annotation_headers + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys 
+
+
 def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
     """Parse the snp output file, give ref|var read counts per sample"""
     files = filter(filters.snp_analysis, files)
@@ -264,6 +306,7 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
         '1000g_AFR',
         'ADA_Alter_Splice',
         'RF_Alter_Splice',
+        'mutalyzer_errors'
 ]
 
     for sample in sort_order:
@@ -413,7 +456,19 @@ def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_ord
     """Parse the annotsv analysis file, give total counts of samples with site"""
 
     files = filter(filters.annotsv_analysis, files)
-    variant_keys = ['Event1', 'Event2', 'Gene1', 'Gene2', 'NM']
+    variant_keys = ['Event1', 'Event2']
+    annotation_headers = ['Gene1',
+                    'Gene2',
+                    'location1',
+                    'location2',
+                    'NM',
+                    '1000g_event',
+                    '1000g_max_AF',
+                    'Repeats1',
+                    'Repeats2',
+                    'DGV_GAIN_found|tested',
+                    'DGV_LOSS_found|tested']
+
     for sample in sort_order:
         #Grab the file for each sample, in specified sort order
         pfx_file = [s for s in files if sample in s.fname]
@@ -436,5 +491,62 @@ def parse_annotsv(files, specimens, annotation, prefixes, variant_keys, sort_ord
 
     #Add 'Count' to prefixes for correct dict zipping/printing    
     prefixes.append('Count')
+    fieldnames = variant_keys + annotation_headers + prefixes
+    return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+def parse_amplicon(files, specimens, annotation, prefixes, variant_keys, sort_order):
+    """Parse the annotsv analysis file, give total counts of samples with site"""
+
+    files = filter(filters.amplicon_analysis, files)
+    variant_keys = ['Position', 'Probe']
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string
+            prefixes.append(pfx['mini-pfx'])
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][pfx['mini-pfx']] = row['MeanCoverage']
+                    annotation[variant] = row
+
     fieldnames = variant_keys + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+def parse_coveragekit(files, specimens, annotation, prefixes, variant_keys, sort_order):
+    """Parse the coverage kit analysis file, give total counts of samples with site"""
+    files=list(files)
+    variant_keys = ['RegionID']
+    annotation_headers=['Position']
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string, if possible
+            cov_pfx=pfx['mini-pfx']+'_AveCoverage'
+            prefixes.append(cov_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][cov_pfx] = row['AverageCoverage']
+                    annotation[variant] = row
+
+    #Update the specimen dict for this variant, count samples over threshold
+    for region, sample_data in specimens.iteritems():
+        total=0
+        for s in sample_data.values():
+            if float(s)>=250:
+                total+=1
+        specimens[region]['Count']=total   
+
+    #Add 'Count' to prefixes for correct dict zipping/printing    
+    prefixes.append('Count')
+    fieldnames = variant_keys + annotation_headers + prefixes 
+    return specimens, annotation, prefixes, fieldnames, variant_keys  
