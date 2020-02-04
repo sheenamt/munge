@@ -330,7 +330,7 @@ def parse_snp(files, specimens, annotation, prefixes, variant_keys, sort_order):
 
     #Add 'Count' to prefixes for correct dict zipping/printing    
     prefixes.append('Count')
-    fieldnames = variant_keys + prefixes + annotation_headers
+    fieldnames = variant_keys + annotation_headers + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
 
 
