@@ -189,7 +189,7 @@ def parse_event_type(event):
 def build_capture_trees(bed_file):
     """Reads BED file and returns a dict of 25 interval trees (1/per chromosome)"""
     # read the BED file
-    bed_df = pd.read_csv(bed_file, sep='\t',
+    bed_df = pd.read_csv(bed_file, usecols=[0,1,2,3], sep='\t',
         names=['chrom', 'start', 'stop', 'gene'],
         dtype={'chrom':str, 'start' : int, 'stop' : int, 'gene' : str})
 

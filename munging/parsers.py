@@ -513,3 +513,37 @@ def parse_amplicon(files, specimens, annotation, prefixes, variant_keys, sort_or
 
     fieldnames = variant_keys + prefixes
     return specimens, annotation, prefixes, fieldnames, variant_keys            
+
+def parse_coveragekit(files, specimens, annotation, prefixes, variant_keys, sort_order):
+    """Parse the coverage kit analysis file, give total counts of samples with site"""
+    files=list(files)
+    variant_keys = ['RegionID']
+    annotation_headers=['Position']
+    for sample in sort_order:
+        #Grab the file for each sample, in specified sort order
+        pfx_file = [s for s in files if sample in s.fname]
+        if pfx_file:
+            pfx_file = pfx_file[0]
+            pfx = munge_pfx(pfx_file.fname)
+            #Create a smaller version of this really long string, if possible
+            cov_pfx=pfx['mini-pfx']+'_AveCoverage'
+            prefixes.append(cov_pfx)
+            with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
+                reader = csv.DictReader(fname, delimiter='\t')
+                for row in reader:
+                    variant = tuple(row[k] for k in variant_keys)
+                    specimens[variant][cov_pfx] = row['AverageCoverage']
+                    annotation[variant] = row
+
+    #Update the specimen dict for this variant, count samples over threshold
+    for region, sample_data in specimens.iteritems():
+        total=0
+        for s in sample_data.values():
+            if float(s)>=250:
+                total+=1
+        specimens[region]['Count']=total   
+
+    #Add 'Count' to prefixes for correct dict zipping/printing    
+    prefixes.append('Count')
+    fieldnames = variant_keys + annotation_headers + prefixes 
+    return specimens, annotation, prefixes, fieldnames, variant_keys  
