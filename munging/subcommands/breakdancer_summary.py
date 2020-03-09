@@ -63,25 +63,31 @@ def action(args):
     chroms = ann.chromosomes.keys()
     df = df[df['Chr1'].isin(chroms) & df['Chr2'].isin(chroms)]
 
-    # add events columns
-    df['Event_1'] = df[['Chr1', 'Pos1']].apply(add_event, axis=1)
-    df['Event_2'] = df[['Chr2', 'Pos2']].apply(add_event, axis=1)
-    # add genes columns
-    df['Gene_1'] = df[['Chr1', 'Pos1']].apply(add_genes, genome_tree = gt, axis=1)
-    df['Gene_2'] = df[['Chr2', 'Pos2']].apply(add_genes, genome_tree = gt, axis=1)
+    # check that any calls remain before applying functions or pandas with crash
+    if len(df) > 0:
+
+        # add events columns
+        df['Event_1'] = df[['Chr1', 'Pos1']].apply(add_event, axis=1)
+        df['Event_2'] = df[['Chr2', 'Pos2']].apply(add_event, axis=1)
+        # add genes columns
+        df['Gene_1'] = df[['Chr1', 'Pos1']].apply(add_genes, genome_tree = gt, axis=1)
+        df['Gene_2'] = df[['Chr2', 'Pos2']].apply(add_genes, genome_tree = gt, axis=1)
+
+        if args.genes:
+            # read in genes to keep
+            gene_df = pd.read_csv(args.genes, comment='#', delimiter='\t',header=None, usecols=[0], names=['gene'])
+            gene_set = set(gene_df['gene'])
+            # discard rows that don't contain a gene from the gene_set
+            df['Flagged_Genes'] = df.apply(filter_genes, gene_set=gene_set, axis=1)
+
+        # sort and save the relevant columns
+        df.sort_values(['num_Reads','Event_1'], ascending=[False, True], inplace=True)
 
     if args.genes:
-        # read in genes to keep
-        gene_df = pd.read_csv(args.genes, comment='#', delimiter='\t',header=None, usecols=[0], names=['gene'])
-        gene_set = set(gene_df['gene'])
-        # discard rows that don't contain a gene from the gene_set
-        df['Flagged_Genes'] = df.apply(filter_genes, gene_set=gene_set, axis=1)
         out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2', 'Flagged_Genes', 'num_Reads']
     
     else:
         out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2', 'num_Reads']
     
-    # sort and save the relevant columns
-    df = df.sort_values(['num_Reads','Event_1'], ascending=[False, True])
     df.to_csv(args.outfile, index=False, sep='\t', columns=out_fields)
 
