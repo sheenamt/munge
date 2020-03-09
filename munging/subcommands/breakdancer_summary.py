@@ -63,7 +63,7 @@ def action(args):
     chroms = ann.chromosomes.keys()
     df = df[df['Chr1'].isin(chroms) & df['Chr2'].isin(chroms)]
 
-    # check that any calls remain before applying functions or pandas with crash
+    # check that any calls remain before applying functions or pandas will crash
     if len(df) > 0:
 
         # add events columns
@@ -77,10 +77,10 @@ def action(args):
             # read in genes to keep
             gene_df = pd.read_csv(args.genes, comment='#', delimiter='\t',header=None, usecols=[0], names=['gene'])
             gene_set = set(gene_df['gene'])
-            # discard rows that don't contain a gene from the gene_set
+            # add column for flagged genes of interest
             df['Flagged_Genes'] = df.apply(filter_genes, gene_set=gene_set, axis=1)
 
-        # sort and save the relevant columns
+        # sort by reads then position
         df.sort_values(['num_Reads','Event_1'], ascending=[False, True], inplace=True)
 
     if args.genes:
@@ -89,5 +89,6 @@ def action(args):
     else:
         out_fields = ['Event_1','Event_2','Type','Size','Gene_1','Gene_2', 'num_Reads']
     
+    # save the relevant columns
     df.to_csv(args.outfile, index=False, sep='\t', columns=out_fields)
 
