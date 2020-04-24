@@ -20,6 +20,8 @@ def build_parser(parser):
     parser.add_argument('output', type=argparse.FileType('w'),
                         help='path and name of output to write',
                         default=sys.stdout)
+    parser.add_argument('--dec_file',
+                        help='annovar formatted file with DEC scores')
 
 def format_indels(series):
     """
@@ -120,6 +122,14 @@ def action(args):
     #Process the clinically flagged positions, format for varscan readcounts function    
     varscan_format_variants = flagged_variants.apply(format_indels, axis = 1)
 
+    # if DEC file provided, add column for DEC values
+    if args.dec_file:
+        dec_df = pd.read_csv(args.dec_file, sep='\t', header=None, names=['generic', 'uw_dec_pvalue', 'chrom', 'start', 'stop', 'Ref_Base', 'Var_Base'])
+        dec_df['chrom'] = dec_df['chrom'].astype('str')
+        
+        varscan_format_variants = pd.merge(varscan_format_variants, dec_df, how='left', on=['chrom', 'start', 'Ref_Base', 'Var_Base'])
+        varscan_format_variants['uw_dec_pvalue'] = varscan_format_variants['uw_dec_pvalue'].fillna(value=-1)
+
     #parse the varscan output into preferred format 
     reader = open(genotype_calls, 'rU')
     reader.next()
@@ -137,9 +147,15 @@ def action(args):
         for variant in info[1]['variants']:
             varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'Variant_Reads']=variant[1]
         
-    header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads']
+    #Add column for VAF
+    varscan_format_variants['Variant_Read_Fraction'] = varscan_format_variants['Variant_Reads'].astype(float) / varscan_format_variants['Valid_Reads'].astype(float)
+    varscan_format_variants['Variant_Read_Fraction'] = varscan_format_variants['Variant_Read_Fraction'].round(4)
     
-    varscan_format_variants.to_csv(genotype_analysis, na_rep='0',index=False,columns=header,sep='\t')
+    header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads', 'Variant_Reads', 'Variant_Read_Fraction']
+    if args.dec_file:
+        header.append('uw_dec_pvalue')
+
+    varscan_format_variants.to_csv(genotype_analysis, na_rep=0, index=False, columns=header, sep='\t')
 
 
     
