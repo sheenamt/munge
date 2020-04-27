@@ -124,11 +124,11 @@ def action(args):
 
     # if DEC file provided, add column for DEC values
     if args.dec_file:
-        dec_df = pd.read_csv(args.dec_file, sep='\t', header=None, names=['generic', 'uw_dec_pvalue', 'chrom', 'start', 'stop', 'Ref_Base', 'Var_Base'])
+        dec_df = pd.read_csv(args.dec_file, sep='\t', header=None, names=['generic', 'UW_DEC_p', 'chrom', 'start', 'stop', 'Ref_Base', 'Var_Base'])
         dec_df['chrom'] = dec_df['chrom'].astype('str')
         
         varscan_format_variants = pd.merge(varscan_format_variants, dec_df, how='left', on=['chrom', 'start', 'Ref_Base', 'Var_Base'])
-        varscan_format_variants['uw_dec_pvalue'] = varscan_format_variants['uw_dec_pvalue'].fillna(value=-1)
+        varscan_format_variants['UW_DEC_p'] = varscan_format_variants['UW_DEC_p'].fillna(value=-1)
 
     #parse the varscan output into preferred format 
     reader = open(genotype_calls, 'rU')
@@ -151,9 +151,10 @@ def action(args):
     varscan_format_variants['Variant_Read_Fraction'] = varscan_format_variants['Variant_Reads'].astype(float) / varscan_format_variants['Valid_Reads'].astype(float)
     varscan_format_variants['Variant_Read_Fraction'] = varscan_format_variants['Variant_Read_Fraction'].round(4)
     
+    # create a header
     header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads', 'Variant_Reads', 'Variant_Read_Fraction']
     if args.dec_file:
-        header.append('uw_dec_pvalue')
+        header.append('UW_DEC_p')
 
     varscan_format_variants.to_csv(genotype_analysis, na_rep=0, index=False, columns=header, sep='\t')
 
