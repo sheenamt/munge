@@ -146,13 +146,11 @@ def action(args):
         varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start), 'Reference_Reads'] = info[1]['reference'][1]
         for variant in info[1]['variants']:
             varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'Variant_Reads']=variant[1]
-        
-    #Add column for VAF
-    varscan_format_variants['Variant_Read_Fraction'] = varscan_format_variants['Variant_Reads'].astype(float) / varscan_format_variants['Valid_Reads'].astype(float)
-    varscan_format_variants['Variant_Read_Fraction'] = varscan_format_variants['Variant_Read_Fraction'].round(4)
+            varscan_format_variants.loc[(varscan_format_variants['chrom'] == chrom) & (varscan_format_variants['varscan_start'] == pos_start) & (varscan_format_variants['varscan_variant'] == variant[0]), 'VAF']=("{0:.4f}".format(float(variant[1])/int(depth)))
+
     
     # create a header
-    header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads', 'Variant_Reads', 'Variant_Read_Fraction']
+    header = ['Position','Ref_Base','Var_Base','Clinically_Flagged','Valid_Reads','Reference_Reads','Variant_Reads', 'VAF']
     if args.dec_file:
         header.append('UW_DEC_p')
 

@@ -164,9 +164,11 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort
             pfx_file = pfx_file[0]
             pfx = munge_pfx(pfx_file.fname)
             #Create a smaller version of this really long string
-            reads_pfx=pfx['mini-pfx']+'_Variants|Total'
-            status_pfx=pfx['mini-pfx']+'_Status'
+            reads_pfx=pfx['mini-pfx']+' Variants|Total|VAF'
+            #vaf_pfx=pfx['mini-pfx']+' VAF'
+            status_pfx=pfx['mini-pfx']+' Status'
             prefixes.append(reads_pfx)
+            #prefixes.append(vaf_pfx)
             prefixes.append(status_pfx)
             with open(os.path.join(pfx_file.dir, pfx_file.fname)) as fname:
                 reader = csv.DictReader(fname, delimiter='\t')
@@ -179,13 +181,14 @@ def parse_glt_flagged(files, specimens, annotation, prefixes, variant_keys, sort
                         frac = "{0:.4f}".format(float(row['Variant_Reads'])/float(row['Valid_Reads']))
                     except ZeroDivisionError:
                         frac = '0'
-                    specimens[variant][reads_pfx]=row['Variant_Reads']+'|'+row['Valid_Reads']
+                    specimens[variant][reads_pfx]=row['Variant_Reads']+' | '+row['Valid_Reads']+' | '+frac
+                    #specimens[variant][vaf_pfx]=frac
                     if int(row['Valid_Reads']) >= 100:
-                        if float(frac) >= 0.98:
+                        if float(frac) >= 0.95:
                             specimens[variant][status_pfx]='HOMO'
-                        elif float(frac) <= 0.10:
+                        elif float(frac) <= 0.02:
                             specimens[variant][status_pfx]='NEG'
-                        elif 0.40 <= float(frac) <= 0.65 :
+                        elif 0.40 <= float(frac) <= 0.58 :
                             specimens[variant][status_pfx]='HET'
                         else:
                             specimens[variant][status_pfx]='REVIEW'                    
