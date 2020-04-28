@@ -1,0 +1,8 @@
+Position	Ref_Base	Var_Base	Clinically_Flagged	Valid_Reads	Reference_Reads	Variant_Reads	Variant_Read_Fraction	UW_DEC_p
+chr1:11854476	T	G	MTHFR E429A germline.  Increased response but also increased risk of toxicity in CRC pts on oxaliplatin, capecitabine, 5-FU, leucovorin with GG and GT genotypes.	663	316	347	0.5234	43.2975
+chr2:234668879	-	AT	UGT1A1 (*28) microsatellite (TA)7 (wild type = 6 repeats). Review in IGV!  Increased risk of toxicity with irinotecan for (TA)7/(TA)7 genotype.  Increased risk of hyperbilirubinemia with nilotinib, also erlotinib should be used with caution	488	299	188	0.3852	1000.0
+chr2:234668879	-	ATAT	UGT1A1 microsatellite (TA)8 (wild type = 6 repeats). 	488	299	4	0.0082	1.876
+chr7:117199645-117199647	TCT	-	CFTR NM_000492.3 c.1521_1523delCTT p.Phe508delPhe (delta F508)	5548	2643	2896	0.522	248.11900000000003
+chr7:117232267	A	-	CFTR NM_000492.3 c.2052delA p.Lys684Asnfs*38 (2184delA)	8645	4236	4352	0.5034	-1.0
+chr7:117267766	C	-	CFTR NM_000492.3 c.3659delC p.Thr1220Lysfs*8 (3659delC)	0	0	0	0	-1.0
+chr20:31022441	-	G	ASXL1 Frameshift seen in OPX-0003T	374	364	3	0.008	7.129739999999999
