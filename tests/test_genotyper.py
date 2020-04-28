@@ -185,3 +185,13 @@ class TestGenotyper(TestBase):
         subprocess.call(cmd)
         self.assertTrue(filecmp.cmp(simplecsv, expected))
 
+    def testGenotyperAnalyzerWithDEC(self):
+        clin_flagged = os.path.join(genotyper_testfiles, 'Clin_Flagged.txt')
+        readcount_output = os.path.join(genotyper_testfiles, 'test.genotype_output')
+        expected = os.path.join(genotyper_testfiles, 'Genotyper_Analysis_DEC.txt')
+        dec_file = os.path.join(genotyper_testfiles, 'Genotyper_DEC_file.tsv')
+        outdir = self.mkoutdir()
+        simplecsv = path.join(outdir, "simple-genotyper2.csv")
+        cmd=["./munge", "genotyper_analyzer", clin_flagged, readcount_output, simplecsv, "--dec_file", dec_file]
+        subprocess.call(cmd)
+        self.assertTrue(filecmp.cmp(simplecsv, expected))
