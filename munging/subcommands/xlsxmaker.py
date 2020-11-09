@@ -124,7 +124,7 @@ def add_links(Reader, sheet, fname, cell_format):
             elif colx == 15 and not value == 'Faves_Y/N':
                 if len(value) < 198:
                     link='=HYPERLINK("https://control.labmed.uw.edu/var_clin/fav/?variant_id={}&pfx={}&ref_reads={}&var_reads={}","mark_fav")'.format(variant_id, f_short_name, ref_reads, var_reads)
-                    sheet.write_formula(row=rowx,col=colx,formula=link,cell_format=cell_format)
+                    sheet.write_formula(row=rowx,col=colx,formula=link)
             elif colx == 20 and not value == 'Cosmic_ID':
                 cosmic_id = value.split(';')[0].replace('ID=','')
                 if len(cosmic_id)>2:
