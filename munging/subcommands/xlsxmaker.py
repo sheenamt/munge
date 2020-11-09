@@ -6,6 +6,7 @@ usage:
  munge xlsmaker (Analysis/Combined) $SAVEPATH/$PFX* -o $SAVEPATH/${PFX}_Analysis.xls
 
 """
+import sys
 import csv
 import re
 import os
@@ -103,14 +104,14 @@ def process_files(infiles, tab, filetype):
             except IndexError:
                 continue
 
-def add_links(Reader, sheet, fname):
+def add_links(Reader, sheet, fname, cell_format):
     """
     Process analysis file to add link columns
     """
     #Need to get the pfx from the fname
     (f_path, f_name) = os.path.split(fname)
     f_short_name = f_name.replace('.SNP_Analysis.txt','')
-
+    
     #rowx is the row#, row is the data
     for rowx, row in enumerate(Reader):
         variant_id, ref_reads, var_reads=build_variant_id(row)
@@ -118,24 +119,23 @@ def add_links(Reader, sheet, fname):
         for colx, value in enumerate(row):
             if colx == 0 and not value == 'gendb_link':
                 if len(value) < 198:
-                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://gendb.labmed.uw.edu/genetics_db/search?variant_id={}","gendb_link")'.format(value))
+                    link='=HYPERLINK("https://gendb.labmed.uw.edu/genetics_db/search?variant_id={}","gendb_link")'.format(value)
+                    sheet.write_formula(row=rowx,col=colx,formula=link,cell_format=cell_format)
             elif colx == 15 and not value == 'Faves_Y/N':
                 if len(value) < 198:
-                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://control.labmed.uw.edu/var_clin/fav/?variant_id={}&pfx={}&ref_reads={}&var_reads={}","mark_fav")'.format(variant_id, f_short_name, ref_reads, var_reads))
+                    link='=HYPERLINK("https://control.labmed.uw.edu/var_clin/fav/?variant_id={}&pfx={}&ref_reads={}&var_reads={}","mark_fav")'.format(variant_id, f_short_name, ref_reads, var_reads)
+                    sheet.write_formula(row=rowx,col=colx,formula=link)
+            elif colx == 20 and not value == 'Cosmic_ID':
+                cosmic_id = value.split(';')[0].replace('ID=','')
+                if len(cosmic_id)>2:
+                    link='=HYPERLINK("https://cancer.sanger.ac.uk/cosmic/search?genome=37&q={}","{}")'.format(cosmic_id, value)
+                    sheet.write_formula(row=rowx,col=colx,formula=link,cell_format=cell_format)
+            elif colx == 23 and not value == 'CLNSIG':
+                if len(value)>2:
+                    clinvar_id,clinvar_sig = value.split(';')
+                    link='HYPERLINK("https://www.ncbi.nlm.nih.gov/clinvar/variation/{}","{}")'.format(clinvar_id, clinvar_sig)
+                    sheet.write_formula(row=rowx,col=colx,formula=link,cell_format=cell_format)
 
-            else:
-                sheet.write(rowx, colx, float_if_possible(value))
-
-def variant_id_link(Reader, sheet):
-    """
-    Process analysis file to add link column
-    """    
-    for rowx, row in enumerate(Reader):
-        row.insert(0, build_variant_id(row))
-        for colx, value in enumerate(row):
-            if colx == 0 and not value == 'link':
-                if len(value) < 198:
-                    sheet.write_formula(rowx, colx, 'HYPERLINK("https://apps.labmed.uw.edu/genetics_db/search?variant_id={}","link")'.format(value))
             else:
                 sheet.write(rowx, colx, float_if_possible(value))
 
@@ -144,9 +144,11 @@ def write_workbook(sheet_name, book, fname):
     Write analysis file as sheet in workbook
     """
     sheet = book.add_worksheet(sheet_name)    
+    cell_format = book.add_format({'underline': True, 'font_color': 'blue'})
+
     Reader = csv.reader(open(fname, 'rU'), delimiter='\t')
     if sheet_name == '10_SNP':
-        Reader = add_links(Reader, sheet, fname)
+        Reader = add_links(Reader, sheet, fname, cell_format)
     else:
         for rowx, row in enumerate(Reader):
             for colx, value in enumerate(row):

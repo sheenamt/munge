@@ -56,7 +56,7 @@ snp_file_types = {
     'merged.hg19_EAS.sites.2015_08_dropped': ({1: '1000g_EAS'}, [2, 3, 4, 5, 6]),
     'merged.hg19_EUR.sites.2015_08_dropped': ({1: '1000g_EUR'}, [2, 3, 4, 5, 6]),
     'merged.hg19_exac03_dropped': ({1: 'EXAC'}, [2, 3, 4, 5, 6]),
-    'merged.hg19_cosmic70_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_cosmic92_dropped': ({1: 'Cosmic'}, [2, 3, 4, 5, 6]),
     'merged.hg19_genomicSuperDups': ({0: 'Segdup'}, [2, 3, 4, 5, 6]),
     'merged.hg19_dbnsfp30a_dropped': ({1: 'ljb_Scores'}, [2, 3, 4, 5, 6]),
     'merged.hg19_esp6500siv2_all_dropped': ({1: 'EVS_esp6500_ALL'}, [2, 3, 4, 5, 6]),
@@ -64,7 +64,7 @@ snp_file_types = {
     'merged.hg19_esp6500siv2_aa_dropped': ({1: 'EVS_esp6500_AA'}, [2, 3, 4, 5, 6]),
     'merged.hg19_UW_freq_dropped': ({1: 'UW_Freq_list'}, [2, 3, 4, 5, 6]),
     'merged.hg19_nci60_dropped': ({1: 'NCI60'}, [2, 3, 4, 5, 6]),
-    'merged.hg19_clinvar_20150629_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
+    'merged.hg19_clinvar_20200316_dropped': ({1: 'ClinVar'}, [2, 3, 4, 5, 6]),
     'merged.hg19_CADD_dropped': ({1: 'CADD'}, [2, 3, 4, 5, 6]),
     'merged.hg19_snp138_dropped': ({1: 'rsid_2'}, [2, 3, 4, 5, 6]),
     'merged.hg19_dbscsnv11_dropped': ({1: 'splicing'}, [2, 3, 4, 5, 6]), #probability score for each variant that reflects the confidence that the variant alters splicing.
@@ -231,6 +231,7 @@ def munge_ljb_scores(data):
     """
     Parse sift, polyphen and gerp from ljb_all file
     """
+
     try:
         info = data.get('ljb_Scores').split(',')
         sift = info[0]
@@ -242,6 +243,23 @@ def munge_ljb_scores(data):
         return -1, -1, -1, -1 
 
     return polyphen, sift, mutation_taster, gerp
+
+def munge_clinvar(data):
+    """
+    Combine the clinvar ID into the ClinSig column for linking out in excel spreadsheet
+    """
+    if data.has_key('ClinVar'):
+        CLNALLELEID,CLNDN,CLNDISDB,CLNREVSTAT,CLNSIG=data.get('ClinVar').split(',')
+        return ';'.join([CLNALLELEID,CLNSIG]), CLNREVSTAT
+
+    else:
+        return -1, -1
+    
+def munge_cosmic(data):
+    if data.has_key('Cosmic'):
+        return data.get('Cosmic').split(';')
+    else:
+        return -1, -1
 
 def largest_variant_reads(output,data):
     """
@@ -324,9 +342,11 @@ def action(args):
         'Var_Reads',
         'Allele_Frac',
         'Variant_Phred',
-        'Cosmic',
+        'Cosmic_ID',
+        'Cosmic_Info',
         'CADD',
-        'ClinVar',
+        'CLNSIG',
+        'CLNREVSTAT',
         'Polyphen',
         'Sift',
         'Mutation_Taster',
@@ -416,6 +436,9 @@ def action(args):
         data['Gene'], data['Transcripts'] = munge_gene_and_Transcripts(data, RefSeqs)
         data['c.'], data['p.'] = munge_transcript(data, RefSeqs)
         data['Polyphen'], data['Sift'],data['Mutation_Taster'],data['Gerp'] = munge_ljb_scores(data)
+        data['Allele_Frac'] = get_allele_freq(data)
+        data['CLNSIG'], data['CLNREVSTAT'] = munge_clinvar(data)
+        data['Cosmic_ID'],data['Cosmic_Info'] = munge_cosmic(data)
         data['dbSNP_ID'] = data.get('rsid_1') or data.get('rsid_2')
         data['1000g_ALL'] = data.get('1000g_ALL') or -1
         data['1000g_AMR'] = data.get('1000g_AMR') or -1
@@ -432,5 +455,4 @@ def action(args):
         _, data['CADD'] = split_string_in_two(data.get('CADD'))
         data['ADA_Alter_Splice'],data['RF_Alter_Splice'] = split_string_in_two(data.get('splicing'))
         data['UW_Freq'], data['UW_Count'] = split_string_in_two(data.get('UW_Freq_list'))
-        data['Allele_Frac'] = get_allele_freq(data)
         writer.writerow(data)
