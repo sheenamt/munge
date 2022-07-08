@@ -5,6 +5,6 @@ numpy>=1.10.1
 pandas>=0.17.1
 plotly>=2.7.0
 pyarrow>=0.15.1
-suds==0.4
+suds==1.0.0
 XlsxWriter==0.9.6
 xlwt==0.7.5
